@@ -1,0 +1,7 @@
+node_modules
+.next
+desktop/release
+desktop/node_modules
+web/node_modules
+web/.next
+.git
