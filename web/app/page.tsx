@@ -18,13 +18,24 @@ export default async function HomePage() {
           </h1>
           <p className="text-lg leading-8 text-zinc-600 dark:text-zinc-400">
             Você cadastra os arquivos, define em qual pasta cada um vai no disco
-            e compartilha o manifesto. O aplicativo de desktop faz o resto.
+            e compartilha o manifesto. Quem baixa usa o app de desktop — ou
+            navega pelo{" "}
+            <Link href="/baixar" className="underline">
+              catálogo público
+            </Link>
+            .
           </p>
           <div className="flex flex-wrap gap-3 pt-2">
+            <Link
+              href="/baixar"
+              className="rounded-full bg-zinc-950 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200"
+            >
+              Baixar jogos
+            </Link>
             {user ? (
               <Link
                 href="/painel"
-                className="rounded-full bg-zinc-950 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200"
+                className="rounded-full border border-zinc-300 px-5 py-2.5 text-sm font-medium transition hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
               >
                 Ir para o painel
               </Link>
