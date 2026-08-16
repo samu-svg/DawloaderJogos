@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { validateDestination } from "@/lib/manifest";
+import { buildDestination, type FolderPreset } from "@/lib/install-presets";
 import { slugify, validateSlug } from "@/lib/slug";
 import { createClient, currentUser } from "@/lib/supabase/server";
 
@@ -93,6 +94,199 @@ export async function deletePortfolio(slug: string): Promise<ActionResult> {
 
   revalidatePath("/painel");
   redirect("/painel");
+}
+
+async function insertEntry(
+  portfolioId: string,
+  data: {
+    label: string;
+    destination: string;
+    externalUrl: string;
+    groupName: string | null;
+    isOptional: boolean;
+    sizeBytes: number;
+    sha256: string | null;
+    sortOrder: number;
+  },
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("entries").insert({
+    portfolio_id: portfolioId,
+    label: data.label,
+    destination: data.destination,
+    external_url: data.externalUrl,
+    kind: "external",
+    size_bytes: data.sizeBytes,
+    sha256: data.sha256,
+    group_name: data.groupName,
+    is_optional: data.isOptional,
+    sort_order: data.sortOrder,
+  });
+
+  if (error) {
+    if (error.code === "23505") {
+      return {
+        ok: false,
+        error: "Dois arquivos não podem ir para a mesma pasta no HD.",
+      };
+    }
+    return { ok: false, error: "Não foi possível salvar o arquivo." };
+  }
+
+  return { ok: true };
+}
+
+function parseUrl(
+  value: string,
+): { ok: false; error: string } | { ok: true; url: string } {
+  const url = value.trim();
+  if (!url) return { ok: false, error: "Informe o link de download." };
+  try {
+    new URL(url);
+  } catch {
+    return { ok: false, error: "O link de download não é válido." };
+  }
+  return { ok: true, url };
+}
+
+function parseFolderPreset(raw: string): FolderPreset {
+  if (raw === "content" || raw === "custom") return raw;
+  return "games";
+}
+
+/** Cadastra um jogo com 1 ou 2 arquivos (jogo + DLC/conteúdo em pastas diferentes). */
+export async function addGamePackage(
+  slug: string,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireUser();
+
+  const gameTitle = String(formData.get("game_title") ?? "").trim();
+  const gameFile = String(formData.get("game_file") ?? "").trim();
+  const gameUrlRaw = String(formData.get("game_url") ?? "").trim();
+  const gameFolder = parseFolderPreset(String(formData.get("game_folder") ?? "games"));
+  const gameCustomPath = String(formData.get("game_custom_path") ?? "").trim();
+  const gameContentId = String(formData.get("game_content_id") ?? "").trim();
+
+  const includeExtra = formData.get("include_extra") === "on";
+  const extraTitle = String(formData.get("extra_title") ?? "").trim();
+  const extraFile = String(formData.get("extra_file") ?? "").trim();
+  const extraUrlRaw = String(formData.get("extra_url") ?? "").trim();
+  const extraFolder = parseFolderPreset(String(formData.get("extra_folder") ?? "content"));
+  const extraCustomPath = String(formData.get("extra_custom_path") ?? "").trim();
+  const extraContentId = String(formData.get("extra_content_id") ?? "").trim();
+
+  if (!gameTitle) return { ok: false, error: "Informe o nome do jogo." };
+  if (!gameFile) return { ok: false, error: "Informe o nome do arquivo do jogo." };
+
+  const gameUrl = parseUrl(gameUrlRaw);
+  if (!gameUrl.ok) return gameUrl;
+
+  const gameDestination = buildDestination(
+    gameFolder,
+    gameFile,
+    gameCustomPath,
+    gameContentId,
+  );
+  if (!gameDestination.ok) return gameDestination;
+
+  if (includeExtra) {
+    if (!extraTitle) return { ok: false, error: "Informe o nome do arquivo extra." };
+    if (!extraFile) return { ok: false, error: "Informe o nome do arquivo extra." };
+
+    const extraUrl = parseUrl(extraUrlRaw);
+    if (!extraUrl.ok) return extraUrl;
+
+    const extraDestination = buildDestination(
+      extraFolder,
+      extraFile,
+      extraCustomPath,
+      extraContentId,
+    );
+    if (!extraDestination.ok) return extraDestination;
+
+    const supabase = await createClient();
+    const { data: portfolio } = await supabase
+      .from("portfolios")
+      .select("id")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (!portfolio) return { ok: false, error: "Portfólio não encontrado." };
+
+    const { data: lastEntry } = await supabase
+      .from("entries")
+      .select("sort_order")
+      .eq("portfolio_id", portfolio.id)
+      .order("sort_order", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    let sortOrder = (lastEntry?.sort_order ?? -1) + 1;
+
+    const mainInsert = await insertEntry(portfolio.id, {
+      label: gameTitle,
+      destination: gameDestination.destination,
+      externalUrl: gameUrl.url,
+      groupName: "jogo",
+      isOptional: false,
+      sizeBytes: 0,
+      sha256: null,
+      sortOrder: sortOrder++,
+    });
+    if (!mainInsert.ok) return mainInsert;
+
+    const extraInsert = await insertEntry(portfolio.id, {
+      label: extraTitle,
+      destination: extraDestination.destination,
+      externalUrl: extraUrl.url,
+      groupName: "conteudo",
+      isOptional: true,
+      sizeBytes: 0,
+      sha256: null,
+      sortOrder: sortOrder++,
+    });
+    if (!extraInsert.ok) return extraInsert;
+
+    revalidatePath(`/painel/${slug}`);
+    revalidatePath(`/api/portfolios/${slug}/manifest`);
+    return { ok: true };
+  }
+
+  const supabase = await createClient();
+  const { data: portfolio } = await supabase
+    .from("portfolios")
+    .select("id")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (!portfolio) return { ok: false, error: "Portfólio não encontrado." };
+
+  const { data: lastEntry } = await supabase
+    .from("entries")
+    .select("sort_order")
+    .eq("portfolio_id", portfolio.id)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  let sortOrder = (lastEntry?.sort_order ?? -1) + 1;
+
+  const mainInsert = await insertEntry(portfolio.id, {
+    label: gameTitle,
+    destination: gameDestination.destination,
+    externalUrl: gameUrl.url,
+    groupName: "jogo",
+    isOptional: false,
+    sizeBytes: 0,
+    sha256: null,
+    sortOrder: sortOrder++,
+  });
+  if (!mainInsert.ok) return mainInsert;
+
+  revalidatePath(`/painel/${slug}`);
+  revalidatePath(`/api/portfolios/${slug}/manifest`);
+  return { ok: true };
 }
 
 export async function addEntry(

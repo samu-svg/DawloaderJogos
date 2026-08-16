@@ -1,8 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
+import { AddGamePackageForm } from "@/components/add-game-package-form";
 import {
-  addEntry,
   deletePortfolioForm,
   deleteEntryForm,
   updatePortfolio,
@@ -31,6 +31,12 @@ function SuccessBanner({ state }: { state: FormState }) {
   );
 }
 
+function groupLabel(group: string | null): string | null {
+  if (group === "jogo") return "Jogo";
+  if (group === "conteudo") return "DLC / Content";
+  return group;
+}
+
 export function PortfolioEditor({
   portfolio,
   entries,
@@ -41,11 +47,6 @@ export function PortfolioEditor({
   const [settingsState, settingsAction, settingsPending] = useActionState(
     async (_prev: FormState, formData: FormData) =>
       updatePortfolio(portfolio.slug, formData),
-    null,
-  );
-  const [entryState, entryAction, entryPending] = useActionState(
-    async (_prev: FormState, formData: FormData) =>
-      addEntry(portfolio.slug, formData),
     null,
   );
 
@@ -149,7 +150,9 @@ export function PortfolioEditor({
                   <p className="text-xs text-zinc-500">
                     {formatBytes(entry.size_bytes)}
                     {entry.is_optional ? " · opcional" : ""}
-                    {entry.group_name ? ` · ${entry.group_name}` : ""}
+                    {groupLabel(entry.group_name)
+                      ? ` · ${groupLabel(entry.group_name)}`
+                      : ""}
                   </p>
                 </div>
                 <form action={deleteEntryForm.bind(null, portfolio.slug, entry.id)}>
@@ -167,90 +170,8 @@ export function PortfolioEditor({
       </section>
 
       <section className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
-        <h2 className="text-lg font-semibold">Adicionar arquivo</h2>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Por enquanto, use um link externo. O app de desktop baixa e coloca na
-          pasta de destino.
-        </p>
-        <form action={entryAction} className="mt-4 grid gap-4 sm:grid-cols-2">
-          <ErrorBanner state={entryState} />
-          {entryState?.ok && (
-            <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 sm:col-span-2 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
-              Arquivo adicionado.
-            </p>
-          )}
-          <label className="block space-y-1.5 sm:col-span-2">
-            <span className="text-sm font-medium">Nome do arquivo</span>
-            <input
-              name="label"
-              required
-              placeholder="Ex.: Halo 3.iso"
-              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900"
-            />
-          </label>
-          <label className="block space-y-1.5 sm:col-span-2">
-            <span className="text-sm font-medium">Pasta de destino no HD</span>
-            <input
-              name="destination"
-              required
-              placeholder="Ex.: Games/Halo 3.iso"
-              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 font-mono outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900"
-            />
-            <p className="text-xs text-zinc-500">
-              Caminho relativo à raiz que a pessoa escolher no app. Ex.:
-              Games/, Content/0000000000000000/
-            </p>
-          </label>
-          <label className="block space-y-1.5 sm:col-span-2">
-            <span className="text-sm font-medium">Link de download</span>
-            <input
-              name="external_url"
-              required
-              type="url"
-              placeholder="https://..."
-              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900"
-            />
-          </label>
-          <label className="block space-y-1.5">
-            <span className="text-sm font-medium">Tamanho (bytes)</span>
-            <input
-              name="size_bytes"
-              type="number"
-              min={0}
-              placeholder="Opcional"
-              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900"
-            />
-          </label>
-          <label className="block space-y-1.5">
-            <span className="text-sm font-medium">Grupo</span>
-            <input
-              name="group_name"
-              placeholder="Opcional"
-              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900"
-            />
-          </label>
-          <label className="block space-y-1.5 sm:col-span-2">
-            <span className="text-sm font-medium">SHA-256</span>
-            <input
-              name="sha256"
-              placeholder="Opcional — verificação de integridade"
-              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 font-mono text-sm outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900"
-            />
-          </label>
-          <label className="flex items-center gap-2 text-sm sm:col-span-2">
-            <input type="checkbox" name="is_optional" className="rounded" />
-            Arquivo opcional (a pessoa pode pular no app)
-          </label>
-          <div className="sm:col-span-2">
-            <button
-              type="submit"
-              disabled={entryPending}
-              className="rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-60 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200"
-            >
-              {entryPending ? "Adicionando..." : "Adicionar arquivo"}
-            </button>
-          </div>
-        </form>
+        <h2 className="text-lg font-semibold">Adicionar jogo</h2>
+        <AddGamePackageForm slug={portfolio.slug} />
       </section>
     </div>
   );

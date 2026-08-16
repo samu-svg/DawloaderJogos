@@ -32,3 +32,6 @@ Thumbs.db
 
 # Agent tools cache
 agent-tools/
+
+.vercel
+.env*
