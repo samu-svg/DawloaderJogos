@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { DesktopDownloadCard } from "@/components/desktop-download-card";
 import { listPublicPortfolios } from "@/lib/catalog";
 
 export const metadata: Metadata = {
@@ -20,6 +21,8 @@ export default async function BaixarPage() {
           e organiza cada um na pasta certa do HD que você escolher.
         </p>
       </div>
+
+      <DesktopDownloadCard showSteps />
 
       {!portfolios.length ? (
         <div className="rounded-2xl border border-dashed border-zinc-300 p-10 text-center dark:border-zinc-700">
@@ -56,7 +59,7 @@ export default async function BaixarPage() {
       )}
 
       <section className="rounded-2xl border border-zinc-200 bg-zinc-50 p-6 dark:border-zinc-800 dark:bg-zinc-900/40">
-        <h2 className="font-semibold">Como funciona</h2>
+        <h2 className="font-semibold">Depois de instalar o app</h2>
         <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
           <li>Abra a página de um portfólio e anote o slug.</li>
           <li>

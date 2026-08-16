@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CopyButton } from "@/components/copy-button";
+import { DesktopDownloadCard } from "@/components/desktop-download-card";
 import { getPublicPortfolio, groupLabel } from "@/lib/catalog";
+import { getDesktopDownloadInfo } from "@/lib/desktop-download";
 import { formatBytes } from "@/lib/manifest";
 import { getSiteUrl } from "@/lib/site-url";
 
@@ -29,6 +31,7 @@ export default async function BaixarPortfolioPage({ params }: PageProps) {
 
   if (!portfolio) notFound();
 
+  const desktopDownload = getDesktopDownloadInfo();
   const totalBytes = portfolio.entries.reduce(
     (sum, entry) => sum + entry.sizeBytes,
     0,
@@ -57,8 +60,14 @@ export default async function BaixarPortfolioPage({ params }: PageProps) {
         </p>
       </div>
 
+      <DesktopDownloadCard
+        title="1. Baixe o aplicativo"
+        description="Instale o Dawloader no Windows antes de baixar este pacote."
+        showSteps={false}
+      />
+
       <section className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
-        <h2 className="text-lg font-semibold">Arquivos neste pacote</h2>
+        <h2 className="text-lg font-semibold">2. Arquivos neste pacote</h2>
         {portfolio.entries.length === 0 ? (
           <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
             Este portfólio ainda não tem arquivos cadastrados.
@@ -104,15 +113,17 @@ export default async function BaixarPortfolioPage({ params }: PageProps) {
       </section>
 
       <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 dark:border-emerald-900 dark:bg-emerald-950/30">
-        <h2 className="text-lg font-semibold">Baixar com o app</h2>
+        <h2 className="text-lg font-semibold">3. Usar no app</h2>
         <p className="mt-2 text-sm leading-6 text-zinc-700 dark:text-zinc-300">
-          Use o aplicativo Dawloader no seu PC. Ele lê este portfólio, você
-          escolhe o HD e cada arquivo é gravado na pasta correta — nada é
-          executado automaticamente.
+          Com o{" "}
+          <a href={desktopDownload.href} download={desktopDownload.fileName} className="underline">
+            Dawloader
+          </a>{" "}
+          aberto, cole os dados abaixo, carregue o manifesto, escolha o HD e
+          inicie o download.
         </p>
 
         <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm leading-6 text-zinc-700 dark:text-zinc-300">
-          <li>Abra o app Dawloader no Windows.</li>
           <li>Cole a URL do site e o slug abaixo.</li>
           <li>Clique em <strong>Carregar manifesto</strong>.</li>
           <li>Escolha a pasta raiz do HD e inicie o download.</li>
