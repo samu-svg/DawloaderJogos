@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { authErrorMessage, SIGNUP_CONFIRM_MESSAGE } from "@/lib/auth-messages";
 
 export function CadastroForm() {
   const router = useRouter();
@@ -32,7 +33,7 @@ export function CadastroForm() {
     setLoading(false);
 
     if (authError) {
-      setError(authError.message);
+      setError(authErrorMessage(authError.message));
       return;
     }
 
@@ -42,9 +43,7 @@ export function CadastroForm() {
       return;
     }
 
-    setMessage(
-      "Conta criada. Se o Supabase exigir confirmação por e-mail, confira sua caixa de entrada antes de entrar.",
-    );
+    setMessage(SIGNUP_CONFIRM_MESSAGE);
   }
 
   return (

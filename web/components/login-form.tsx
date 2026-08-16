@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { authErrorMessage } from "@/lib/auth-messages";
 
 export function LoginForm() {
   const router = useRouter();
@@ -26,7 +27,7 @@ export function LoginForm() {
     setLoading(false);
 
     if (authError) {
-      setError("E-mail ou senha incorretos.");
+      setError(authErrorMessage(authError.message));
       return;
     }
 
