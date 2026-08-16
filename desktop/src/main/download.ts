@@ -16,7 +16,7 @@ export interface DownloadProgress {
   label: string;
   downloadedBytes: number;
   totalBytes: number;
-  status: "downloading" | "verifying" | "done" | "error";
+  status: "downloading" | "verifying" | "importing" | "done" | "error";
   error?: string;
 }
 

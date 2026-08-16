@@ -6,7 +6,7 @@ export interface DownloadProgressEvent {
   label: string;
   downloadedBytes: number;
   totalBytes: number;
-  status: "downloading" | "verifying" | "done" | "error";
+  status: "downloading" | "verifying" | "importing" | "done" | "error";
   error?: string;
 }
 
@@ -16,6 +16,13 @@ const api = {
     ipcRenderer.invoke("fetch-manifest", { baseUrl, slug }),
   startDownload: (rootDir: string, entries: ResolvedManifestEntry[]) =>
     ipcRenderer.invoke("start-download", { rootDir, entries }),
+  importLocalFolder: (payload: {
+    rootDir: string;
+    sourceDir: string;
+    entryId: string;
+    label: string;
+    destination: string;
+  }) => ipcRenderer.invoke("import-local-folder", payload),
   cancelDownload: (): Promise<void> => ipcRenderer.invoke("cancel-download"),
   onDownloadProgress: (callback: (event: DownloadProgressEvent) => void) => {
     const listener = (_: Electron.IpcRendererEvent, payload: DownloadProgressEvent) =>

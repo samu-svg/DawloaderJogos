@@ -26,9 +26,16 @@
         {
           "target": "portable",
           "arch": ["x64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["x64"]
         }
       ],
       "signAndEditExecutable": false
+    },
+    "portable": {
+      "artifactName": "Dawloader-${version}-portable.exe"
     }
   },
   "devDependencies": {

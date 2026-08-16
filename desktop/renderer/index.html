@@ -24,7 +24,7 @@
         <div class="grid two">
           <label>
             <span>URL do site</span>
-            <input id="base-url" type="url" value="http://localhost:3000" />
+            <input id="base-url" type="url" value="https://dawloader.vercel.app" />
           </label>
           <label>
             <span>Slug do portfólio</span>
@@ -44,6 +44,11 @@
           <button id="select-folder-btn" class="secondary">Escolher pasta raiz</button>
         </div>
         <p id="root-path" class="mono muted">Nenhuma pasta selecionada.</p>
+        <p class="muted" style="margin-top: 0.5rem; font-size: 0.85rem">
+          Escolha o HD como pasta raiz. Para links do TeraBox, baixe a pasta no
+          PC e use <strong>Importar pasta</strong>. Arquivos com URL direta usam
+          Iniciar download.
+        </p>
 
         <div class="table-wrap">
           <table>
@@ -51,7 +56,8 @@
               <tr>
                 <th><input id="select-all" type="checkbox" checked /></th>
                 <th>Arquivo</th>
-                <th>Destino no HD</th>
+                <th>Tipo</th>
+                <th>Pasta no HD (pode editar)</th>
                 <th>Tamanho</th>
                 <th>Status</th>
               </tr>
@@ -68,6 +74,6 @@
       </section>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js" defer></script>
   </body>
 </html>

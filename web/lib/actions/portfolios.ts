@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { validateDestination } from "@/lib/manifest";
-import { buildDestination, type FolderPreset } from "@/lib/install-presets";
+import { buildDestination, buildFolderDestination, type FolderPreset } from "@/lib/install-presets";
+import { LOCAL_IMPORT_URL } from "@/lib/local-import";
 import { slugify, validateSlug } from "@/lib/slug";
 import { createClient, currentUser } from "@/lib/supabase/server";
 
@@ -164,6 +165,8 @@ export async function addGamePackage(
   const gameTitle = String(formData.get("game_title") ?? "").trim();
   const gameFile = String(formData.get("game_file") ?? "").trim();
   const gameUrlRaw = String(formData.get("game_url") ?? "").trim();
+  const deliveryMode = String(formData.get("delivery_mode") ?? "download");
+  const isFolderLocal = deliveryMode === "folder-local";
   const gameFolder = parseFolderPreset(String(formData.get("game_folder") ?? "games"));
   const gameCustomPath = String(formData.get("game_custom_path") ?? "").trim();
   const gameContentId = String(formData.get("game_content_id") ?? "").trim();
@@ -177,18 +180,79 @@ export async function addGamePackage(
   const extraContentId = String(formData.get("extra_content_id") ?? "").trim();
 
   if (!gameTitle) return { ok: false, error: "Informe o nome do jogo." };
-  if (!gameFile) return { ok: false, error: "Informe o nome do arquivo do jogo." };
+  if (!gameFile) {
+    return {
+      ok: false,
+      error: isFolderLocal
+        ? "Informe o nome da pasta do jogo."
+        : "Informe o nome do arquivo do jogo.",
+    };
+  }
 
-  const gameUrl = parseUrl(gameUrlRaw);
-  if (!gameUrl.ok) return gameUrl;
+  let gameExternalUrl: string;
+  let gameGroupName: string;
+  let gameDestination: { ok: true; destination: string } | { ok: false; error: string };
 
-  const gameDestination = buildDestination(
-    gameFolder,
-    gameFile,
-    gameCustomPath,
-    gameContentId,
-  );
+  if (isFolderLocal) {
+    gameExternalUrl = LOCAL_IMPORT_URL;
+    gameGroupName = "pasta-local";
+    gameDestination = buildFolderDestination(
+      gameFolder,
+      gameFile,
+      gameCustomPath,
+      gameContentId,
+    );
+  } else {
+    const gameUrl = parseUrl(gameUrlRaw);
+    if (!gameUrl.ok) return gameUrl;
+    gameExternalUrl = gameUrl.url;
+    gameGroupName = "jogo";
+    gameDestination = buildDestination(
+      gameFolder,
+      gameFile,
+      gameCustomPath,
+      gameContentId,
+    );
+  }
+
   if (!gameDestination.ok) return gameDestination;
+
+  if (isFolderLocal) {
+    const supabase = await createClient();
+    const { data: portfolio } = await supabase
+      .from("portfolios")
+      .select("id")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (!portfolio) return { ok: false, error: "Portfólio não encontrado." };
+
+    const { data: lastEntry } = await supabase
+      .from("entries")
+      .select("sort_order")
+      .eq("portfolio_id", portfolio.id)
+      .order("sort_order", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const sortOrder = (lastEntry?.sort_order ?? -1) + 1;
+
+    const insert = await insertEntry(portfolio.id, {
+      label: gameTitle,
+      destination: gameDestination.destination,
+      externalUrl: gameExternalUrl,
+      groupName: gameGroupName,
+      isOptional: false,
+      sizeBytes: 0,
+      sha256: null,
+      sortOrder,
+    });
+    if (!insert.ok) return insert;
+
+    revalidatePath(`/painel/${slug}`);
+    revalidatePath(`/api/portfolios/${slug}/manifest`);
+    return { ok: true };
+  }
 
   if (includeExtra) {
     if (!extraTitle) return { ok: false, error: "Informe o nome do arquivo extra." };
@@ -227,8 +291,8 @@ export async function addGamePackage(
     const mainInsert = await insertEntry(portfolio.id, {
       label: gameTitle,
       destination: gameDestination.destination,
-      externalUrl: gameUrl.url,
-      groupName: "jogo",
+      externalUrl: gameExternalUrl,
+      groupName: gameGroupName,
       isOptional: false,
       sizeBytes: 0,
       sha256: null,
@@ -275,8 +339,8 @@ export async function addGamePackage(
   const mainInsert = await insertEntry(portfolio.id, {
     label: gameTitle,
     destination: gameDestination.destination,
-    externalUrl: gameUrl.url,
-    groupName: "jogo",
+    externalUrl: gameExternalUrl,
+    groupName: gameGroupName,
     isOptional: false,
     sizeBytes: 0,
     sha256: null,

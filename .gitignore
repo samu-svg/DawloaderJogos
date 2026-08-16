@@ -13,6 +13,7 @@ web/out/
 # Electron build output
 desktop/release/
 desktop/release2/
+desktop/release3/
 desktop/dist/
 
 # Logs

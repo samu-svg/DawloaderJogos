@@ -34,6 +34,7 @@ function SuccessBanner({ state }: { state: FormState }) {
 function groupLabel(group: string | null): string | null {
   if (group === "jogo") return "Jogo";
   if (group === "conteudo") return "DLC / Content";
+  if (group === "pasta-local") return "Pasta local (TeraBox)";
   return group;
 }
 

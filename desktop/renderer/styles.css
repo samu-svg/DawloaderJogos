@@ -166,6 +166,35 @@ td.mono {
   margin-top: 16px;
 }
 
+.input-dest {
+  width: 100%;
+  min-width: 220px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #0f0f0f;
+  color: var(--text);
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.8rem;
+}
+
+.btn-import {
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--primary);
+  color: var(--primary-text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-import:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 @media (max-width: 720px) {
   .grid.two,
   .manifest-header {

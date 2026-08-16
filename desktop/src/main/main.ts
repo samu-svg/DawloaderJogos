@@ -1,12 +1,14 @@
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
-import path from "node:path";
 import type { Manifest, ResolvedManifestEntry } from "../shared/manifest";
 import {
   findDuplicateDestinations,
   validateDestination,
 } from "../shared/manifest";
+import { preloadPath, rendererPath } from "./app-paths";
 import { downloadEntry, type DownloadProgress } from "./download";
+import { importLocalFolder } from "./import-folder";
 import { resolveUnderRoot } from "./paths";
+import { isLocalImportUrl } from "../shared/local-import";
 
 let mainWindow: BrowserWindow | null = null;
 let abortController: AbortController | null = null;
@@ -18,15 +20,42 @@ function createWindow() {
     minWidth: 720,
     minHeight: 560,
     title: "Dawloader",
+    show: false,
     webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
+      preload: preloadPath(),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true,
+      sandbox: false,
     },
   });
 
-  mainWindow.loadFile(path.join(__dirname, "../../renderer/index.html"));
+  const indexHtml = rendererPath("index.html");
+
+  mainWindow.webContents.on(
+    "did-fail-load",
+    (_event, errorCode, errorDescription, validatedURL) => {
+      dialog.showErrorBox(
+        "Dawloader",
+        `Não foi possível carregar a interface (${errorCode}).\n${errorDescription}\n${validatedURL}`,
+      );
+    },
+  );
+
+  mainWindow.once("ready-to-show", () => {
+    mainWindow?.show();
+  });
+
+  void mainWindow.loadFile(indexHtml).catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    dialog.showErrorBox(
+      "Dawloader",
+      `Não foi possível abrir a interface.\n${indexHtml}\n\n${message}`,
+    );
+  });
+
+  if (!app.isPackaged) {
+    mainWindow.webContents.openDevTools({ mode: "detach" });
+  }
 }
 
 function send(channel: string, payload: unknown) {
@@ -116,6 +145,23 @@ ipcMain.handle(
     for (const entry of payload.entries) {
       if (signal.aborted) break;
 
+      if (isLocalImportUrl(entry.downloadUrl)) {
+        send("download-progress", {
+          entryId: entry.id,
+          label: entry.label,
+          downloadedBytes: 0,
+          totalBytes: entry.sizeBytes,
+          status: "error",
+          error: "Use «Importar pasta» para este item.",
+        } satisfies DownloadProgress);
+        results.push({
+          entryId: entry.id,
+          ok: false,
+          error: "Use «Importar pasta» para este item.",
+        });
+        continue;
+      }
+
       const resolved = resolveUnderRoot(payload.rootDir, entry.destination);
       if (!resolved.ok) {
         send("download-progress", {
@@ -161,5 +207,50 @@ ipcMain.handle(
     abortController = null;
     send("download-complete", { results });
     return { results };
+  },
+);
+
+ipcMain.handle(
+  "import-local-folder",
+  async (
+    _event,
+    payload: {
+      rootDir: string;
+      sourceDir: string;
+      entryId: string;
+      label: string;
+      destination: string;
+    },
+  ) => {
+    abortController?.abort();
+    abortController = new AbortController();
+    const signal = abortController.signal;
+
+    try {
+      const result = await importLocalFolder({
+        entryId: payload.entryId,
+        label: payload.label,
+        sourceDir: payload.sourceDir,
+        rootDir: payload.rootDir,
+        destination: payload.destination,
+        signal,
+        onProgress: (progress) => send("download-progress", progress),
+      });
+      return { ok: true as const, ...result };
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Erro ao importar a pasta.";
+      send("download-progress", {
+        entryId: payload.entryId,
+        label: payload.label,
+        downloadedBytes: 0,
+        totalBytes: 0,
+        status: "error",
+        error: message,
+      } satisfies DownloadProgress);
+      return { ok: false as const, error: message };
+    } finally {
+      abortController = null;
+    }
   },
 );
