@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'"
+    />
+    <title>Dawloader</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <div>
+          <h1>Dawloader</h1>
+          <p>Baixa arquivos de um portfólio e organiza no HD.</p>
+        </div>
+      </header>
+
+      <section class="card">
+        <h2>1. Carregar portfólio</h2>
+        <div class="grid two">
+          <label>
+            <span>URL do site</span>
+            <input id="base-url" type="url" value="http://localhost:3000" />
+          </label>
+          <label>
+            <span>Slug do portfólio</span>
+            <input id="slug" type="text" placeholder="meu-pacote" />
+          </label>
+        </div>
+        <button id="load-btn" class="primary">Carregar manifesto</button>
+        <p id="load-error" class="error hidden"></p>
+      </section>
+
+      <section id="manifest-section" class="card hidden">
+        <div class="manifest-header">
+          <div>
+            <h2 id="portfolio-title">Portfólio</h2>
+            <p id="portfolio-meta" class="muted"></p>
+          </div>
+          <button id="select-folder-btn" class="secondary">Escolher pasta raiz</button>
+        </div>
+        <p id="root-path" class="mono muted">Nenhuma pasta selecionada.</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th><input id="select-all" type="checkbox" checked /></th>
+                <th>Arquivo</th>
+                <th>Destino no HD</th>
+                <th>Tamanho</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="entries-body"></tbody>
+          </table>
+        </div>
+
+        <div class="actions">
+          <button id="download-btn" class="primary" disabled>Iniciar download</button>
+          <button id="cancel-btn" class="danger hidden">Cancelar</button>
+        </div>
+        <p id="summary" class="muted"></p>
+      </section>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

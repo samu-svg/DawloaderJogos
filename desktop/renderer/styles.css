@@ -1,0 +1,175 @@
+:root {
+  color-scheme: dark;
+  --bg: #0a0a0a;
+  --card: #141414;
+  --border: #2a2a2a;
+  --text: #f4f4f5;
+  --muted: #a1a1aa;
+  --primary: #fafafa;
+  --primary-text: #09090b;
+  --danger: #ef4444;
+  --ok: #22c55e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.header h1 {
+  margin: 0 0 4px;
+  font-size: 1.75rem;
+}
+
+.header p,
+.muted {
+  color: var(--muted);
+}
+
+.card {
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--card);
+}
+
+.card h2 {
+  margin: 0 0 16px;
+  font-size: 1.1rem;
+}
+
+.grid.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.875rem;
+}
+
+input[type="text"],
+input[type="url"] {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #0f0f0f;
+  color: var(--text);
+}
+
+button {
+  margin-top: 12px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button.primary {
+  background: var(--primary);
+  color: var(--primary-text);
+}
+
+button.secondary {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+button.danger {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid #7f1d1d;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.error {
+  margin-top: 12px;
+  color: #fca5a5;
+}
+
+.manifest-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+}
+
+.mono {
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.85rem;
+}
+
+.table-wrap {
+  margin-top: 16px;
+  overflow: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+th,
+td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+td.mono {
+  word-break: break-all;
+}
+
+.status {
+  font-size: 0.8rem;
+}
+
+.status.done {
+  color: var(--ok);
+}
+
+.status.error {
+  color: var(--danger);
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+@media (max-width: 720px) {
+  .grid.two,
+  .manifest-header {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+}

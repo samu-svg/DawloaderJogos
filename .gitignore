@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Environment (secrets)
+.env
+.env.local
+.env.*.local
+
+# Next.js
+web/.next/
+web/out/
+
+# Electron build output
+desktop/release/
+desktop/dist/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.cursor/
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+
+# Agent tools cache
+agent-tools/
