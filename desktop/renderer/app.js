@@ -136,7 +136,7 @@ function init() {
       if (localImport) {
         const tag = document.createElement("span");
         tag.className = "muted";
-        tag.textContent = " · importar do PC";
+        tag.textContent = " · zip / TeraBox";
         labelCell.appendChild(tag);
       }
 
@@ -152,17 +152,31 @@ function init() {
       destCell.appendChild(destInput);
 
       const sizeCell = document.createElement("td");
-      sizeCell.textContent = localImport ? "Pasta" : formatBytes(entry.sizeBytes);
+      sizeCell.textContent = localImport ? "Zip" : formatBytes(entry.sizeBytes);
 
       const statusCell = document.createElement("td");
       statusCell.className = "status muted";
       if (localImport) {
-        const importBtn = document.createElement("button");
-        importBtn.type = "button";
-        importBtn.className = "btn-import";
-        importBtn.textContent = "Importar pasta";
-        importBtn.addEventListener("click", () => void handleImport(entry, statusCell));
-        statusCell.appendChild(importBtn);
+        const wrap = document.createElement("div");
+        wrap.className = "import-actions";
+
+        const zipBtn = document.createElement("button");
+        zipBtn.type = "button";
+        zipBtn.className = "btn-import";
+        zipBtn.textContent = "Instalar zip";
+        zipBtn.addEventListener("click", () => void handleInstall(entry, statusCell, "zip"));
+        wrap.appendChild(zipBtn);
+
+        const folderBtn = document.createElement("button");
+        folderBtn.type = "button";
+        folderBtn.className = "btn-import secondary";
+        folderBtn.textContent = "Pasta";
+        folderBtn.addEventListener("click", () =>
+          void handleInstall(entry, statusCell, "folder"),
+        );
+        wrap.appendChild(folderBtn);
+
+        statusCell.appendChild(wrap);
       } else {
         statusCell.textContent = "Aguardando";
       }
@@ -175,39 +189,45 @@ function init() {
     updateDownloadButton();
   }
 
-  async function handleImport(entry, statusCell) {
+  async function handleInstall(entry, statusCell, mode) {
     if (!selectedRoot) {
       alert("Escolha primeiro a pasta raiz do HD.");
       return;
     }
 
-    const sourceDir = await window.dawloader.selectFolder();
-    if (!sourceDir) return;
+    let sourcePath = null;
+    if (mode === "zip") {
+      sourcePath = await window.dawloader.selectZipFile();
+    } else {
+      sourcePath = await window.dawloader.selectFolder();
+    }
+    if (!sourcePath) return;
 
     const input = getDestinationInput(entry.id);
     const destination = input?.value.trim() || entry.destination;
 
+    const sourceLabel = mode === "zip" ? "Zip" : "Pasta";
     const confirmed = confirm(
-      `Importar todos os arquivos de:\n${sourceDir}\n\nPara:\n${selectedRoot}\\${destination.replace(/\//g, "\\")}\n\nSubpastas serão preservadas.`,
+      `${sourceLabel}:\n${sourcePath}\n\nInstalar em:\n${selectedRoot}\\${destination.replace(/\//g, "\\")}\n\nO zip será descompactado automaticamente. Subpastas são preservadas.`,
     );
     if (!confirmed) return;
 
     statusCell.className = "status muted";
-    statusCell.textContent = "Importando...";
-    summary.textContent = `Importando ${entry.label}...`;
+    statusCell.textContent = mode === "zip" ? "Descompactando..." : "Instalando...";
+    summary.textContent = `Instalando ${entry.label}...`;
 
-    const result = await window.dawloader.importLocalFolder({
+    const result = await window.dawloader.importLocalPackage({
       rootDir: selectedRoot,
-      sourceDir,
+      sourcePath,
       entryId: entry.id,
       label: entry.label,
       destination,
     });
 
     if (result.ok) {
-      summary.textContent = `Importado: ${result.filesCopied} arquivo(s) (${formatBytes(result.bytesCopied)}).`;
+      summary.textContent = `Instalado: ${result.filesCopied} arquivo(s) (${formatBytes(result.bytesCopied)}).`;
     } else {
-      summary.textContent = result.error ?? "Erro na importação.";
+      summary.textContent = result.error ?? "Erro na instalação.";
     }
   }
 
@@ -308,7 +328,11 @@ function init() {
     const cell = statusCells.get(event.entryId);
     if (!cell) return;
 
-    if (event.status === "downloading" || event.status === "importing") {
+    if (
+      event.status === "downloading" ||
+      event.status === "importing" ||
+      event.status === "extracting"
+    ) {
       cell.className = "status";
       cell.textContent = `${formatBytes(event.downloadedBytes)} / ${formatBytes(event.totalBytes)}`;
     } else if (event.status === "verifying") {

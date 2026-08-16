@@ -113,8 +113,9 @@ export function AddGamePackageForm({ slug }: { slug: string }) {
             className="mt-1"
           />
           <span>
-            <strong>Pasta completa (TeraBox, etc.)</strong> — quem baixa traz a
-            pasta no PC e o app copia tudo para o HD (Games, Content…).
+            <strong>Pasta completa (TeraBox, etc.)</strong> — quem baixa traz o
+            <strong>.zip</strong> do TeraBox; o app descompacta e instala no HD
+            (Games, Content…).
           </span>
         </label>
       </fieldset>

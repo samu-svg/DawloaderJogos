@@ -10,13 +10,19 @@ import { open, rename, unlink } from "node:fs/promises";
 import path from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
+import { copyDirectoryToAbsolute } from "./import-folder";
+import {
+  extractZipToContentRoot,
+  isZipFile,
+  removeTempDir,
+} from "./zip-extract";
 
 export interface DownloadProgress {
   entryId: string;
   label: string;
   downloadedBytes: number;
   totalBytes: number;
-  status: "downloading" | "verifying" | "importing" | "done" | "error";
+  status: "downloading" | "verifying" | "extracting" | "importing" | "done" | "error";
   error?: string;
 }
 
@@ -119,6 +125,54 @@ export async function downloadEntry(options: {
     unlinkSync(destPath);
   }
   await rename(tempPath, destPath);
+
+  if (await isZipFile(destPath)) {
+    const installDir = destPath.toLowerCase().endsWith(".zip")
+      ? destPath.slice(0, -4)
+      : destPath;
+
+    onProgress({
+      entryId,
+      label,
+      downloadedBytes: statSync(destPath).size,
+      totalBytes: expectedSize || statSync(destPath).size,
+      status: "extracting",
+    });
+
+    const { contentRoot, tempDir } = await extractZipToContentRoot(destPath);
+    let installed = { filesCopied: 0, bytesCopied: 0 };
+    try {
+      const { mkdir } = await import("node:fs/promises");
+      await mkdir(installDir, { recursive: true });
+      installed = await copyDirectoryToAbsolute(
+        contentRoot,
+        installDir,
+        (copied, total) => {
+          onProgress({
+            entryId,
+            label,
+            downloadedBytes: copied,
+            totalBytes: total,
+            status: "importing",
+          });
+        },
+        signal,
+      );
+    } finally {
+      await removeTempDir(tempDir);
+    }
+
+    await unlink(destPath).catch(() => undefined);
+
+    onProgress({
+      entryId,
+      label,
+      downloadedBytes: installed.bytesCopied,
+      totalBytes: installed.bytesCopied,
+      status: "done",
+    });
+    return;
+  }
 
   onProgress({
     entryId,

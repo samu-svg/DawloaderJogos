@@ -44,7 +44,7 @@ export function DesktopDownloadCard({
             .
           </li>
           <li>Escolha um portfólio abaixo e copie o slug na página dele.</li>
-          <li>No app, cole a URL deste site, carregue o manifesto e escolha o HD.</li>
+          <li>No app, cole a URL deste site, carregue o manifesto e escolha o HD. Para TeraBox, use <strong>Instalar zip</strong>.</li>
         </ol>
       )}
 

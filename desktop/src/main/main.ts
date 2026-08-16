@@ -6,7 +6,7 @@ import {
 } from "../shared/manifest";
 import { preloadPath, rendererPath } from "./app-paths";
 import { downloadEntry, type DownloadProgress } from "./download";
-import { importLocalFolder } from "./import-folder";
+import { importLocalPackage } from "./import-folder";
 import { resolveUnderRoot } from "./paths";
 import { isLocalImportUrl } from "../shared/local-import";
 
@@ -152,12 +152,12 @@ ipcMain.handle(
           downloadedBytes: 0,
           totalBytes: entry.sizeBytes,
           status: "error",
-          error: "Use «Importar pasta» para este item.",
+          error: "Use «Instalar zip» para este item.",
         } satisfies DownloadProgress);
         results.push({
           entryId: entry.id,
           ok: false,
-          error: "Use «Importar pasta» para este item.",
+          error: "Use «Instalar zip» para este item.",
         });
         continue;
       }
@@ -210,13 +210,23 @@ ipcMain.handle(
   },
 );
 
+ipcMain.handle("select-zip-file", async () => {
+  const result = await dialog.showOpenDialog(mainWindow!, {
+    properties: ["openFile"],
+    title: "Escolha o .zip baixado (ex.: TeraBox)",
+    filters: [{ name: "Arquivo Zip", extensions: ["zip"] }],
+  });
+  if (result.canceled || result.filePaths.length === 0) return null;
+  return result.filePaths[0];
+});
+
 ipcMain.handle(
-  "import-local-folder",
+  "import-local-package",
   async (
     _event,
     payload: {
       rootDir: string;
-      sourceDir: string;
+      sourcePath: string;
       entryId: string;
       label: string;
       destination: string;
@@ -227,10 +237,10 @@ ipcMain.handle(
     const signal = abortController.signal;
 
     try {
-      const result = await importLocalFolder({
+      const result = await importLocalPackage({
         entryId: payload.entryId,
         label: payload.label,
-        sourceDir: payload.sourceDir,
+        sourcePath: payload.sourcePath,
         rootDir: payload.rootDir,
         destination: payload.destination,
         signal,
@@ -239,7 +249,7 @@ ipcMain.handle(
       return { ok: true as const, ...result };
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Erro ao importar a pasta.";
+        error instanceof Error ? error.message : "Erro ao instalar o pacote.";
       send("download-progress", {
         entryId: payload.entryId,
         label: payload.label,

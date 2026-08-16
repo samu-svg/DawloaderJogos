@@ -1,6 +1,6 @@
 {
   "name": "dawloader-desktop",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Baixa arquivos de um manifesto e organiza no HD",
   "main": "dist/main/main.js",
@@ -25,11 +25,15 @@
       "target": [
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "zip",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "signAndEditExecutable": false
@@ -43,5 +47,8 @@
     "electron": "^35.0.0",
     "electron-builder": "^25.1.8",
     "typescript": "^5"
+  },
+  "dependencies": {
+    "extract-zip": "^2.0.1"
   }
 }

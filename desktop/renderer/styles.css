@@ -178,6 +178,12 @@ td.mono {
   font-size: 0.8rem;
 }
 
+.import-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .btn-import {
   margin: 0;
   padding: 6px 10px;
@@ -188,6 +194,11 @@ td.mono {
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
+}
+
+.btn-import.secondary {
+  background: transparent;
+  color: var(--text);
 }
 
 .btn-import:disabled {

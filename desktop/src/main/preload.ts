@@ -6,23 +6,24 @@ export interface DownloadProgressEvent {
   label: string;
   downloadedBytes: number;
   totalBytes: number;
-  status: "downloading" | "verifying" | "importing" | "done" | "error";
+  status: "downloading" | "verifying" | "extracting" | "importing" | "done" | "error";
   error?: string;
 }
 
 const api = {
   selectFolder: (): Promise<string | null> => ipcRenderer.invoke("select-folder"),
+  selectZipFile: (): Promise<string | null> => ipcRenderer.invoke("select-zip-file"),
   fetchManifest: (baseUrl: string, slug: string): Promise<Manifest> =>
     ipcRenderer.invoke("fetch-manifest", { baseUrl, slug }),
   startDownload: (rootDir: string, entries: ResolvedManifestEntry[]) =>
     ipcRenderer.invoke("start-download", { rootDir, entries }),
-  importLocalFolder: (payload: {
+  importLocalPackage: (payload: {
     rootDir: string;
-    sourceDir: string;
+    sourcePath: string;
     entryId: string;
     label: string;
     destination: string;
-  }) => ipcRenderer.invoke("import-local-folder", payload),
+  }) => ipcRenderer.invoke("import-local-package", payload),
   cancelDownload: (): Promise<void> => ipcRenderer.invoke("cancel-download"),
   onDownloadProgress: (callback: (event: DownloadProgressEvent) => void) => {
     const listener = (_: Electron.IpcRendererEvent, payload: DownloadProgressEvent) =>

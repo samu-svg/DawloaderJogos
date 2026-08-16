@@ -36,6 +36,9 @@ export default async function BaixarPortfolioPage({ params }: PageProps) {
     (sum, entry) => sum + entry.sizeBytes,
     0,
   );
+  const hasLocalImport = portfolio.entries.some(
+    (entry) => entry.group === "pasta-local",
+  );
 
   return (
     <div className="space-y-10">
@@ -119,14 +122,28 @@ export default async function BaixarPortfolioPage({ params }: PageProps) {
           <a href={desktopDownload.href} download={desktopDownload.fileName} className="underline">
             Dawloader
           </a>{" "}
-          aberto, cole os dados abaixo, carregue o manifesto, escolha o HD e
-          inicie o download.
+          aberto, cole os dados abaixo, carregue o manifesto e escolha o HD.
+          {hasLocalImport
+            ? " Para pastas do TeraBox, baixe o .zip no PC e use Instalar zip no app — ele descompacta e grava na pasta certa."
+            : " Depois inicie o download dos arquivos."}
         </p>
 
         <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm leading-6 text-zinc-700 dark:text-zinc-300">
           <li>Cole a URL do site e o slug abaixo.</li>
           <li>Clique em <strong>Carregar manifesto</strong>.</li>
-          <li>Escolha a pasta raiz do HD e inicie o download.</li>
+          <li>Escolha a pasta raiz do HD.</li>
+          {hasLocalImport ? (
+            <>
+              <li>
+                Baixe o <strong>.zip</strong> do TeraBox (ou similar) no seu PC.
+              </li>
+              <li>
+                No app, clique em <strong>Instalar zip</strong> na linha do jogo.
+              </li>
+            </>
+          ) : (
+            <li>Inicie o download no app.</li>
+          )}
         </ol>
 
         <div className="mt-6 space-y-4">
