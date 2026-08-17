@@ -9,7 +9,6 @@ import {
   type ActionResult,
 } from "@/lib/actions/portfolios";
 import { formatBytes } from "@/lib/manifest";
-import { isLocalImportUrl } from "@/lib/local-import";
 import type { EntryRow, PortfolioRow } from "@/lib/database.types";
 
 type FormState = ActionResult | null;
@@ -35,7 +34,6 @@ function SuccessBanner({ state }: { state: FormState }) {
 function groupLabel(group: string | null): string | null {
   if (group === "jogo") return "Jogo";
   if (group === "conteudo") return "DLC / Content";
-  if (group === "pasta-local") return "Pasta local (TeraBox)";
   return group;
 }
 
@@ -149,22 +147,7 @@ export function PortfolioEditor({
                     {entry.destination}
                   </p>
                   <p className="truncate text-xs text-zinc-500">
-                    {entry.group_name === "pasta-local" &&
-                    entry.external_url &&
-                    !isLocalImportUrl(entry.external_url) ? (
-                      <a
-                        href={entry.external_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline"
-                      >
-                        {entry.external_url}
-                      </a>
-                    ) : entry.group_name === "pasta-local" ? (
-                      "TeraBox — link não cadastrado"
-                    ) : (
-                      entry.external_url
-                    )}
+                    {entry.external_url}
                   </p>
                   <p className="text-xs text-zinc-500">
                     {formatBytes(entry.size_bytes)}

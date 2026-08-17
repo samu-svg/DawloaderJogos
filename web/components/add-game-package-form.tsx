@@ -4,16 +4,12 @@ import { useActionState, useState } from "react";
 import { addGamePackage, type ActionResult } from "@/lib/actions/portfolios";
 import type { FolderPreset } from "@/lib/install-presets";
 
-type DeliveryMode = "download" | "folder-local";
-
 function FolderFields({
   prefix,
   defaultPreset,
-  folderMode = false,
 }: {
   prefix: "game" | "extra";
   defaultPreset: FolderPreset;
-  folderMode?: boolean;
 }) {
   const [preset, setPreset] = useState<FolderPreset>(defaultPreset);
 
@@ -47,14 +43,10 @@ function FolderFields({
 
       {preset === "custom" && (
         <label className="block space-y-1.5 sm:col-span-2">
-          <span className="text-sm font-medium">
-            {folderMode ? "Caminho da pasta no HD" : "Caminho personalizado"}
-          </span>
+          <span className="text-sm font-medium">Caminho personalizado</span>
           <input
             name={`${prefix}_custom_path`}
-            placeholder={
-              folderMode ? "Ex.: Games/MeuJogo" : "Ex.: Games/MeuJogo.iso"
-            }
+            placeholder="Ex.: Games/MeuJogo.zip"
             className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 font-mono outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900"
           />
         </label>
@@ -65,14 +57,11 @@ function FolderFields({
 
 export function AddGamePackageForm({ slug }: { slug: string }) {
   const [includeExtra, setIncludeExtra] = useState(false);
-  const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("download");
   const [state, action, pending] = useActionState(
     async (_prev: ActionResult | null, formData: FormData) =>
       addGamePackage(slug, formData),
     null,
   );
-
-  const isFolderLocal = deliveryMode === "folder-local";
 
   return (
     <form action={action} className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -87,38 +76,12 @@ export function AddGamePackageForm({ slug }: { slug: string }) {
         </p>
       )}
 
-      <fieldset className="space-y-3 sm:col-span-2">
-        <legend className="text-sm font-medium">Como entregar o jogo</legend>
-        <label className="flex items-start gap-2 text-sm">
-          <input
-            type="radio"
-            name="delivery_mode"
-            value="download"
-            checked={deliveryMode === "download"}
-            onChange={() => setDeliveryMode("download")}
-            className="mt-1"
-          />
-          <span>
-            <strong>Link de download</strong> — um ou dois arquivos com URL
-            direta (R2, etc.).
-          </span>
-        </label>
-        <label className="flex items-start gap-2 text-sm">
-          <input
-            type="radio"
-            name="delivery_mode"
-            value="folder-local"
-            checked={deliveryMode === "folder-local"}
-            onChange={() => setDeliveryMode("folder-local")}
-            className="mt-1"
-          />
-          <span>
-            <strong>Pasta completa (TeraBox, etc.)</strong> — informe o link do
-            TeraBox; quem baixa pega o <strong>.zip</strong> e o app instala no
-            HD (Games, Content…).
-          </span>
-        </label>
-      </fieldset>
+      <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm leading-6 text-zinc-700 sm:col-span-2 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
+        Use um <strong>link direto</strong> — aquele que já começa a baixar o
+        arquivo, sem abrir página de compartilhamento. O app baixa sozinho e, se
+        for <code>.zip</code>, descompacta na pasta de destino. O link é testado
+        ao salvar.
+      </p>
 
       <label className="block space-y-1.5 sm:col-span-2">
         <span className="text-sm font-medium">Nome do jogo</span>
@@ -131,73 +94,40 @@ export function AddGamePackageForm({ slug }: { slug: string }) {
       </label>
 
       <label className="block space-y-1.5">
-        <span className="text-sm font-medium">
-          {isFolderLocal ? "Nome da pasta no HD" : "Arquivo do jogo"}
-        </span>
+        <span className="text-sm font-medium">Arquivo do jogo</span>
         <input
           name="game_file"
           required
-          placeholder={isFolderLocal ? "Ex.: Halo 3" : "Ex.: Halo 3.iso"}
+          placeholder="Ex.: Halo 3.zip"
           className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 font-mono outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900"
         />
       </label>
 
-      {!isFolderLocal ? (
-        <label className="block space-y-1.5">
-          <span className="text-sm font-medium">Link de download</span>
-          <input
-            name="game_url"
-            required
-            type="url"
-            placeholder="https://..."
-            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900"
-          />
-        </label>
-      ) : (
-        <label className="block space-y-1.5">
-          <span className="text-sm font-medium">Link do TeraBox</span>
-          <input
-            name="game_url"
-            required
-            type="url"
-            placeholder="https://www.terabox.com/..."
-            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900"
-          />
-          <span className="text-xs text-zinc-500">
-            Link público da pasta no TeraBox. Quem baixa obtém um{" "}
-            <strong>.zip</strong>; o app reconhece e instala automaticamente.
-          </span>
-        </label>
-      )}
+      <label className="block space-y-1.5">
+        <span className="text-sm font-medium">Link direto do arquivo</span>
+        <input
+          name="game_url"
+          required
+          type="url"
+          placeholder="https://..."
+          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900"
+        />
+      </label>
 
-      {isFolderLocal && (
-        <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 sm:col-span-2 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
-          Você não envia o arquivo aqui. Cadastre o link do TeraBox e a pasta
-          de destino; quem baixa pega o .zip pelo link e usa{" "}
-          <strong>Instalar zip</strong> no app.
-        </p>
-      )}
+      <FolderFields prefix="game" defaultPreset="games" />
 
-      <FolderFields
-        prefix="game"
-        defaultPreset="games"
-        folderMode={isFolderLocal}
-      />
+      <label className="flex items-center gap-2 text-sm sm:col-span-2">
+        <input
+          type="checkbox"
+          name="include_extra"
+          checked={includeExtra}
+          onChange={(event) => setIncludeExtra(event.target.checked)}
+          className="rounded"
+        />
+        Incluir segundo arquivo (DLC ou Content em pasta diferente)
+      </label>
 
-      {!isFolderLocal && (
-        <label className="flex items-center gap-2 text-sm sm:col-span-2">
-          <input
-            type="checkbox"
-            name="include_extra"
-            checked={includeExtra}
-            onChange={(event) => setIncludeExtra(event.target.checked)}
-            className="rounded"
-          />
-          Incluir segundo arquivo (DLC ou Content em pasta diferente)
-        </label>
-      )}
-
-      {!isFolderLocal && includeExtra && (
+      {includeExtra && (
         <>
           <div className="border-t border-zinc-200 pt-4 sm:col-span-2 dark:border-zinc-800">
             <h3 className="text-sm font-semibold">Arquivo extra</h3>
@@ -224,7 +154,7 @@ export function AddGamePackageForm({ slug }: { slug: string }) {
           </label>
 
           <label className="block space-y-1.5">
-            <span className="text-sm font-medium">Link de download</span>
+            <span className="text-sm font-medium">Link direto do arquivo</span>
             <input
               name="extra_url"
               required={includeExtra}
@@ -244,7 +174,7 @@ export function AddGamePackageForm({ slug }: { slug: string }) {
           disabled={pending}
           className="rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-60 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200"
         >
-          {pending ? "Salvando..." : "Adicionar jogo"}
+          {pending ? "Testando link e salvando..." : "Adicionar jogo"}
         </button>
       </div>
     </form>

@@ -36,9 +36,6 @@ export default async function BaixarPortfolioPage({ params }: PageProps) {
     (sum, entry) => sum + entry.sizeBytes,
     0,
   );
-  const hasLocalImport = portfolio.entries.some(
-    (entry) => entry.group === "pasta-local",
-  );
 
   return (
     <div className="space-y-10">
@@ -83,9 +80,6 @@ export default async function BaixarPortfolioPage({ params }: PageProps) {
                   <th className="py-2 pr-4 font-medium">Nome</th>
                   <th className="py-2 pr-4 font-medium">Tipo</th>
                   <th className="py-2 pr-4 font-medium">Pasta no HD</th>
-                  {hasLocalImport && (
-                    <th className="py-2 pr-4 font-medium">Link</th>
-                  )}
                   <th className="py-2 font-medium">Tamanho</th>
                 </tr>
               </thead>
@@ -101,37 +95,12 @@ export default async function BaixarPortfolioPage({ params }: PageProps) {
                         <span className="ml-1 text-zinc-500">· opcional</span>
                       )}
                     </td>
-                    <td className="py-3 pr-4">
-                      {groupLabel(entry.group) ?? "—"}
-                      {entry.group === "pasta-local" && (
-                        <span className="ml-1 text-xs text-zinc-500">· .zip</span>
-                      )}
-                    </td>
+                    <td className="py-3 pr-4">{groupLabel(entry.group) ?? "—"}</td>
                     <td className="py-3 pr-4 font-mono text-xs text-zinc-600 dark:text-zinc-400">
                       {entry.destination}
                     </td>
-                    {hasLocalImport && (
-                      <td className="py-3 pr-4">
-                        {entry.sourceUrl ? (
-                          <a
-                            href={entry.sourceUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm text-emerald-700 underline dark:text-emerald-400"
-                          >
-                            Abrir TeraBox
-                          </a>
-                        ) : (
-                          <span className="text-xs text-zinc-500">—</span>
-                        )}
-                      </td>
-                    )}
                     <td className="py-3 text-zinc-600 dark:text-zinc-400">
-                      {entry.group === "pasta-local"
-                        ? "Zip (TeraBox)"
-                        : entry.sizeBytes > 0
-                          ? formatBytes(entry.sizeBytes)
-                          : "—"}
+                      {entry.sizeBytes > 0 ? formatBytes(entry.sizeBytes) : "—"}
                     </td>
                   </tr>
                 ))}
@@ -148,28 +117,15 @@ export default async function BaixarPortfolioPage({ params }: PageProps) {
           <a href={desktopDownload.href} download={desktopDownload.fileName} className="underline">
             Dawloader
           </a>{" "}
-          aberto, cole os dados abaixo, carregue o manifesto e escolha o HD.
-          {hasLocalImport
-            ? " Para pastas do TeraBox, baixe o .zip no PC e use Instalar zip no app — ele descompacta e grava na pasta certa."
-            : " Depois inicie o download dos arquivos."}
+          aberto, cole os dados abaixo e o app baixa e organiza os jogos no HD.
+          Arquivos .zip são descompactados automaticamente na pasta certa.
         </p>
 
         <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm leading-6 text-zinc-700 dark:text-zinc-300">
           <li>Cole a URL do site e o slug abaixo.</li>
           <li>Clique em <strong>Carregar manifesto</strong>.</li>
-          <li>Escolha a pasta raiz do HD.</li>
-          {hasLocalImport ? (
-            <>
-              <li>
-                Baixe o <strong>.zip</strong> do TeraBox (ou similar) no seu PC.
-              </li>
-              <li>
-                No app, clique em <strong>Instalar zip</strong> na linha do jogo.
-              </li>
-            </>
-          ) : (
-            <li>Inicie o download no app.</li>
-          )}
+          <li>Escolha a pasta de destino no HD.</li>
+          <li>Marque os jogos e clique em <strong>Iniciar download</strong>.</li>
         </ol>
 
         <div className="mt-6 space-y-4">

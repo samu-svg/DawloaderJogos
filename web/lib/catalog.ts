@@ -1,4 +1,3 @@
-import { isLocalImportUrl, isPastaLocalGroup } from "@/lib/local-import";
 import { createClient } from "@/lib/supabase/server";
 
 export type CatalogPortfolio = {
@@ -17,7 +16,6 @@ export type CatalogEntry = {
   sizeBytes: number;
   optional: boolean;
   group: string | null;
-  sourceUrl: string | null;
 };
 
 export type CatalogPortfolioDetail = CatalogPortfolio & {
@@ -27,7 +25,6 @@ export type CatalogPortfolioDetail = CatalogPortfolio & {
 export function groupLabel(group: string | null): string | null {
   if (group === "jogo") return "Jogo";
   if (group === "conteudo") return "DLC / Content";
-  if (group === "pasta-local") return "Zip (TeraBox)";
   return group;
 }
 
@@ -58,7 +55,7 @@ export async function getPublicPortfolio(
   const { data, error } = await supabase
     .from("portfolios")
     .select(
-      "id, slug, title, description, updated_at, entries(id, label, destination, size_bytes, is_optional, group_name, external_url, sort_order)",
+      "id, slug, title, description, updated_at, entries(id, label, destination, size_bytes, is_optional, group_name, sort_order)",
     )
     .eq("slug", slug)
     .eq("is_public", true)
@@ -84,14 +81,6 @@ export async function getPublicPortfolio(
       sizeBytes: entry.size_bytes,
       optional: entry.is_optional,
       group: entry.group_name,
-      sourceUrl:
-        isPastaLocalGroup(entry.group_name) &&
-        entry.external_url &&
-        !isLocalImportUrl(entry.external_url)
-          ? entry.external_url
-          : isPastaLocalGroup(entry.group_name)
-            ? null
-            : entry.external_url,
     })),
   };
 }

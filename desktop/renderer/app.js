@@ -70,38 +70,28 @@ function init() {
   function groupLabel(group) {
     if (group === "jogo") return "Jogo";
     if (group === "conteudo") return "DLC / Content";
-    if (group === "pasta-local") return "Zip (TeraBox)";
     return group ?? "—";
-  }
-
-  function isZipPackage(entry) {
-    return (
-      entry.packageFormat === "zip" ||
-      entry.group === "pasta-local" ||
-      entry.downloadUrl.startsWith("local://")
-    );
-  }
-
-  function isLocalImport(entry) {
-    return isZipPackage(entry);
   }
 
   function getDestinationInput(entryId) {
     return document.querySelector(`input[data-destination-for="${entryId}"]`);
   }
 
+  function checkboxes() {
+    return [...entriesBody.querySelectorAll('input[type="checkbox"][data-entry-id]')];
+  }
+
   function selectedEntriesWithDestinations() {
     if (!manifest) return [];
 
     const selectedIds = new Set(
-      [...entriesBody.querySelectorAll('input[type="checkbox"][data-entry-id]')]
+      checkboxes()
         .filter((input) => input.checked)
         .map((input) => input.dataset.entryId),
     );
 
     return manifest.entries
       .filter((entry) => selectedIds.has(entry.id))
-      .filter((entry) => !isLocalImport(entry))
       .map((entry) => {
         const input = getDestinationInput(entry.id);
         const destination = input?.value.trim() || entry.destination;
@@ -110,10 +100,16 @@ function init() {
   }
 
   function updateDownloadButton() {
-    const hasSelection = [
-      ...entriesBody.querySelectorAll('input[type="checkbox"][data-entry-id]'),
-    ].some((input) => input.checked);
+    const hasSelection = checkboxes().some((input) => input.checked);
     downloadBtn.disabled = !selectedRoot || !hasSelection;
+
+    if (!selectedRoot) {
+      downloadBtn.title = "Escolha primeiro a pasta de destino.";
+    } else if (!hasSelection) {
+      downloadBtn.title = "Marque pelo menos um jogo.";
+    } else {
+      downloadBtn.title = "";
+    }
   }
 
   function renderEntries(entries) {
@@ -122,14 +118,12 @@ function init() {
 
     for (const entry of entries) {
       const row = document.createElement("tr");
-      const localImport = isLocalImport(entry);
 
       const checkCell = document.createElement("td");
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.dataset.entryId = entry.id;
-      checkbox.checked = !entry.optional && !localImport;
-      checkbox.disabled = localImport;
+      checkbox.checked = !entry.optional;
       checkbox.addEventListener("change", updateDownloadButton);
       checkCell.appendChild(checkbox);
 
@@ -139,12 +133,6 @@ function init() {
         const tag = document.createElement("span");
         tag.className = "muted";
         tag.textContent = " · opcional";
-        labelCell.appendChild(tag);
-      }
-      if (localImport) {
-        const tag = document.createElement("span");
-        tag.className = "muted";
-        tag.textContent = " · zip / TeraBox";
         labelCell.appendChild(tag);
       }
 
@@ -160,45 +148,11 @@ function init() {
       destCell.appendChild(destInput);
 
       const sizeCell = document.createElement("td");
-      sizeCell.textContent = localImport ? "Zip" : formatBytes(entry.sizeBytes);
+      sizeCell.textContent = entry.sizeBytes > 0 ? formatBytes(entry.sizeBytes) : "—";
 
       const statusCell = document.createElement("td");
       statusCell.className = "status muted";
-      if (localImport) {
-        const wrap = document.createElement("div");
-        wrap.className = "import-actions";
-
-        if (entry.sourceUrl) {
-          const teraboxBtn = document.createElement("button");
-          teraboxBtn.type = "button";
-          teraboxBtn.className = "btn-import secondary";
-          teraboxBtn.textContent = "Abrir TeraBox";
-          teraboxBtn.addEventListener("click", () =>
-            void window.dawloader.openExternalUrl(entry.sourceUrl),
-          );
-          wrap.appendChild(teraboxBtn);
-        }
-
-        const zipBtn = document.createElement("button");
-        zipBtn.type = "button";
-        zipBtn.className = "btn-import";
-        zipBtn.textContent = "Instalar zip";
-        zipBtn.addEventListener("click", () => void handleInstall(entry, statusCell, "zip"));
-        wrap.appendChild(zipBtn);
-
-        const folderBtn = document.createElement("button");
-        folderBtn.type = "button";
-        folderBtn.className = "btn-import secondary";
-        folderBtn.textContent = "Pasta";
-        folderBtn.addEventListener("click", () =>
-          void handleInstall(entry, statusCell, "folder"),
-        );
-        wrap.appendChild(folderBtn);
-
-        statusCell.appendChild(wrap);
-      } else {
-        statusCell.textContent = "Aguardando";
-      }
+      statusCell.textContent = "Aguardando";
       statusCells.set(entry.id, statusCell);
 
       row.append(checkCell, labelCell, typeCell, destCell, sizeCell, statusCell);
@@ -206,57 +160,6 @@ function init() {
     }
 
     updateDownloadButton();
-  }
-
-  async function handleInstall(entry, statusCell, mode) {
-    if (!selectedRoot) {
-      alert("Escolha primeiro a pasta raiz do HD.");
-      return;
-    }
-
-    if (mode === "zip" && entry.sourceUrl) {
-      const openFirst = confirm(
-        `1. Baixe o .zip no TeraBox (navegador).\n2. Depois escolha o arquivo baixado aqui.\n\nAbrir o link do TeraBox agora?`,
-      );
-      if (openFirst) {
-        await window.dawloader.openExternalUrl(entry.sourceUrl);
-      }
-    }
-
-    let sourcePath = null;
-    if (mode === "zip") {
-      sourcePath = await window.dawloader.selectZipFile();
-    } else {
-      sourcePath = await window.dawloader.selectFolder();
-    }
-    if (!sourcePath) return;
-
-    const input = getDestinationInput(entry.id);
-    const destination = input?.value.trim() || entry.destination;
-
-    const sourceLabel = mode === "zip" ? "Zip" : "Pasta";
-    const confirmed = confirm(
-      `${sourceLabel}:\n${sourcePath}\n\nInstalar em:\n${selectedRoot}\\${destination.replace(/\//g, "\\")}\n\nO zip será descompactado automaticamente. Subpastas são preservadas.`,
-    );
-    if (!confirmed) return;
-
-    statusCell.className = "status muted";
-    statusCell.textContent = mode === "zip" ? "Descompactando..." : "Instalando...";
-    summary.textContent = `Instalando ${entry.label}...`;
-
-    const result = await window.dawloader.importLocalPackage({
-      rootDir: selectedRoot,
-      sourcePath,
-      entryId: entry.id,
-      label: entry.label,
-      destination,
-    });
-
-    if (result.ok) {
-      summary.textContent = `Instalado: ${result.filesCopied} arquivo(s) (${formatBytes(result.bytesCopied)}).`;
-    } else {
-      summary.textContent = result.error ?? "Erro na instalação.";
-    }
   }
 
   loadBtn.addEventListener("click", async () => {
@@ -270,10 +173,14 @@ function init() {
         /** @type {HTMLInputElement} */ (slugInput).value.trim(),
       );
       portfolioTitle.textContent = manifest.portfolio.title;
-      portfolioMeta.textContent = `${manifest.entries.length} arquivo(s) · ${formatBytes(manifest.totalBytes)} · expira ${new Date(manifest.expiresAt).toLocaleString("pt-BR")}`;
+      const totalLabel =
+        manifest.totalBytes > 0 ? ` · ${formatBytes(manifest.totalBytes)}` : "";
+      portfolioMeta.textContent = `${manifest.entries.length} jogo(s)${totalLabel}`;
       renderEntries(manifest.entries);
       manifestSection.classList.remove("hidden");
-      summary.textContent = "";
+      summary.textContent = selectedRoot
+        ? ""
+        : "Escolha a pasta de destino para liberar o download.";
     } catch (error) {
       loadError.textContent =
         error instanceof Error ? error.message : "Erro ao carregar manifesto.";
@@ -289,13 +196,12 @@ function init() {
     if (!folder) return;
     selectedRoot = folder;
     rootPath.textContent = folder;
+    summary.textContent = "";
     updateDownloadButton();
   });
 
   selectAll.addEventListener("change", () => {
-    for (const input of entriesBody.querySelectorAll(
-      'input[type="checkbox"][data-entry-id]',
-    )) {
+    for (const input of checkboxes()) {
       input.checked = selectAll.checked;
     }
     updateDownloadButton();
@@ -315,7 +221,7 @@ function init() {
       .join("\n\n");
 
     const confirmed = confirm(
-      `Confirma baixar ${entries.length} arquivo(s)?\n\n${preview}\n\nNada será executado — apenas copiado.`,
+      `Baixar ${entries.length} jogo(s)?\n\n${preview}\n\nArquivos .zip são descompactados automaticamente na pasta de destino.`,
     );
     if (!confirmed) return;
 
@@ -334,7 +240,7 @@ function init() {
     try {
       const result = await window.dawloader.startDownload(selectedRoot, entries);
       const okCount = result.results.filter((item) => item.ok).length;
-      summary.textContent = `Concluído: ${okCount}/${result.results.length} arquivo(s) baixados.`;
+      summary.textContent = `Concluído: ${okCount}/${result.results.length} jogo(s) instalados.`;
     } catch (error) {
       summary.textContent =
         error instanceof Error ? error.message : "Erro durante o download.";
@@ -356,16 +262,18 @@ function init() {
     const cell = statusCells.get(event.entryId);
     if (!cell) return;
 
-    if (
-      event.status === "downloading" ||
-      event.status === "importing" ||
-      event.status === "extracting"
-    ) {
+    if (event.status === "downloading") {
       cell.className = "status";
       cell.textContent = `${formatBytes(event.downloadedBytes)} / ${formatBytes(event.totalBytes)}`;
     } else if (event.status === "verifying") {
       cell.className = "status";
-      cell.textContent = "Verificando hash...";
+      cell.textContent = "Verificando...";
+    } else if (event.status === "extracting") {
+      cell.className = "status";
+      cell.textContent = "Descompactando...";
+    } else if (event.status === "installing") {
+      cell.className = "status";
+      cell.textContent = `Instalando ${formatBytes(event.downloadedBytes)} / ${formatBytes(event.totalBytes)}`;
     } else if (event.status === "done") {
       cell.className = "status done";
       cell.textContent = "Concluído";
@@ -377,7 +285,7 @@ function init() {
 
   window.dawloader.onDownloadComplete(({ results }) => {
     const okCount = results.filter((item) => item.ok).length;
-    summary.textContent = `Concluído: ${okCount}/${results.length} arquivo(s) baixados.`;
+    summary.textContent = `Concluído: ${okCount}/${results.length} jogo(s) instalados.`;
     cancelBtn.classList.add("hidden");
     downloadBtn.disabled = false;
   });

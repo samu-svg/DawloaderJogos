@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
+import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import type { Manifest, ResolvedManifestEntry } from "../shared/manifest";
 import {
   findDuplicateDestinations,
@@ -6,10 +6,7 @@ import {
 } from "../shared/manifest";
 import { preloadPath, rendererPath } from "./app-paths";
 import { downloadEntry, type DownloadProgress } from "./download";
-import { importLocalPackage } from "./import-folder";
 import { resolveUnderRoot } from "./paths";
-import { isLocalImportUrl } from "../shared/local-import";
-import { isZipFile, isZipPath } from "./zip-extract";
 
 let mainWindow: BrowserWindow | null = null;
 let abortController: AbortController | null = null;
@@ -146,23 +143,6 @@ ipcMain.handle(
     for (const entry of payload.entries) {
       if (signal.aborted) break;
 
-      if (isLocalImportUrl(entry.downloadUrl)) {
-        send("download-progress", {
-          entryId: entry.id,
-          label: entry.label,
-          downloadedBytes: 0,
-          totalBytes: entry.sizeBytes,
-          status: "error",
-          error: "Use «Instalar zip» para este item.",
-        } satisfies DownloadProgress);
-        results.push({
-          entryId: entry.id,
-          ok: false,
-          error: "Use «Instalar zip» para este item.",
-        });
-        continue;
-      }
-
       const resolved = resolveUnderRoot(payload.rootDir, entry.destination);
       if (!resolved.ok) {
         send("download-progress", {
@@ -208,83 +188,5 @@ ipcMain.handle(
     abortController = null;
     send("download-complete", { results });
     return { results };
-  },
-);
-
-ipcMain.handle("select-zip-file", async () => {
-  const result = await dialog.showOpenDialog(mainWindow!, {
-    properties: ["openFile"],
-    title: "Escolha o .zip baixado do TeraBox",
-    filters: [
-      { name: "Arquivo Zip", extensions: ["zip"] },
-      { name: "Todos os arquivos", extensions: ["*"] },
-    ],
-  });
-  if (result.canceled || result.filePaths.length === 0) return null;
-
-  const filePath = result.filePaths[0];
-  if (!isZipPath(filePath) && !(await isZipFile(filePath))) {
-    await dialog.showMessageBox(mainWindow!, {
-      type: "error",
-      title: "Arquivo inválido",
-      message: "Este arquivo não é um .zip.",
-      detail:
-        "Baixe o pacote no TeraBox (link «Abrir TeraBox») e selecione o arquivo .zip baixado.",
-    });
-    return null;
-  }
-
-  return filePath;
-});
-
-ipcMain.handle("open-external-url", async (_event, url: string) => {
-  if (!url.startsWith("http://") && !url.startsWith("https://")) {
-    throw new Error("Link inválido.");
-  }
-  await shell.openExternal(url);
-});
-
-ipcMain.handle(
-  "import-local-package",
-  async (
-    _event,
-    payload: {
-      rootDir: string;
-      sourcePath: string;
-      entryId: string;
-      label: string;
-      destination: string;
-    },
-  ) => {
-    abortController?.abort();
-    abortController = new AbortController();
-    const signal = abortController.signal;
-
-    try {
-      const result = await importLocalPackage({
-        entryId: payload.entryId,
-        label: payload.label,
-        sourcePath: payload.sourcePath,
-        rootDir: payload.rootDir,
-        destination: payload.destination,
-        signal,
-        onProgress: (progress) => send("download-progress", progress),
-      });
-      return { ok: true as const, ...result };
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Erro ao instalar o pacote.";
-      send("download-progress", {
-        entryId: payload.entryId,
-        label: payload.label,
-        downloadedBytes: 0,
-        totalBytes: 0,
-        status: "error",
-        error: message,
-      } satisfies DownloadProgress);
-      return { ok: false as const, error: message };
-    } finally {
-      abortController = null;
-    }
   },
 );

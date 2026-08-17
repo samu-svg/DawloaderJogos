@@ -1,4 +1,4 @@
-export const DESKTOP_APP_VERSION = "0.1.1";
+export const DESKTOP_APP_VERSION = "0.2.0";
 
 export const DESKTOP_PORTABLE_FILENAME = `Dawloader-${DESKTOP_APP_VERSION}-portable.exe`;
 

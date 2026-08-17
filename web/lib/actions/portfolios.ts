@@ -3,9 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { validateDestination } from "@/lib/manifest";
-import { buildDestination, buildFolderDestination, type FolderPreset } from "@/lib/install-presets";
-import { PASTA_LOCAL_GROUP } from "@/lib/local-import";
-import { isTeraboxUrl } from "@/lib/terabox";
+import { buildDestination, type FolderPreset } from "@/lib/install-presets";
+import { probeDownloadUrl } from "@/lib/download-probe";
 import { slugify, validateSlug } from "@/lib/slug";
 import { createClient, currentUser } from "@/lib/supabase/server";
 import type { PostgrestError } from "@supabase/supabase-js";
@@ -202,8 +201,6 @@ export async function addGamePackage(
   const gameTitle = String(formData.get("game_title") ?? "").trim();
   const gameFile = String(formData.get("game_file") ?? "").trim();
   const gameUrlRaw = String(formData.get("game_url") ?? "").trim();
-  const deliveryMode = String(formData.get("delivery_mode") ?? "download");
-  const isFolderLocal = deliveryMode === "folder-local";
   const gameFolder = parseFolderPreset(String(formData.get("game_folder") ?? "games"));
   const gameCustomPath = String(formData.get("game_custom_path") ?? "").trim();
   const gameContentId = String(formData.get("game_content_id") ?? "").trim();
@@ -218,90 +215,30 @@ export async function addGamePackage(
 
   if (!gameTitle) return { ok: false, error: "Informe o nome do jogo." };
   if (!gameFile) {
-    return {
-      ok: false,
-      error: isFolderLocal
-        ? "Informe o nome da pasta do jogo."
-        : "Informe o nome do arquivo do jogo.",
-    };
+    return { ok: false, error: "Informe o nome do arquivo do jogo." };
   }
 
-  let gameExternalUrl: string;
-  let gameGroupName: string;
-  let gameDestination: { ok: true; destination: string } | { ok: false; error: string };
+  const gameUrl = parseUrl(gameUrlRaw);
+  if (!gameUrl.ok) return gameUrl;
 
-  if (isFolderLocal) {
-    const gameUrl = parseUrl(gameUrlRaw);
-    if (!gameUrl.ok) {
-      return { ok: false, error: "Informe o link do TeraBox." };
-    }
-    if (!isTeraboxUrl(gameUrl.url)) {
-      return {
-        ok: false,
-        error:
-          "Informe um link válido do TeraBox (terabox.com, 1024tera.com, etc.). O arquivo será baixado como .zip.",
-      };
-    }
-    gameExternalUrl = gameUrl.url;
-    gameGroupName = PASTA_LOCAL_GROUP;
-    gameDestination = buildFolderDestination(
-      gameFolder,
-      gameFile,
-      gameCustomPath,
-      gameContentId,
-    );
-  } else {
-    const gameUrl = parseUrl(gameUrlRaw);
-    if (!gameUrl.ok) return gameUrl;
-    gameExternalUrl = gameUrl.url;
-    gameGroupName = "jogo";
-    gameDestination = buildDestination(
-      gameFolder,
-      gameFile,
-      gameCustomPath,
-      gameContentId,
-    );
-  }
-
+  const gameDestination = buildDestination(
+    gameFolder,
+    gameFile,
+    gameCustomPath,
+    gameContentId,
+  );
   if (!gameDestination.ok) return gameDestination;
 
-  if (isFolderLocal) {
-    const supabase = await createClient();
-    const { data: portfolio } = await supabase
-      .from("portfolios")
-      .select("id")
-      .eq("slug", slug)
-      .eq("owner_id", user.id)
-      .maybeSingle();
+  // The link is checked now so a broken one never reaches the desktop app.
+  const gameProbe = await probeDownloadUrl(gameUrl.url);
+  if (!gameProbe.ok) return { ok: false, error: `${gameTitle}: ${gameProbe.error}` };
 
-    if (!portfolio) return { ok: false, error: "Portfólio não encontrado." };
-
-    const { data: lastEntry } = await supabase
-      .from("entries")
-      .select("sort_order")
-      .eq("portfolio_id", portfolio.id)
-      .order("sort_order", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const sortOrder = (lastEntry?.sort_order ?? -1) + 1;
-
-    const insert = await insertEntry(portfolio.id, {
-      label: gameTitle,
-      destination: gameDestination.destination,
-      externalUrl: gameExternalUrl,
-      groupName: gameGroupName,
-      isOptional: false,
-      sizeBytes: 0,
-      sha256: null,
-      sortOrder,
-    });
-    if (!insert.ok) return insert;
-
-    revalidatePath(`/painel/${slug}`);
-    revalidatePath(`/api/portfolios/${slug}/manifest`);
-    return { ok: true };
-  }
+  let extra: {
+    title: string;
+    url: string;
+    destination: string;
+    sizeBytes: number;
+  } | null = null;
 
   if (includeExtra) {
     if (!extraTitle) return { ok: false, error: "Informe o nome do arquivo extra." };
@@ -318,53 +255,15 @@ export async function addGamePackage(
     );
     if (!extraDestination.ok) return extraDestination;
 
-    const supabase = await createClient();
-    const { data: portfolio } = await supabase
-      .from("portfolios")
-      .select("id")
-      .eq("slug", slug)
-      .eq("owner_id", user.id)
-      .maybeSingle();
+    const extraProbe = await probeDownloadUrl(extraUrl.url);
+    if (!extraProbe.ok) return { ok: false, error: `${extraTitle}: ${extraProbe.error}` };
 
-    if (!portfolio) return { ok: false, error: "Portfólio não encontrado." };
-
-    const { data: lastEntry } = await supabase
-      .from("entries")
-      .select("sort_order")
-      .eq("portfolio_id", portfolio.id)
-      .order("sort_order", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    let sortOrder = (lastEntry?.sort_order ?? -1) + 1;
-
-    const mainInsert = await insertEntry(portfolio.id, {
-      label: gameTitle,
-      destination: gameDestination.destination,
-      externalUrl: gameExternalUrl,
-      groupName: gameGroupName,
-      isOptional: false,
-      sizeBytes: 0,
-      sha256: null,
-      sortOrder: sortOrder++,
-    });
-    if (!mainInsert.ok) return mainInsert;
-
-    const extraInsert = await insertEntry(portfolio.id, {
-      label: extraTitle,
+    extra = {
+      title: extraTitle,
+      url: extraUrl.url,
       destination: extraDestination.destination,
-      externalUrl: extraUrl.url,
-      groupName: "conteudo",
-      isOptional: true,
-      sizeBytes: 0,
-      sha256: null,
-      sortOrder: sortOrder++,
-    });
-    if (!extraInsert.ok) return extraInsert;
-
-    revalidatePath(`/painel/${slug}`);
-    revalidatePath(`/api/portfolios/${slug}/manifest`);
-    return { ok: true };
+      sizeBytes: extraProbe.sizeBytes,
+    };
   }
 
   const supabase = await createClient();
@@ -390,14 +289,28 @@ export async function addGamePackage(
   const mainInsert = await insertEntry(portfolio.id, {
     label: gameTitle,
     destination: gameDestination.destination,
-    externalUrl: gameExternalUrl,
-    groupName: gameGroupName,
+    externalUrl: gameUrl.url,
+    groupName: "jogo",
     isOptional: false,
-    sizeBytes: 0,
+    sizeBytes: gameProbe.sizeBytes,
     sha256: null,
     sortOrder: sortOrder++,
   });
   if (!mainInsert.ok) return mainInsert;
+
+  if (extra) {
+    const extraInsert = await insertEntry(portfolio.id, {
+      label: extra.title,
+      destination: extra.destination,
+      externalUrl: extra.url,
+      groupName: "conteudo",
+      isOptional: true,
+      sizeBytes: extra.sizeBytes,
+      sha256: null,
+      sortOrder: sortOrder++,
+    });
+    if (!extraInsert.ok) return extraInsert;
+  }
 
   revalidatePath(`/painel/${slug}`);
   revalidatePath(`/api/portfolios/${slug}/manifest`);
