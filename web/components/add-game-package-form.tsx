@@ -76,12 +76,22 @@ export function AddGamePackageForm({ slug }: { slug: string }) {
         </p>
       )}
 
-      <p className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm leading-6 text-zinc-700 sm:col-span-2 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
-        Use um <strong>link direto</strong> — aquele que já começa a baixar o
-        arquivo, sem abrir página de compartilhamento. O app baixa sozinho e, se
-        for <code>.zip</code>, descompacta na pasta de destino. O link é testado
-        ao salvar.
-      </p>
+      <div className="space-y-2 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm leading-6 text-zinc-700 sm:col-span-2 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
+        <p>
+          Use um <strong>link direto</strong> — aquele que já começa a baixar o
+          arquivo. O app baixa sozinho e, se for <code>.zip</code>, descompacta
+          na pasta de destino. O link é testado aqui na hora de salvar.
+        </p>
+        <p>
+          Serve: Google Drive (o link é convertido automaticamente), Dropbox,
+          GitHub Releases, Cloudflare R2, Backblaze B2 ou servidor próprio.
+        </p>
+        <p>
+          Não serve: TeraBox, MEGA, MediaFire e afins. Eles entregam uma página
+          de compartilhamento em vez do arquivo, então nenhum programa consegue
+          baixar por ali.
+        </p>
+      </div>
 
       <label className="block space-y-1.5 sm:col-span-2">
         <span className="text-sm font-medium">Nome do jogo</span>

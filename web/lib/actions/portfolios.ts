@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { validateDestination } from "@/lib/manifest";
 import { buildDestination, type FolderPreset } from "@/lib/install-presets";
 import { probeDownloadUrl } from "@/lib/download-probe";
+import { normalizeDirectUrl, shareOnlyHostName } from "@/lib/direct-url";
 import { slugify, validateSlug } from "@/lib/slug";
 import { createClient, currentUser } from "@/lib/supabase/server";
 import type { PostgrestError } from "@supabase/supabase-js";
@@ -176,14 +177,23 @@ async function insertEntry(
 function parseUrl(
   value: string,
 ): { ok: false; error: string } | { ok: true; url: string } {
-  const url = value.trim();
-  if (!url) return { ok: false, error: "Informe o link de download." };
+  const raw = value.trim();
+  if (!raw) return { ok: false, error: "Informe o link de download." };
   try {
-    new URL(url);
+    new URL(raw);
   } catch {
     return { ok: false, error: "O link de download não é válido." };
   }
-  return { ok: true, url };
+
+  const shareOnly = shareOnlyHostName(raw);
+  if (shareOnly) {
+    return {
+      ok: false,
+      error: `O ${shareOnly} entrega uma página de compartilhamento, não o arquivo, então nenhum programa consegue baixar por ali. Hospede o arquivo no Google Drive (o link é convertido automaticamente) ou em outro serviço com link direto.`,
+    };
+  }
+
+  return { ok: true, url: normalizeDirectUrl(raw) };
 }
 
 function parseFolderPreset(raw: string): FolderPreset {
