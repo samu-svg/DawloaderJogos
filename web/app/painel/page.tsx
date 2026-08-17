@@ -1,11 +1,15 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, currentUser } from "@/lib/supabase/server";
 
 export default async function PainelPage() {
+  const user = await currentUser();
+  if (!user) return null;
+
   const supabase = await createClient();
   const { data: portfolios } = await supabase
     .from("portfolios")
     .select("id, slug, title, description, is_public, updated_at")
+    .eq("owner_id", user.id)
     .order("updated_at", { ascending: false });
 
   return (
