@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PortfolioEditor } from "@/components/portfolio-editor";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, currentUser } from "@/lib/supabase/server";
 
 export default async function PortfolioPage({
   params,
@@ -9,12 +9,15 @@ export default async function PortfolioPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const supabase = await createClient();
+  const [user, supabase] = await Promise.all([currentUser(), createClient()]);
+
+  if (!user) notFound();
 
   const { data: portfolio } = await supabase
     .from("portfolios")
     .select("*")
     .eq("slug", slug)
+    .eq("owner_id", user.id)
     .maybeSingle();
 
   if (!portfolio) notFound();

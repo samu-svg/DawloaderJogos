@@ -8,8 +8,42 @@ import { PASTA_LOCAL_GROUP } from "@/lib/local-import";
 import { isTeraboxUrl } from "@/lib/terabox";
 import { slugify, validateSlug } from "@/lib/slug";
 import { createClient, currentUser } from "@/lib/supabase/server";
+import type { PostgrestError } from "@supabase/supabase-js";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
+
+function mapEntryInsertError(error: PostgrestError): string {
+  if (
+    error.code === "23505" ||
+    error.message.includes("entries_destination_key") ||
+    error.details?.includes("entries_destination_key")
+  ) {
+    return "Já existe um jogo nesta pasta do HD. Remova o item antigo ou escolha outro nome de pasta.";
+  }
+  if (error.code === "42501") {
+    return "Sem permissão para editar este portfólio. Faça login com a conta correta.";
+  }
+  if (error.code === "23514") {
+    return "O caminho de destino no HD é inválido. Revise o nome da pasta.";
+  }
+  console.error("insertEntry failed:", error);
+  return "Não foi possível salvar o arquivo. Tente outro nome de pasta ou remova o item existente.";
+}
+
+async function findExistingDestination(
+  portfolioId: string,
+  destination: string,
+): Promise<{ label: string; destination: string } | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("entries")
+    .select("label, destination")
+    .eq("portfolio_id", portfolioId);
+
+  const target = destination.toLowerCase();
+  const hit = data?.find((entry) => entry.destination.toLowerCase() === target);
+  return hit ?? null;
+}
 
 async function requireUser() {
   const user = await currentUser();
@@ -111,6 +145,14 @@ async function insertEntry(
     sortOrder: number;
   },
 ): Promise<ActionResult> {
+  const existing = await findExistingDestination(portfolioId, data.destination);
+  if (existing) {
+    return {
+      ok: false,
+      error: `Já existe «${existing.label}» em ${existing.destination}. Remova esse item ou escolha outra pasta no HD.`,
+    };
+  }
+
   const supabase = await createClient();
   const { error } = await supabase.from("entries").insert({
     portfolio_id: portfolioId,
@@ -126,13 +168,7 @@ async function insertEntry(
   });
 
   if (error) {
-    if (error.code === "23505") {
-      return {
-        ok: false,
-        error: "Dois arquivos não podem ir para a mesma pasta no HD.",
-      };
-    }
-    return { ok: false, error: "Não foi possível salvar o arquivo." };
+    return { ok: false, error: mapEntryInsertError(error) };
   }
 
   return { ok: true };
@@ -161,7 +197,7 @@ export async function addGamePackage(
   slug: string,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireUser();
+  const user = await requireUser();
 
   const gameTitle = String(formData.get("game_title") ?? "").trim();
   const gameFile = String(formData.get("game_file") ?? "").trim();
@@ -235,6 +271,7 @@ export async function addGamePackage(
       .from("portfolios")
       .select("id")
       .eq("slug", slug)
+      .eq("owner_id", user.id)
       .maybeSingle();
 
     if (!portfolio) return { ok: false, error: "Portfólio não encontrado." };
@@ -286,6 +323,7 @@ export async function addGamePackage(
       .from("portfolios")
       .select("id")
       .eq("slug", slug)
+      .eq("owner_id", user.id)
       .maybeSingle();
 
     if (!portfolio) return { ok: false, error: "Portfólio não encontrado." };
@@ -334,6 +372,7 @@ export async function addGamePackage(
     .from("portfolios")
     .select("id")
     .eq("slug", slug)
+    .eq("owner_id", user.id)
     .maybeSingle();
 
   if (!portfolio) return { ok: false, error: "Portfólio não encontrado." };
