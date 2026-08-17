@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
 import type { Manifest, ResolvedManifestEntry } from "../shared/manifest";
 import {
   findDuplicateDestinations,
@@ -9,6 +9,7 @@ import { downloadEntry, type DownloadProgress } from "./download";
 import { importLocalPackage } from "./import-folder";
 import { resolveUnderRoot } from "./paths";
 import { isLocalImportUrl } from "../shared/local-import";
+import { isZipFile, isZipPath } from "./zip-extract";
 
 let mainWindow: BrowserWindow | null = null;
 let abortController: AbortController | null = null;
@@ -213,11 +214,34 @@ ipcMain.handle(
 ipcMain.handle("select-zip-file", async () => {
   const result = await dialog.showOpenDialog(mainWindow!, {
     properties: ["openFile"],
-    title: "Escolha o .zip baixado (ex.: TeraBox)",
-    filters: [{ name: "Arquivo Zip", extensions: ["zip"] }],
+    title: "Escolha o .zip baixado do TeraBox",
+    filters: [
+      { name: "Arquivo Zip", extensions: ["zip"] },
+      { name: "Todos os arquivos", extensions: ["*"] },
+    ],
   });
   if (result.canceled || result.filePaths.length === 0) return null;
-  return result.filePaths[0];
+
+  const filePath = result.filePaths[0];
+  if (!isZipPath(filePath) && !(await isZipFile(filePath))) {
+    await dialog.showMessageBox(mainWindow!, {
+      type: "error",
+      title: "Arquivo inválido",
+      message: "Este arquivo não é um .zip.",
+      detail:
+        "Baixe o pacote no TeraBox (link «Abrir TeraBox») e selecione o arquivo .zip baixado.",
+    });
+    return null;
+  }
+
+  return filePath;
+});
+
+ipcMain.handle("open-external-url", async (_event, url: string) => {
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    throw new Error("Link inválido.");
+  }
+  await shell.openExternal(url);
 });
 
 ipcMain.handle(

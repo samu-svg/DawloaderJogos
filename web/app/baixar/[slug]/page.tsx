@@ -83,6 +83,9 @@ export default async function BaixarPortfolioPage({ params }: PageProps) {
                   <th className="py-2 pr-4 font-medium">Nome</th>
                   <th className="py-2 pr-4 font-medium">Tipo</th>
                   <th className="py-2 pr-4 font-medium">Pasta no HD</th>
+                  {hasLocalImport && (
+                    <th className="py-2 pr-4 font-medium">Link</th>
+                  )}
                   <th className="py-2 font-medium">Tamanho</th>
                 </tr>
               </thead>
@@ -100,12 +103,35 @@ export default async function BaixarPortfolioPage({ params }: PageProps) {
                     </td>
                     <td className="py-3 pr-4">
                       {groupLabel(entry.group) ?? "—"}
+                      {entry.group === "pasta-local" && (
+                        <span className="ml-1 text-xs text-zinc-500">· .zip</span>
+                      )}
                     </td>
                     <td className="py-3 pr-4 font-mono text-xs text-zinc-600 dark:text-zinc-400">
                       {entry.destination}
                     </td>
+                    {hasLocalImport && (
+                      <td className="py-3 pr-4">
+                        {entry.sourceUrl ? (
+                          <a
+                            href={entry.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-emerald-700 underline dark:text-emerald-400"
+                          >
+                            Abrir TeraBox
+                          </a>
+                        ) : (
+                          <span className="text-xs text-zinc-500">—</span>
+                        )}
+                      </td>
+                    )}
                     <td className="py-3 text-zinc-600 dark:text-zinc-400">
-                      {entry.sizeBytes > 0 ? formatBytes(entry.sizeBytes) : "—"}
+                      {entry.group === "pasta-local"
+                        ? "Zip (TeraBox)"
+                        : entry.sizeBytes > 0
+                          ? formatBytes(entry.sizeBytes)
+                          : "—"}
                     </td>
                   </tr>
                 ))}

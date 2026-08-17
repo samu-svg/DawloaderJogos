@@ -23,6 +23,10 @@ export interface ResolvedManifestEntry {
   optional?: boolean;
   group?: string;
   downloadUrl: string;
+  /** Link original (ex.: TeraBox) para a pessoa baixar o .zip manualmente. */
+  sourceUrl?: string;
+  /** Formato do pacote quando a instalação é local. */
+  packageFormat?: "zip";
 }
 
 export interface Manifest {

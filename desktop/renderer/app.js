@@ -70,12 +70,20 @@ function init() {
   function groupLabel(group) {
     if (group === "jogo") return "Jogo";
     if (group === "conteudo") return "DLC / Content";
-    if (group === "pasta-local") return "Pasta local";
+    if (group === "pasta-local") return "Zip (TeraBox)";
     return group ?? "—";
   }
 
+  function isZipPackage(entry) {
+    return (
+      entry.packageFormat === "zip" ||
+      entry.group === "pasta-local" ||
+      entry.downloadUrl.startsWith("local://")
+    );
+  }
+
   function isLocalImport(entry) {
-    return entry.downloadUrl.startsWith("local://");
+    return isZipPackage(entry);
   }
 
   function getDestinationInput(entryId) {
@@ -160,6 +168,17 @@ function init() {
         const wrap = document.createElement("div");
         wrap.className = "import-actions";
 
+        if (entry.sourceUrl) {
+          const teraboxBtn = document.createElement("button");
+          teraboxBtn.type = "button";
+          teraboxBtn.className = "btn-import secondary";
+          teraboxBtn.textContent = "Abrir TeraBox";
+          teraboxBtn.addEventListener("click", () =>
+            void window.dawloader.openExternalUrl(entry.sourceUrl),
+          );
+          wrap.appendChild(teraboxBtn);
+        }
+
         const zipBtn = document.createElement("button");
         zipBtn.type = "button";
         zipBtn.className = "btn-import";
@@ -193,6 +212,15 @@ function init() {
     if (!selectedRoot) {
       alert("Escolha primeiro a pasta raiz do HD.");
       return;
+    }
+
+    if (mode === "zip" && entry.sourceUrl) {
+      const openFirst = confirm(
+        `1. Baixe o .zip no TeraBox (navegador).\n2. Depois escolha o arquivo baixado aqui.\n\nAbrir o link do TeraBox agora?`,
+      );
+      if (openFirst) {
+        await window.dawloader.openExternalUrl(entry.sourceUrl);
+      }
     }
 
     let sourcePath = null;

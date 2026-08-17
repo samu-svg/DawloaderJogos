@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { validateDestination } from "@/lib/manifest";
 import { buildDestination, buildFolderDestination, type FolderPreset } from "@/lib/install-presets";
-import { LOCAL_IMPORT_URL } from "@/lib/local-import";
+import { PASTA_LOCAL_GROUP } from "@/lib/local-import";
+import { isTeraboxUrl } from "@/lib/terabox";
 import { slugify, validateSlug } from "@/lib/slug";
 import { createClient, currentUser } from "@/lib/supabase/server";
 
@@ -194,8 +195,19 @@ export async function addGamePackage(
   let gameDestination: { ok: true; destination: string } | { ok: false; error: string };
 
   if (isFolderLocal) {
-    gameExternalUrl = LOCAL_IMPORT_URL;
-    gameGroupName = "pasta-local";
+    const gameUrl = parseUrl(gameUrlRaw);
+    if (!gameUrl.ok) {
+      return { ok: false, error: "Informe o link do TeraBox." };
+    }
+    if (!isTeraboxUrl(gameUrl.url)) {
+      return {
+        ok: false,
+        error:
+          "Informe um link válido do TeraBox (terabox.com, 1024tera.com, etc.). O arquivo será baixado como .zip.",
+      };
+    }
+    gameExternalUrl = gameUrl.url;
+    gameGroupName = PASTA_LOCAL_GROUP;
     gameDestination = buildFolderDestination(
       gameFolder,
       gameFile,

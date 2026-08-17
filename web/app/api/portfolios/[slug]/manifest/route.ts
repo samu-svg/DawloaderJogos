@@ -6,6 +6,7 @@ import {
   validateDestination,
 } from "@/lib/manifest";
 import { downloadUrlTtl, signDownloadUrl } from "@/lib/storage";
+import { isLocalImportUrl, isPastaLocalGroup, manifestDownloadUrl } from "@/lib/local-import";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -72,9 +73,17 @@ export async function GET(
         ? row.storage_key
           ? await signDownloadUrl(row.storage_key, row.label)
           : null
-        : row.external_url;
+        : manifestDownloadUrl(row.group_name, row.external_url);
 
     if (!downloadUrl) continue;
+
+    const isZipPackage = isPastaLocalGroup(row.group_name);
+    const sourceUrl =
+      isZipPackage &&
+      row.external_url &&
+      !isLocalImportUrl(row.external_url)
+        ? row.external_url
+        : undefined;
 
     entries.push({
       id: row.id,
@@ -85,6 +94,8 @@ export async function GET(
       optional: row.is_optional || undefined,
       group: row.group_name ?? undefined,
       downloadUrl,
+      ...(isZipPackage ? { packageFormat: "zip" as const } : {}),
+      ...(sourceUrl ? { sourceUrl } : {}),
     });
   }
 

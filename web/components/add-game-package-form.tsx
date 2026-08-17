@@ -113,9 +113,9 @@ export function AddGamePackageForm({ slug }: { slug: string }) {
             className="mt-1"
           />
           <span>
-            <strong>Pasta completa (TeraBox, etc.)</strong> — quem baixa traz o
-            <strong>.zip</strong> do TeraBox; o app descompacta e instala no HD
-            (Games, Content…).
+            <strong>Pasta completa (TeraBox, etc.)</strong> — informe o link do
+            TeraBox; quem baixa pega o <strong>.zip</strong> e o app instala no
+            HD (Games, Content…).
           </span>
         </label>
       </fieldset>
@@ -142,7 +142,7 @@ export function AddGamePackageForm({ slug }: { slug: string }) {
         />
       </label>
 
-      {!isFolderLocal && (
+      {!isFolderLocal ? (
         <label className="block space-y-1.5">
           <span className="text-sm font-medium">Link de download</span>
           <input
@@ -153,6 +153,29 @@ export function AddGamePackageForm({ slug }: { slug: string }) {
             className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900"
           />
         </label>
+      ) : (
+        <label className="block space-y-1.5">
+          <span className="text-sm font-medium">Link do TeraBox</span>
+          <input
+            name="game_url"
+            required
+            type="url"
+            placeholder="https://www.terabox.com/..."
+            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900"
+          />
+          <span className="text-xs text-zinc-500">
+            Link público da pasta no TeraBox. Quem baixa obtém um{" "}
+            <strong>.zip</strong>; o app reconhece e instala automaticamente.
+          </span>
+        </label>
+      )}
+
+      {isFolderLocal && (
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 sm:col-span-2 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+          Você não envia o arquivo aqui. Cadastre o link do TeraBox e a pasta
+          de destino; quem baixa pega o .zip pelo link e usa{" "}
+          <strong>Instalar zip</strong> no app.
+        </p>
       )}
 
       <FolderFields

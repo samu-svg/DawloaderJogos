@@ -3,6 +3,7 @@ import path from "node:path";
 import type { DownloadProgress } from "./download";
 import {
   extractZipToContentRoot,
+  isZipFile,
   isZipPath,
   removeTempDir,
 } from "./zip-extract";
@@ -173,8 +174,15 @@ export async function importLocalPackage(options: {
     });
   }
 
-  if (!sourceStat.isFile() || !isZipPath(resolved)) {
+  if (!sourceStat.isFile()) {
     throw new Error("Selecione um arquivo .zip ou uma pasta.");
+  }
+
+  const isZip = isZipPath(resolved) || (await isZipFile(resolved));
+  if (!isZip) {
+    throw new Error(
+      "Arquivo não reconhecido como .zip. Baixe o pacote do TeraBox e selecione o arquivo zip.",
+    );
   }
 
   onProgress({

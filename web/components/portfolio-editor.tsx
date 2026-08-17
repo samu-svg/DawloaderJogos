@@ -9,6 +9,7 @@ import {
   type ActionResult,
 } from "@/lib/actions/portfolios";
 import { formatBytes } from "@/lib/manifest";
+import { isLocalImportUrl } from "@/lib/local-import";
 import type { EntryRow, PortfolioRow } from "@/lib/database.types";
 
 type FormState = ActionResult | null;
@@ -147,7 +148,24 @@ export function PortfolioEditor({
                   <p className="font-mono text-sm text-zinc-600 dark:text-zinc-400">
                     {entry.destination}
                   </p>
-                  <p className="truncate text-xs text-zinc-500">{entry.external_url}</p>
+                  <p className="truncate text-xs text-zinc-500">
+                    {entry.group_name === "pasta-local" &&
+                    entry.external_url &&
+                    !isLocalImportUrl(entry.external_url) ? (
+                      <a
+                        href={entry.external_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline"
+                      >
+                        {entry.external_url}
+                      </a>
+                    ) : entry.group_name === "pasta-local" ? (
+                      "TeraBox — link não cadastrado"
+                    ) : (
+                      entry.external_url
+                    )}
+                  </p>
                   <p className="text-xs text-zinc-500">
                     {formatBytes(entry.size_bytes)}
                     {entry.is_optional ? " · opcional" : ""}

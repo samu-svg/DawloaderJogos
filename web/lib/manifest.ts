@@ -42,6 +42,10 @@ export interface ManifestEntry {
 export interface ResolvedManifestEntry extends ManifestEntry {
   /** Ready-to-use download URL. Expires for hosted files. */
   downloadUrl: string;
+  /** Link original (ex.: TeraBox) para baixar o .zip manualmente. */
+  sourceUrl?: string;
+  /** Formato do pacote para instalação local. */
+  packageFormat?: "zip";
 }
 
 export interface Manifest {

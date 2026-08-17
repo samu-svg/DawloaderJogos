@@ -13,6 +13,8 @@ export interface DownloadProgressEvent {
 const api = {
   selectFolder: (): Promise<string | null> => ipcRenderer.invoke("select-folder"),
   selectZipFile: (): Promise<string | null> => ipcRenderer.invoke("select-zip-file"),
+  openExternalUrl: (url: string): Promise<void> =>
+    ipcRenderer.invoke("open-external-url", url),
   fetchManifest: (baseUrl: string, slug: string): Promise<Manifest> =>
     ipcRenderer.invoke("fetch-manifest", { baseUrl, slug }),
   startDownload: (rootDir: string, entries: ResolvedManifestEntry[]) =>
