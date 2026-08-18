@@ -4,7 +4,7 @@ import { DesktopDownloadCard } from "@/components/desktop-download-card";
 import { listPublicPortfolios } from "@/lib/catalog";
 
 export const metadata: Metadata = {
-  title: "Baixar — Dawloader",
+  title: "Catálogos — Dawloader",
   description:
     "Catálogo público de portfólios. Escolha um pacote e baixe com o app de desktop.",
 };
@@ -15,7 +15,7 @@ export default async function BaixarPage() {
   return (
     <div className="space-y-8">
       <div className="max-w-2xl space-y-3">
-        <h1 className="text-3xl font-semibold tracking-tight">Baixar jogos</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Catálogos</h1>
         <p className="text-zinc-600 dark:text-zinc-400">
           Escolha um portfólio abaixo. O aplicativo de desktop baixa os arquivos
           e organiza cada um na pasta certa do HD que você escolher.

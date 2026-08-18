@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { DesktopDownloadCard } from "@/components/desktop-download-card";
 import { SiteHeader } from "@/components/site-header";
 import { isPortfolioAdmin } from "@/lib/admin";
 import { listPublicPortfolios } from "@/lib/catalog";
@@ -63,41 +62,6 @@ export default async function HomePage() {
             )}
           </div>
         </div>
-
-        <div className="mt-12">
-          <DesktopDownloadCard
-            title="1. Baixe o app Dawloader"
-            description="Instale no Windows (portable, sem setup). É ele que baixa os jogos e grava cada um na pasta correta do HD."
-            showSteps
-          />
-        </div>
-
-        <section className="mt-16 grid gap-6 sm:grid-cols-3">
-          {[
-            {
-              title: "2. Escolha os jogos",
-              text: "Abra um pacote no catálogo e veja o que está disponível — capa, tamanho e pasta de destino.",
-            },
-            {
-              title: "3. Carregue no app",
-              text: "Cole a URL deste site e o código do pacote. Escolha o HD de destino e marque o que quer baixar.",
-            },
-            {
-              title: "4. Pronto no HD",
-              text: "O app baixa, descompacta quando for zip e organiza tudo. Só abrir a pasta e jogar.",
-            },
-          ].map((step) => (
-            <div
-              key={step.title}
-              className="rounded-2xl border border-zinc-200 p-5 dark:border-zinc-800"
-            >
-              <h2 className="font-semibold">{step.title}</h2>
-              <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-                {step.text}
-              </p>
-            </div>
-          ))}
-        </section>
 
         <section id="catalogo" className="mt-16 scroll-mt-8">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
