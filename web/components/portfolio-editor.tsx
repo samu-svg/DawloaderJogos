@@ -4,10 +4,11 @@ import { useActionState } from "react";
 import { AddGamePackageForm } from "@/components/add-game-package-form";
 import {
   deletePortfolioForm,
-  deleteEntryForm,
+  deleteGameGroupForm,
   updatePortfolio,
   type ActionResult,
 } from "@/lib/actions/portfolios";
+import { groupPortfolioEntries } from "@/lib/entry-groups";
 import { formatBytes } from "@/lib/manifest";
 import { GameCoverFrame } from "@/components/game-cover";
 import type { EntryRow, PortfolioRow } from "@/lib/database.types";
@@ -38,6 +39,13 @@ function groupLabel(group: string | null): string | null {
   return group;
 }
 
+function deleteGameMessage(label: string, extraCount: number): string {
+  if (extraCount > 0) {
+    return `Apagar «${label}» e ${extraCount} arquivo(s) extra(s) vinculado(s)?`;
+  }
+  return `Apagar «${label}» deste portfólio?`;
+}
+
 export function PortfolioEditor({
   portfolio,
   entries,
@@ -45,6 +53,8 @@ export function PortfolioEditor({
   portfolio: PortfolioRow;
   entries: EntryRow[];
 }) {
+  const gameGroups = groupPortfolioEntries(entries);
+
   const [settingsState, settingsAction, settingsPending] = useActionState(
     async (_prev: FormState, formData: FormData) =>
       updatePortfolio(portfolio.slug, formData),
@@ -109,7 +119,7 @@ export function PortfolioEditor({
           onSubmit={(event) => {
             if (
               !confirm(
-                "Excluir este portfólio e todos os arquivos cadastrados nele?",
+                "Excluir este portfólio e todos os jogos cadastrados nele?",
               )
             ) {
               event.preventDefault();
@@ -127,48 +137,90 @@ export function PortfolioEditor({
 
       <section className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
         <div className="flex items-center justify-between gap-4">
-          <h2 className="text-lg font-semibold">Arquivos</h2>
-          <span className="text-sm text-zinc-500">{entries.length} item(ns)</span>
+          <h2 className="text-lg font-semibold">Jogos</h2>
+          <span className="text-sm text-zinc-500">
+            {gameGroups.length} jogo(s) · {entries.length} arquivo(s)
+          </span>
         </div>
 
-        {entries.length === 0 ? (
+        {gameGroups.length === 0 ? (
           <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
-            Nenhum arquivo ainda. Adicione o primeiro abaixo.
+            Nenhum jogo ainda. Adicione o primeiro abaixo.
           </p>
         ) : (
           <ul className="mt-4 divide-y divide-zinc-200 dark:divide-zinc-800">
-            {entries.map((entry) => (
+            {gameGroups.map((group) => (
               <li
-                key={entry.id}
+                key={group.main.id}
                 className="flex flex-col gap-3 py-4 sm:flex-row sm:items-start sm:justify-between"
               >
                 <div className="flex min-w-0 gap-4">
-                  <div className="h-16 w-12 shrink-0 overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800">
-                    <GameCoverFrame title={entry.label} coverUrl={entry.cover_url} />
+                  <div className="h-20 w-14 shrink-0 overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800">
+                    <GameCoverFrame
+                      title={group.main.label}
+                      coverUrl={group.main.cover_url}
+                    />
                   </div>
-                  <div className="min-w-0 space-y-1">
-                  <p className="font-medium">{entry.label}</p>
-                  <p className="font-mono text-sm text-zinc-600 dark:text-zinc-400">
-                    {entry.destination}
-                  </p>
-                  <p className="truncate text-xs text-zinc-500">
-                    {entry.external_url}
-                  </p>
-                  <p className="text-xs text-zinc-500">
-                    {formatBytes(entry.size_bytes)}
-                    {entry.is_optional ? " · opcional" : ""}
-                    {groupLabel(entry.group_name)
-                      ? ` · ${groupLabel(entry.group_name)}`
-                      : ""}
-                  </p>
+                  <div className="min-w-0 space-y-2">
+                    <div>
+                      <p className="font-medium">{group.main.label}</p>
+                      <p className="font-mono text-sm text-zinc-600 dark:text-zinc-400">
+                        {group.main.destination}
+                      </p>
+                      <p className="truncate text-xs text-zinc-500">
+                        {group.main.external_url}
+                      </p>
+                      <p className="text-xs text-zinc-500">
+                        {formatBytes(group.main.size_bytes)}
+                        {group.main.is_optional ? " · opcional" : ""}
+                        {groupLabel(group.main.group_name)
+                          ? ` · ${groupLabel(group.main.group_name)}`
+                          : ""}
+                      </p>
+                    </div>
+
+                    {group.extras.length > 0 && (
+                      <ul className="space-y-2 border-l border-zinc-200 pl-3 dark:border-zinc-700">
+                        {group.extras.map((extra) => (
+                          <li key={extra.id} className="text-sm">
+                            <p className="font-medium">{extra.label}</p>
+                            <p className="font-mono text-xs text-zinc-600 dark:text-zinc-400">
+                              {extra.destination}
+                            </p>
+                            <p className="text-xs text-zinc-500">
+                              {formatBytes(extra.size_bytes)}
+                              {extra.is_optional ? " · opcional" : ""}
+                              {groupLabel(extra.group_name)
+                                ? ` · ${groupLabel(extra.group_name)}`
+                                : ""}
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 </div>
-                <form action={deleteEntryForm.bind(null, portfolio.slug, entry.id)}>
+                <form
+                  action={deleteGameGroupForm.bind(
+                    null,
+                    portfolio.slug,
+                    group.main.id,
+                  )}
+                  onSubmit={(event) => {
+                    if (
+                      !confirm(
+                        deleteGameMessage(group.main.label, group.extras.length),
+                      )
+                    ) {
+                      event.preventDefault();
+                    }
+                  }}
+                >
                   <button
                     type="submit"
-                    className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm transition hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
+                    className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 transition hover:bg-red-50 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/30"
                   >
-                    Remover
+                    Apagar jogo
                   </button>
                 </form>
               </li>

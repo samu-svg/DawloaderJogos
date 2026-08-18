@@ -38,7 +38,7 @@ export function CadastroForm() {
     }
 
     if (data.session) {
-      router.push("/painel");
+      router.push("/baixar");
       router.refresh();
       return;
     }

@@ -30,18 +30,29 @@ export default async function HomePage() {
             <strong>Content</strong> ou onde estiver configurado.
           </p>
           <div className="flex flex-wrap gap-3 pt-2">
-            <a
-              href={portfolios.length ? "#catalogo" : "/baixar"}
-              className="rounded-full bg-zinc-950 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200"
-            >
-              Ver catálogo
-            </a>
-            <Link
-              href="/baixar"
-              className="rounded-full border border-zinc-300 px-5 py-2.5 text-sm font-medium transition hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
-            >
-              Como funciona
-            </Link>
+            {user ? (
+              <Link
+                href="/baixar"
+                className="rounded-full bg-zinc-950 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200"
+              >
+                Ver catálogo
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/cadastro"
+                  className="rounded-full bg-zinc-950 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200"
+                >
+                  Criar conta
+                </Link>
+                <Link
+                  href="/login"
+                  className="rounded-full border border-zinc-300 px-5 py-2.5 text-sm font-medium transition hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
+                >
+                  Entrar
+                </Link>
+              </>
+            )}
             {isAdmin && (
               <Link
                 href="/painel"
@@ -93,10 +104,12 @@ export default async function HomePage() {
             <div>
               <h2 className="text-2xl font-semibold tracking-tight">Catálogo</h2>
               <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                Pacotes públicos disponíveis para download.
+                {user
+                  ? "Pacotes disponíveis para download."
+                  : "Crie uma conta para acessar os pacotes completos."}
               </p>
             </div>
-            {portfolios.length > 0 && (
+            {user && portfolios.length > 0 && (
               <Link
                 href="/baixar"
                 className="text-sm font-medium underline text-zinc-600 dark:text-zinc-400"
@@ -111,6 +124,29 @@ export default async function HomePage() {
               <p className="text-zinc-600 dark:text-zinc-400">
                 Nenhum pacote publicado ainda. Volte em breve.
               </p>
+            </div>
+          ) : !user ? (
+            <div className="mt-6 rounded-2xl border border-zinc-200 bg-zinc-50 p-8 text-center dark:border-zinc-800 dark:bg-zinc-900/40">
+              <p className="text-zinc-700 dark:text-zinc-300">
+                {portfolios.length} pacote(s) disponíveis.
+              </p>
+              <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                Crie uma conta gratuita para ver o catálogo e baixar.
+              </p>
+              <div className="mt-4 flex flex-wrap justify-center gap-3">
+                <Link
+                  href="/cadastro"
+                  className="rounded-full bg-zinc-950 px-5 py-2 text-sm font-medium text-white dark:bg-zinc-50 dark:text-zinc-950"
+                >
+                  Criar conta
+                </Link>
+                <Link
+                  href="/login"
+                  className="rounded-full border border-zinc-300 px-5 py-2 text-sm font-medium dark:border-zinc-700"
+                >
+                  Entrar
+                </Link>
+              </div>
             </div>
           ) : (
             <ul className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -136,15 +172,6 @@ export default async function HomePage() {
             </ul>
           )}
         </section>
-
-        {!user && (
-          <p className="mt-16 text-center text-xs text-zinc-500">
-            Administrador?{" "}
-            <Link href="/login" className="underline">
-              Entrar
-            </Link>
-          </p>
-        )}
       </main>
     </>
   );

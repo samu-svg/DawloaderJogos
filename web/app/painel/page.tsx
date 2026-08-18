@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { PortfolioListCard } from "@/components/portfolio-list-card";
 import { isPortfolioAdmin } from "@/lib/admin";
 import { createClient, currentUser } from "@/lib/supabase/server";
 
@@ -6,7 +8,11 @@ export default async function PainelPage() {
   const user = await currentUser();
   if (!user) return null;
 
-  const canCreatePortfolio = isPortfolioAdmin(user.email);
+  if (!isPortfolioAdmin(user.email)) {
+    redirect("/baixar");
+  }
+
+  const canCreatePortfolio = true;
 
   const supabase = await createClient();
   const { data: portfolios } = await supabase
@@ -55,31 +61,12 @@ export default async function PainelPage() {
         <ul className="grid gap-4 sm:grid-cols-2">
           {portfolios.map((portfolio) => (
             <li key={portfolio.id}>
-              <Link
-                href={`/painel/${portfolio.slug}`}
-                className="block rounded-2xl border border-zinc-200 bg-white p-5 transition hover:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-600"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <h2 className="font-semibold">{portfolio.title}</h2>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs ${
-                      portfolio.is_public
-                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                        : "bg-zinc-100 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400"
-                    }`}
-                  >
-                    {portfolio.is_public ? "Público" : "Privado"}
-                  </span>
-                </div>
-                {portfolio.description && (
-                  <p className="mt-2 line-clamp-2 text-sm text-zinc-600 dark:text-zinc-400">
-                    {portfolio.description}
-                  </p>
-                )}
-                <p className="mt-4 font-mono text-xs text-zinc-500">
-                  /api/portfolios/{portfolio.slug}/manifest
-                </p>
-              </Link>
+              <PortfolioListCard
+                slug={portfolio.slug}
+                title={portfolio.title}
+                description={portfolio.description}
+                isPublic={portfolio.is_public}
+              />
             </li>
           ))}
         </ul>

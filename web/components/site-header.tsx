@@ -49,6 +49,12 @@ export function SiteHeader({
               >
                 Entrar
               </Link>
+              <Link
+                href="/cadastro"
+                className="rounded-full bg-zinc-950 px-4 py-1.5 text-white transition hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200"
+              >
+                Criar conta
+              </Link>
             </>
           )}
         </nav>

@@ -8,11 +8,21 @@ import { probeDownloadUrl } from "@/lib/download-probe";
 import { normalizeDirectUrl, shareOnlyHostName } from "@/lib/direct-url";
 import { isPortfolioAdmin } from "@/lib/admin";
 import { requireOwnedPortfolio } from "@/lib/catalog";
+import { entryIdsInGroup } from "@/lib/entry-groups";
 import { slugify, validateSlug } from "@/lib/slug";
 import { createClient, currentUser } from "@/lib/supabase/server";
 import type { PostgrestError } from "@supabase/supabase-js";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
+
+function revalidatePortfolioPaths(slug: string) {
+  revalidatePath("/painel");
+  revalidatePath(`/painel/${slug}`);
+  revalidatePath(`/api/portfolios/${slug}/manifest`);
+  revalidatePath("/baixar");
+  revalidatePath(`/baixar/${slug}`);
+  revalidatePath("/");
+}
 
 function mapEntryInsertError(error: PostgrestError): string {
   if (
@@ -135,9 +145,7 @@ export async function updatePortfolio(
     return { ok: false, error: "Não foi possível salvar as alterações." };
   }
 
-  revalidatePath("/painel");
-  revalidatePath(`/painel/${slug}`);
-  revalidatePath(`/api/portfolios/${slug}/manifest`);
+  revalidatePortfolioPaths(slug);
   return { ok: true };
 }
 
@@ -159,7 +167,7 @@ export async function deletePortfolio(slug: string): Promise<ActionResult> {
     return { ok: false, error: "Não foi possível excluir o portfólio." };
   }
 
-  revalidatePath("/painel");
+  revalidatePortfolioPaths(slug);
   redirect("/painel");
 }
 
@@ -377,8 +385,7 @@ export async function addGamePackage(
     if (!extraInsert.ok) return extraInsert;
   }
 
-  revalidatePath(`/painel/${slug}`);
-  revalidatePath(`/api/portfolios/${slug}/manifest`);
+  revalidatePortfolioPaths(slug);
   return { ok: true };
 }
 
@@ -454,8 +461,42 @@ export async function addEntry(
     return { ok: false, error: "Não foi possível adicionar o arquivo." };
   }
 
-  revalidatePath(`/painel/${slug}`);
-  revalidatePath(`/api/portfolios/${slug}/manifest`);
+  revalidatePortfolioPaths(slug);
+  return { ok: true };
+}
+
+export async function deleteGameGroup(
+  slug: string,
+  mainEntryId: string,
+): Promise<ActionResult> {
+  const user = await requireUser();
+  const portfolio = await requireOwnedPortfolio(slug, user.id);
+  if (!portfolio) {
+    return { ok: false, error: "Portfólio não encontrado ou sem permissão." };
+  }
+
+  const supabase = await createClient();
+  const { data: entries } = await supabase
+    .from("entries")
+    .select("id, group_name, sort_order")
+    .eq("portfolio_id", portfolio.id);
+
+  const idsToDelete = entryIdsInGroup(entries ?? [], mainEntryId);
+  if (!idsToDelete.length) {
+    return { ok: false, error: "Jogo não encontrado." };
+  }
+
+  const { error } = await supabase
+    .from("entries")
+    .delete()
+    .in("id", idsToDelete)
+    .eq("portfolio_id", portfolio.id);
+
+  if (error) {
+    return { ok: false, error: "Não foi possível apagar o jogo." };
+  }
+
+  revalidatePortfolioPaths(slug);
   return { ok: true };
 }
 
@@ -480,13 +521,19 @@ export async function deleteEntry(
     return { ok: false, error: "Não foi possível remover o arquivo." };
   }
 
-  revalidatePath(`/painel/${slug}`);
-  revalidatePath(`/api/portfolios/${slug}/manifest`);
+  revalidatePortfolioPaths(slug);
   return { ok: true };
 }
 
 export async function deletePortfolioForm(slug: string): Promise<void> {
   await deletePortfolio(slug);
+}
+
+export async function deleteGameGroupForm(
+  slug: string,
+  mainEntryId: string,
+): Promise<void> {
+  await deleteGameGroup(slug, mainEntryId);
 }
 
 export async function deleteEntryForm(
