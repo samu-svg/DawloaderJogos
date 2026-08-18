@@ -1,7 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createPublicReaderClient } from "@/lib/supabase/server";
 
 export type CatalogPortfolio = {
-  id: string;
   slug: string;
   title: string;
   description: string | null;
@@ -30,17 +29,16 @@ export function groupLabel(group: string | null): string | null {
 }
 
 export async function listPublicPortfolios(): Promise<CatalogPortfolio[]> {
-  const supabase = await createClient();
+  const supabase = await createPublicReaderClient();
   const { data, error } = await supabase
     .from("portfolios")
-    .select("id, slug, title, description, updated_at, entries(count)")
+    .select("slug, title, description, updated_at, entries(count)")
     .eq("is_public", true)
     .order("updated_at", { ascending: false });
 
   if (error || !data) return [];
 
   return data.map((row) => ({
-    id: row.id,
     slug: row.slug,
     title: row.title,
     description: row.description,
@@ -52,11 +50,11 @@ export async function listPublicPortfolios(): Promise<CatalogPortfolio[]> {
 export async function getPublicPortfolio(
   slug: string,
 ): Promise<CatalogPortfolioDetail | null> {
-  const supabase = await createClient();
+  const supabase = await createPublicReaderClient();
   const { data, error } = await supabase
     .from("portfolios")
     .select(
-      "id, slug, title, description, updated_at, entries(id, label, destination, size_bytes, is_optional, group_name, cover_url, sort_order)",
+      "slug, title, description, updated_at, entries(id, label, destination, size_bytes, is_optional, group_name, cover_url, sort_order)",
     )
     .eq("slug", slug)
     .eq("is_public", true)
@@ -69,7 +67,6 @@ export async function getPublicPortfolio(
   );
 
   return {
-    id: data.id,
     slug: data.slug,
     title: data.title,
     description: data.description,
@@ -85,4 +82,17 @@ export async function getPublicPortfolio(
       coverUrl: entry.cover_url,
     })),
   };
+}
+
+/** Confirma que o portfólio pertence ao usuário logado. */
+export async function requireOwnedPortfolio(slug: string, ownerId: string) {
+  const supabase = await createClient();
+  const { data: portfolio } = await supabase
+    .from("portfolios")
+    .select("id, slug")
+    .eq("slug", slug)
+    .eq("owner_id", ownerId)
+    .maybeSingle();
+
+  return portfolio;
 }

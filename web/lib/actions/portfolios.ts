@@ -7,6 +7,7 @@ import { buildDestination, type FolderPreset } from "@/lib/install-presets";
 import { probeDownloadUrl } from "@/lib/download-probe";
 import { normalizeDirectUrl, shareOnlyHostName } from "@/lib/direct-url";
 import { isPortfolioAdmin } from "@/lib/admin";
+import { requireOwnedPortfolio } from "@/lib/catalog";
 import { slugify, validateSlug } from "@/lib/slug";
 import { createClient, currentUser } from "@/lib/supabase/server";
 import type { PostgrestError } from "@supabase/supabase-js";
@@ -105,7 +106,12 @@ export async function updatePortfolio(
   slug: string,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireUser();
+  const user = await requireUser();
+  const portfolio = await requireOwnedPortfolio(slug, user.id);
+  if (!portfolio) {
+    return { ok: false, error: "Portfólio não encontrado ou sem permissão." };
+  }
+
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const isPublic = formData.get("is_public") === "on";
@@ -122,7 +128,8 @@ export async function updatePortfolio(
       description: description || null,
       is_public: isPublic,
     })
-    .eq("slug", slug);
+    .eq("slug", slug)
+    .eq("owner_id", user.id);
 
   if (error) {
     return { ok: false, error: "Não foi possível salvar as alterações." };
@@ -135,9 +142,18 @@ export async function updatePortfolio(
 }
 
 export async function deletePortfolio(slug: string): Promise<ActionResult> {
-  await requireUser();
+  const user = await requireUser();
+  const portfolio = await requireOwnedPortfolio(slug, user.id);
+  if (!portfolio) {
+    return { ok: false, error: "Portfólio não encontrado ou sem permissão." };
+  }
+
   const supabase = await createClient();
-  const { error } = await supabase.from("portfolios").delete().eq("slug", slug);
+  const { error } = await supabase
+    .from("portfolios")
+    .delete()
+    .eq("slug", slug)
+    .eq("owner_id", user.id);
 
   if (error) {
     return { ok: false, error: "Não foi possível excluir o portfólio." };
@@ -370,7 +386,7 @@ export async function addEntry(
   slug: string,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireUser();
+  const user = await requireUser();
   const label = String(formData.get("label") ?? "").trim();
   const destinationRaw = String(formData.get("destination") ?? "").trim();
   const externalUrl = String(formData.get("external_url") ?? "").trim();
@@ -401,14 +417,10 @@ export async function addEntry(
   }
 
   const supabase = await createClient();
-  const { data: portfolio } = await supabase
-    .from("portfolios")
-    .select("id")
-    .eq("slug", slug)
-    .maybeSingle();
+  const portfolio = await requireOwnedPortfolio(slug, user.id);
 
   if (!portfolio) {
-    return { ok: false, error: "Portfólio não encontrado." };
+    return { ok: false, error: "Portfólio não encontrado ou sem permissão." };
   }
 
   const { data: lastEntry } = await supabase
@@ -451,9 +463,18 @@ export async function deleteEntry(
   slug: string,
   entryId: string,
 ): Promise<ActionResult> {
-  await requireUser();
+  const user = await requireUser();
+  const portfolio = await requireOwnedPortfolio(slug, user.id);
+  if (!portfolio) {
+    return { ok: false, error: "Portfólio não encontrado ou sem permissão." };
+  }
+
   const supabase = await createClient();
-  const { error } = await supabase.from("entries").delete().eq("id", entryId);
+  const { error } = await supabase
+    .from("entries")
+    .delete()
+    .eq("id", entryId)
+    .eq("portfolio_id", portfolio.id);
 
   if (error) {
     return { ok: false, error: "Não foi possível remover o arquivo." };

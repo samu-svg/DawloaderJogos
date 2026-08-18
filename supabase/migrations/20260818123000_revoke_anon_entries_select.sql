@@ -1,0 +1,5 @@
+-- Bloqueia leitura direta de entries via API anônima quando o site usa
+-- SUPABASE_SERVICE_ROLE_KEY no servidor (catalog.ts + manifest).
+-- Só aplique DEPOIS de configurar essa variável na Vercel.
+--
+-- drop policy if exists entries_select_public on public.entries;

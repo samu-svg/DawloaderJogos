@@ -6,7 +6,7 @@ import {
   validateDestination,
 } from "@/lib/manifest";
 import { downloadUrlTtl, signDownloadUrl } from "@/lib/storage";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicReaderClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +15,7 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
-  const supabase = await createClient();
+  const supabase = await createPublicReaderClient();
 
   // Row level security limits this to public portfolios, so an unlisted one
   // simply comes back empty.

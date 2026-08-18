@@ -115,7 +115,7 @@ export default async function HomePage() {
           ) : (
             <ul className="mt-6 grid gap-4 sm:grid-cols-2">
               {portfolios.slice(0, 4).map((portfolio) => (
-                <li key={portfolio.id}>
+                <li key={portfolio.slug}>
                   <Link
                     href={`/baixar/${portfolio.slug}`}
                     className="block h-full rounded-2xl border border-zinc-200 bg-white p-5 transition hover:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-600"

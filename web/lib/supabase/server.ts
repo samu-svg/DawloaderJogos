@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import type { Database } from "@/lib/database.types";
 
@@ -41,6 +42,23 @@ export async function createClient() {
       },
     },
   );
+}
+
+/**
+ * Server-only reader for páginas públicas e manifesto. Usa a service role quando
+ * disponível para não depender de SELECT anônimo na tabela entries (links de
+ * download). Sempre filtre is_public nas queries — a service role ignora RLS.
+ */
+export async function createPublicReaderClient() {
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (serviceKey) {
+    return createSupabaseClient<Database>(
+      requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
+      serviceKey,
+      { auth: { persistSession: false, autoRefreshToken: false } },
+    );
+  }
+  return createClient();
 }
 
 /** Returns the signed-in user, or null. */
