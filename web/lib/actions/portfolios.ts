@@ -6,6 +6,7 @@ import { validateDestination } from "@/lib/manifest";
 import { buildDestination, type FolderPreset } from "@/lib/install-presets";
 import { probeDownloadUrl } from "@/lib/download-probe";
 import { normalizeDirectUrl, shareOnlyHostName } from "@/lib/direct-url";
+import { isPortfolioAdmin } from "@/lib/admin";
 import { slugify, validateSlug } from "@/lib/slug";
 import { createClient, currentUser } from "@/lib/supabase/server";
 import type { PostgrestError } from "@supabase/supabase-js";
@@ -53,6 +54,14 @@ async function requireUser() {
 
 export async function createPortfolio(formData: FormData): Promise<ActionResult> {
   const user = await requireUser();
+
+  if (!isPortfolioAdmin(user.email)) {
+    return {
+      ok: false,
+      error: "Apenas o administrador pode criar portfólios no momento.",
+    };
+  }
+
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const slugInput = String(formData.get("slug") ?? "").trim();
@@ -78,6 +87,12 @@ export async function createPortfolio(formData: FormData): Promise<ActionResult>
   if (error) {
     if (error.code === "23505") {
       return { ok: false, error: "Este endereço já está em uso. Escolha outro." };
+    }
+    if (error.code === "42501") {
+      return {
+        ok: false,
+        error: "Apenas o administrador pode criar portfólios no momento.",
+      };
     }
     return { ok: false, error: "Não foi possível criar o portfólio." };
   }
@@ -132,6 +147,23 @@ export async function deletePortfolio(slug: string): Promise<ActionResult> {
   redirect("/painel");
 }
 
+function parseCoverUrl(
+  value: string,
+): { ok: true; url: string | null } | { ok: false; error: string } {
+  const raw = value.trim();
+  if (!raw) return { ok: true, url: null };
+
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return { ok: false, error: "A capa precisa ser um link http ou https." };
+    }
+    return { ok: true, url: url.toString() };
+  } catch {
+    return { ok: false, error: "Link da capa inválido." };
+  }
+}
+
 async function insertEntry(
   portfolioId: string,
   data: {
@@ -143,6 +175,7 @@ async function insertEntry(
     sizeBytes: number;
     sha256: string | null;
     sortOrder: number;
+    coverUrl?: string | null;
   },
 ): Promise<ActionResult> {
   const existing = await findExistingDestination(portfolioId, data.destination);
@@ -165,6 +198,7 @@ async function insertEntry(
     group_name: data.groupName,
     is_optional: data.isOptional,
     sort_order: data.sortOrder,
+    cover_url: data.coverUrl ?? null,
   });
 
   if (error) {
@@ -209,6 +243,7 @@ export async function addGamePackage(
   const user = await requireUser();
 
   const gameTitle = String(formData.get("game_title") ?? "").trim();
+  const gameCoverRaw = String(formData.get("game_cover_url") ?? "").trim();
   const gameFile = String(formData.get("game_file") ?? "").trim();
   const gameUrlRaw = String(formData.get("game_url") ?? "").trim();
   const gameFolder = parseFolderPreset(String(formData.get("game_folder") ?? "games"));
@@ -227,6 +262,9 @@ export async function addGamePackage(
   if (!gameFile) {
     return { ok: false, error: "Informe o nome do arquivo do jogo." };
   }
+
+  const gameCover = parseCoverUrl(gameCoverRaw);
+  if (!gameCover.ok) return gameCover;
 
   const gameUrl = parseUrl(gameUrlRaw);
   if (!gameUrl.ok) return gameUrl;
@@ -305,6 +343,7 @@ export async function addGamePackage(
     sizeBytes: gameProbe.sizeBytes,
     sha256: null,
     sortOrder: sortOrder++,
+    coverUrl: gameCover.url,
   });
   if (!mainInsert.ok) return mainInsert;
 

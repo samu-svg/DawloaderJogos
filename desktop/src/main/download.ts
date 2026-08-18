@@ -58,6 +58,21 @@ function installDirFor(destPath: string): string {
   return destPath.toLowerCase().endsWith(".zip") ? destPath.slice(0, -4) : destPath;
 }
 
+/** Drops the downloaded archive and any partial file — only the extracted folder stays. */
+async function removeZipDownloadArtifacts(destPath: string): Promise<void> {
+  await unlink(partialPath(destPath)).catch(() => undefined);
+
+  if (!existsSync(destPath)) return;
+
+  try {
+    if (statSync(destPath).isFile()) {
+      await unlink(destPath);
+    }
+  } catch {
+    // Ignore races if another process touched the path.
+  }
+}
+
 export async function downloadEntry(options: {
   entryId: string;
   label: string;
@@ -155,7 +170,7 @@ export async function downloadEntry(options: {
       );
     } finally {
       await removeTempDir(tempDir);
-      await unlink(tempPath).catch(() => undefined);
+      await removeZipDownloadArtifacts(destPath);
     }
 
     onProgress({

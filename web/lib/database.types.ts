@@ -22,6 +22,7 @@ export type Database = {
           size_bytes: number;
           sort_order: number;
           storage_key: string | null;
+          cover_url: string | null;
         };
         Insert: {
           created_at?: string;
@@ -37,6 +38,7 @@ export type Database = {
           size_bytes?: number;
           sort_order?: number;
           storage_key?: string | null;
+          cover_url?: string | null;
         };
         Update: {
           destination?: string;
@@ -49,6 +51,7 @@ export type Database = {
           size_bytes?: number;
           sort_order?: number;
           storage_key?: string | null;
+          cover_url?: string | null;
         };
         Relationships: [
           {

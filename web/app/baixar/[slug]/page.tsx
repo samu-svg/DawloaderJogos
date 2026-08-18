@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CopyButton } from "@/components/copy-button";
 import { DesktopDownloadCard } from "@/components/desktop-download-card";
+import { GameCoverFrame } from "@/components/game-cover";
 import { getPublicPortfolio, groupLabel } from "@/lib/catalog";
 import { getDesktopDownloadInfo } from "@/lib/desktop-download";
 import { formatBytes } from "@/lib/manifest";
@@ -55,7 +56,7 @@ export default async function BaixarPortfolioPage({ params }: PageProps) {
           </p>
         )}
         <p className="mt-3 text-sm text-zinc-500">
-          {portfolio.entries.length} arquivo(s)
+          {portfolio.entries.length} jogo(s)
           {totalBytes > 0 ? ` · ${formatBytes(totalBytes)}` : ""}
         </p>
       </div>
@@ -67,46 +68,37 @@ export default async function BaixarPortfolioPage({ params }: PageProps) {
       />
 
       <section className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
-        <h2 className="text-lg font-semibold">2. Arquivos neste pacote</h2>
+        <h2 className="text-lg font-semibold">2. Jogos neste pacote</h2>
         {portfolio.entries.length === 0 ? (
           <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
-            Este portfólio ainda não tem arquivos cadastrados.
+            Este portfólio ainda não tem jogos cadastrados.
           </p>
         ) : (
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-zinc-200 text-zinc-500 dark:border-zinc-800">
-                  <th className="py-2 pr-4 font-medium">Nome</th>
-                  <th className="py-2 pr-4 font-medium">Tipo</th>
-                  <th className="py-2 pr-4 font-medium">Pasta no HD</th>
-                  <th className="py-2 font-medium">Tamanho</th>
-                </tr>
-              </thead>
-              <tbody>
-                {portfolio.entries.map((entry) => (
-                  <tr
-                    key={entry.id}
-                    className="border-b border-zinc-100 dark:border-zinc-900"
-                  >
-                    <td className="py-3 pr-4">
-                      {entry.label}
-                      {entry.optional && (
-                        <span className="ml-1 text-zinc-500">· opcional</span>
-                      )}
-                    </td>
-                    <td className="py-3 pr-4">{groupLabel(entry.group) ?? "—"}</td>
-                    <td className="py-3 pr-4 font-mono text-xs text-zinc-600 dark:text-zinc-400">
-                      {entry.destination}
-                    </td>
-                    <td className="py-3 text-zinc-600 dark:text-zinc-400">
-                      {entry.sizeBytes > 0 ? formatBytes(entry.sizeBytes) : "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {portfolio.entries.map((entry) => (
+              <li
+                key={entry.id}
+                className="overflow-hidden rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/40"
+              >
+                <div className="aspect-[3/4] w-full">
+                  <GameCoverFrame title={entry.label} coverUrl={entry.coverUrl} />
+                </div>
+                <div className="space-y-2 p-4">
+                  <div>
+                    <h3 className="font-semibold leading-snug">{entry.label}</h3>
+                    {entry.optional && (
+                      <span className="text-xs text-zinc-500">Opcional</span>
+                    )}
+                  </div>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                    {groupLabel(entry.group) ?? "—"}
+                    {entry.sizeBytes > 0 ? ` · ${formatBytes(entry.sizeBytes)}` : ""}
+                  </p>
+                  <p className="font-mono text-xs text-zinc-500">{entry.destination}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
         )}
       </section>
 

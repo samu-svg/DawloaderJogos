@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Dawloader",
-  description: "Monte portfólios de download e organize arquivos no HD automaticamente.",
+  title: "Dawloader — Baixe jogos e instale no HD",
+  description:
+    "Catálogo de jogos para download. O app Dawloader baixa, descompacta e organiza cada jogo na pasta certa do seu HD.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

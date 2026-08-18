@@ -103,6 +103,20 @@ export function AddGamePackageForm({ slug }: { slug: string }) {
         />
       </label>
 
+      <label className="block space-y-1.5 sm:col-span-2">
+        <span className="text-sm font-medium">Capa do jogo (opcional)</span>
+        <input
+          name="game_cover_url"
+          type="url"
+          placeholder="https://... (jpg, png ou webp)"
+          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900"
+        />
+        <span className="text-xs text-zinc-500">
+          Link público da imagem. Pode ser Imgur, Google Drive (imagem), GitHub
+          ou qualquer URL que abra a foto direto no navegador.
+        </span>
+      </label>
+
       <label className="block space-y-1.5">
         <span className="text-sm font-medium">Arquivo do jogo</span>
         <input

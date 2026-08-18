@@ -9,6 +9,7 @@ import {
   type ActionResult,
 } from "@/lib/actions/portfolios";
 import { formatBytes } from "@/lib/manifest";
+import { GameCoverFrame } from "@/components/game-cover";
 import type { EntryRow, PortfolioRow } from "@/lib/database.types";
 
 type FormState = ActionResult | null;
@@ -141,7 +142,11 @@ export function PortfolioEditor({
                 key={entry.id}
                 className="flex flex-col gap-3 py-4 sm:flex-row sm:items-start sm:justify-between"
               >
-                <div className="min-w-0 space-y-1">
+                <div className="flex min-w-0 gap-4">
+                  <div className="h-16 w-12 shrink-0 overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800">
+                    <GameCoverFrame title={entry.label} coverUrl={entry.cover_url} />
+                  </div>
+                  <div className="min-w-0 space-y-1">
                   <p className="font-medium">{entry.label}</p>
                   <p className="font-mono text-sm text-zinc-600 dark:text-zinc-400">
                     {entry.destination}
@@ -156,6 +161,7 @@ export function PortfolioEditor({
                       ? ` · ${groupLabel(entry.group_name)}`
                       : ""}
                   </p>
+                  </div>
                 </div>
                 <form action={deleteEntryForm.bind(null, portfolio.slug, entry.id)}>
                   <button

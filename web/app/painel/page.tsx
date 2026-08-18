@@ -1,9 +1,12 @@
 import Link from "next/link";
+import { isPortfolioAdmin } from "@/lib/admin";
 import { createClient, currentUser } from "@/lib/supabase/server";
 
 export default async function PainelPage() {
   const user = await currentUser();
   if (!user) return null;
+
+  const canCreatePortfolio = isPortfolioAdmin(user.email);
 
   const supabase = await createClient();
   const { data: portfolios } = await supabase
@@ -22,25 +25,31 @@ export default async function PainelPage() {
             colocar.
           </p>
         </div>
-        <Link
-          href="/painel/novo"
-          className="inline-flex items-center justify-center rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200"
-        >
-          Novo portfólio
-        </Link>
+        {canCreatePortfolio && (
+          <Link
+            href="/painel/novo"
+            className="inline-flex items-center justify-center rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200"
+          >
+            Novo portfólio
+          </Link>
+        )}
       </div>
 
       {!portfolios?.length ? (
         <div className="rounded-2xl border border-dashed border-zinc-300 p-10 text-center dark:border-zinc-700">
           <p className="text-zinc-600 dark:text-zinc-400">
-            Você ainda não criou nenhum portfólio.
+            {canCreatePortfolio
+              ? "Você ainda não criou nenhum portfólio."
+              : "Nenhum portfólio disponível para esta conta."}
           </p>
-          <Link
-            href="/painel/novo"
-            className="mt-4 inline-block text-sm font-medium underline"
-          >
-            Criar o primeiro
-          </Link>
+          {canCreatePortfolio && (
+            <Link
+              href="/painel/novo"
+              className="mt-4 inline-block text-sm font-medium underline"
+            >
+              Criar o primeiro
+            </Link>
+          )}
         </div>
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2">
