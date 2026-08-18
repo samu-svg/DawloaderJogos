@@ -1,4 +1,10 @@
+import path from "node:path";
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
+import type { CatalogLaunch } from "../shared/catalog-launch";
+import {
+  findDeepLinkInArgv,
+  parseDawloaderDeepLink,
+} from "../shared/catalog-launch";
 import type { Manifest, ResolvedManifestEntry } from "../shared/manifest";
 import {
   findDuplicateDestinations,
@@ -8,8 +14,53 @@ import { preloadPath, rendererPath } from "./app-paths";
 import { downloadEntry, type DownloadProgress } from "./download";
 import { resolveUnderRoot } from "./paths";
 
+const PROTOCOL = "dawloader";
+
 let mainWindow: BrowserWindow | null = null;
 let abortController: AbortController | null = null;
+let pendingCatalogLaunch: CatalogLaunch | null = null;
+
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
+if (!gotSingleInstanceLock) {
+  app.quit();
+}
+
+function registerProtocolClient() {
+  if (process.defaultApp) {
+    if (process.argv.length >= 2) {
+      app.setAsDefaultProtocolClient(PROTOCOL, process.execPath, [
+        path.resolve(process.argv[1]),
+      ]);
+      return;
+    }
+  }
+
+  app.setAsDefaultProtocolClient(PROTOCOL);
+}
+
+function deliverCatalogLaunch(launch: CatalogLaunch) {
+  pendingCatalogLaunch = launch;
+
+  if (!mainWindow) return;
+
+  if (mainWindow.webContents.isLoading()) {
+    mainWindow.webContents.once("did-finish-load", () => {
+      mainWindow?.webContents.send("catalog-launch", launch);
+    });
+  } else {
+    mainWindow.webContents.send("catalog-launch", launch);
+  }
+
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.focus();
+}
+
+function handleDeepLink(rawUrl: string) {
+  const launch = parseDawloaderDeepLink(rawUrl);
+  if (!launch) return;
+  deliverCatalogLaunch(launch);
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -92,13 +143,29 @@ async function fetchManifest(baseUrl: string, slug: string): Promise<Manifest> {
   return manifest;
 }
 
-app.whenReady().then(() => {
-  createWindow();
-
-  app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+if (gotSingleInstanceLock) {
+  app.on("second-instance", (_event, argv) => {
+    const deepLink = findDeepLinkInArgv(argv);
+    if (deepLink) handleDeepLink(deepLink);
   });
-});
+
+  app.on("open-url", (event, url) => {
+    event.preventDefault();
+    handleDeepLink(url);
+  });
+
+  app.whenReady().then(() => {
+    registerProtocolClient();
+    createWindow();
+
+    const deepLink = findDeepLinkInArgv(process.argv);
+    if (deepLink) handleDeepLink(deepLink);
+
+    app.on("activate", () => {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    });
+  });
+}
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
@@ -119,6 +186,12 @@ ipcMain.handle(
     return fetchManifest(payload.baseUrl, payload.slug);
   },
 );
+
+ipcMain.handle("consume-catalog-launch", () => {
+  const launch = pendingCatalogLaunch;
+  pendingCatalogLaunch = null;
+  return launch;
+});
 
 ipcMain.handle("cancel-download", () => {
   abortController?.abort();

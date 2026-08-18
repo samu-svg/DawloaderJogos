@@ -50,6 +50,8 @@ function init() {
 
   /** @type {Manifest | null} */
   let manifest = null;
+  /** @type {string[] | null} */
+  let pendingEntryFilter = null;
   /** @type {string | null} */
   let selectedRoot = null;
   /** @type {Map<string, HTMLElement>} */
@@ -112,7 +114,8 @@ function init() {
     }
   }
 
-  function renderEntries(entries) {
+  function renderEntries(entries, options = {}) {
+    const allChecked = options.allChecked === true;
     entriesBody.innerHTML = "";
     statusCells.clear();
 
@@ -123,7 +126,7 @@ function init() {
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.dataset.entryId = entry.id;
-      checkbox.checked = !entry.optional;
+      checkbox.checked = allChecked || !entry.optional;
       checkbox.addEventListener("change", updateDownloadButton);
       checkCell.appendChild(checkbox);
 
@@ -162,7 +165,26 @@ function init() {
     updateDownloadButton();
   }
 
-  loadBtn.addEventListener("click", async () => {
+  loadBtn.addEventListener("click", () => {
+    void loadManifest();
+  });
+
+  async function applyCatalogLaunch(launch) {
+    /** @type {HTMLInputElement} */ (baseUrlInput).value = launch.baseUrl;
+    /** @type {HTMLInputElement} */ (slugInput).value = launch.slug;
+    pendingEntryFilter = launch.entryIds?.length ? launch.entryIds : null;
+    await loadManifest();
+  }
+
+  window.dawloader.onCatalogLaunch((launch) => {
+    void applyCatalogLaunch(launch);
+  });
+
+  void window.dawloader.consumeCatalogLaunch().then((launch) => {
+    if (launch) void applyCatalogLaunch(launch);
+  });
+
+  async function loadManifest() {
     loadError.classList.add("hidden");
     loadBtn.disabled = true;
     loadBtn.textContent = "Carregando...";
@@ -172,11 +194,31 @@ function init() {
         /** @type {HTMLInputElement} */ (baseUrlInput).value.trim(),
         /** @type {HTMLInputElement} */ (slugInput).value.trim(),
       );
+
+      let entries = manifest.entries;
+      const entryFilter = pendingEntryFilter;
+      pendingEntryFilter = null;
+
+      if (entryFilter?.length) {
+        const allowed = new Set(entryFilter);
+        entries = entries.filter((entry) => allowed.has(entry.id));
+        if (entries.length === 0) {
+          throw new Error(
+            "Os jogos selecionados no site não foram encontrados neste catálogo.",
+          );
+        }
+        manifest = {
+          ...manifest,
+          entries,
+          totalBytes: entries.reduce((sum, entry) => sum + entry.sizeBytes, 0),
+        };
+      }
+
       portfolioTitle.textContent = manifest.portfolio.title;
       const totalLabel =
         manifest.totalBytes > 0 ? ` · ${formatBytes(manifest.totalBytes)}` : "";
       portfolioMeta.textContent = `${manifest.entries.length} jogo(s)${totalLabel}`;
-      renderEntries(manifest.entries);
+      renderEntries(manifest.entries, { allChecked: Boolean(entryFilter?.length) });
       manifestSection.classList.remove("hidden");
       summary.textContent = selectedRoot
         ? ""
@@ -189,7 +231,7 @@ function init() {
       loadBtn.disabled = false;
       loadBtn.textContent = "Carregar manifesto";
     }
-  });
+  }
 
   selectFolderBtn.addEventListener("click", async () => {
     const folder = await window.dawloader.selectFolder();

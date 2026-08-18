@@ -1,6 +1,6 @@
 {
   "name": "dawloader-desktop",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "private": true,
   "description": "Baixa arquivos de um manifesto e organiza no HD",
   "main": "dist/main/main.js",
@@ -15,7 +15,7 @@
     "appId": "com.dawloader.desktop",
     "productName": "Dawloader",
     "directories": {
-      "output": "release"
+      "output": "release7"
     },
     "files": [
       "dist/**/*",
@@ -38,6 +38,14 @@
       ],
       "signAndEditExecutable": false
     },
+    "protocols": [
+      {
+        "name": "Dawloader",
+        "schemes": [
+          "dawloader"
+        ]
+      }
+    ],
     "portable": {
       "artifactName": "Dawloader-${version}-portable.exe"
     }

@@ -117,7 +117,7 @@ export default async function HomePage() {
               {portfolios.slice(0, 4).map((portfolio) => (
                 <li key={portfolio.slug}>
                   <Link
-                    href={`/baixar/${portfolio.slug}`}
+                    href={`/baixar?catalog=${portfolio.slug}`}
                     className="block h-full rounded-2xl border border-zinc-200 bg-white p-5 transition hover:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-600"
                   >
                     <h3 className="font-semibold">{portfolio.title}</h3>

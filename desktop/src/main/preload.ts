@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron";
+import type { CatalogLaunch } from "../shared/catalog-launch";
 import type { Manifest, ResolvedManifestEntry } from "../shared/manifest";
 
 export interface DownloadProgressEvent {
@@ -14,6 +15,8 @@ const api = {
   selectFolder: (): Promise<string | null> => ipcRenderer.invoke("select-folder"),
   fetchManifest: (baseUrl: string, slug: string): Promise<Manifest> =>
     ipcRenderer.invoke("fetch-manifest", { baseUrl, slug }),
+  consumeCatalogLaunch: (): Promise<CatalogLaunch | null> =>
+    ipcRenderer.invoke("consume-catalog-launch"),
   startDownload: (rootDir: string, entries: ResolvedManifestEntry[]) =>
     ipcRenderer.invoke("start-download", { rootDir, entries }),
   cancelDownload: (): Promise<void> => ipcRenderer.invoke("cancel-download"),
@@ -22,6 +25,12 @@ const api = {
       callback(payload);
     ipcRenderer.on("download-progress", listener);
     return () => ipcRenderer.removeListener("download-progress", listener);
+  },
+  onCatalogLaunch: (callback: (launch: CatalogLaunch) => void) => {
+    const listener = (_: Electron.IpcRendererEvent, payload: CatalogLaunch) =>
+      callback(payload);
+    ipcRenderer.on("catalog-launch", listener);
+    return () => ipcRenderer.removeListener("catalog-launch", listener);
   },
   onDownloadComplete: (
     callback: (payload: {
