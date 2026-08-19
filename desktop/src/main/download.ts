@@ -16,7 +16,7 @@ export interface DownloadProgress {
   error?: string;
 }
 
-const PARTIAL_SUFFIX = ".dawloader.partial";
+const PARTIAL_SUFFIX = ".montahd.partial";
 
 function partialPath(finalPath: string): string {
   return finalPath + PARTIAL_SUFFIX;

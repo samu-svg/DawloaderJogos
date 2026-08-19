@@ -13,8 +13,8 @@ export interface DownloadProgressEvent {
 
 const api = {
   selectFolder: (): Promise<string | null> => ipcRenderer.invoke("select-folder"),
-  fetchManifest: (baseUrl: string, slug: string): Promise<Manifest> =>
-    ipcRenderer.invoke("fetch-manifest", { baseUrl, slug }),
+  fetchManifest: (baseUrl: string, slug: string, manifestToken?: string): Promise<Manifest> =>
+    ipcRenderer.invoke("fetch-manifest", { baseUrl, slug, manifestToken }),
   consumeCatalogLaunch: (): Promise<CatalogLaunch | null> =>
     ipcRenderer.invoke("consume-catalog-launch"),
   startDownload: (rootDir: string, entries: ResolvedManifestEntry[]) =>
@@ -46,6 +46,6 @@ const api = {
   },
 };
 
-contextBridge.exposeInMainWorld("dawloader", api);
+contextBridge.exposeInMainWorld("montahd", api);
 
-export type DawloaderApi = typeof api;
+export type MontaHDApi = typeof api;

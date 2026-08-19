@@ -3,7 +3,7 @@ import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import type { CatalogLaunch } from "../shared/catalog-launch";
 import {
   findDeepLinkInArgv,
-  parseDawloaderDeepLink,
+  parseMontaHDDeepLink,
 } from "../shared/catalog-launch";
 import type { Manifest, ResolvedManifestEntry } from "../shared/manifest";
 import {
@@ -14,7 +14,7 @@ import { preloadPath, rendererPath } from "./app-paths";
 import { downloadEntry, type DownloadProgress } from "./download";
 import { resolveUnderRoot } from "./paths";
 
-const PROTOCOL = "dawloader";
+const PROTOCOL = "montahd";
 
 let mainWindow: BrowserWindow | null = null;
 let abortController: AbortController | null = null;
@@ -57,7 +57,7 @@ function deliverCatalogLaunch(launch: CatalogLaunch) {
 }
 
 function handleDeepLink(rawUrl: string) {
-  const launch = parseDawloaderDeepLink(rawUrl);
+  const launch = parseMontaHDDeepLink(rawUrl);
   if (!launch) return;
   deliverCatalogLaunch(launch);
 }
@@ -68,7 +68,7 @@ function createWindow() {
     height: 720,
     minWidth: 720,
     minHeight: 560,
-    title: "Dawloader",
+    title: "MontaHD",
     show: false,
     webPreferences: {
       preload: preloadPath(),
@@ -84,7 +84,7 @@ function createWindow() {
     "did-fail-load",
     (_event, errorCode, errorDescription, validatedURL) => {
       dialog.showErrorBox(
-        "Dawloader",
+        "MontaHD",
         `Não foi possível carregar a interface (${errorCode}).\n${errorDescription}\n${validatedURL}`,
       );
     },
@@ -97,7 +97,7 @@ function createWindow() {
   void mainWindow.loadFile(indexHtml).catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error);
     dialog.showErrorBox(
-      "Dawloader",
+      "MontaHD",
       `Não foi possível abrir a interface.\n${indexHtml}\n\n${message}`,
     );
   });
@@ -115,9 +115,23 @@ function normalizeBaseUrl(input: string): string {
   return input.replace(/\/+$/, "");
 }
 
-async function fetchManifest(baseUrl: string, slug: string): Promise<Manifest> {
+async function fetchManifest(
+  baseUrl: string,
+  slug: string,
+  manifestToken?: string,
+): Promise<Manifest> {
   const url = `${normalizeBaseUrl(baseUrl)}/api/portfolios/${encodeURIComponent(slug)}/manifest`;
-  const response = await fetch(url);
+  const headers: Record<string, string> = {};
+  if (manifestToken) {
+    headers.Authorization = `Bearer ${manifestToken}`;
+  }
+
+  const response = await fetch(url, { headers });
+  if (response.status === 401 || response.status === 403) {
+    throw new Error(
+      "Assinatura ativa necessária. Abra o catálogo pelo site e clique em Abrir no MontaHD.",
+    );
+  }
   if (response.status === 404) {
     throw new Error("Portfólio não encontrado ou não está público.");
   }
@@ -182,8 +196,11 @@ ipcMain.handle("select-folder", async () => {
 
 ipcMain.handle(
   "fetch-manifest",
-  async (_event, payload: { baseUrl: string; slug: string }) => {
-    return fetchManifest(payload.baseUrl, payload.slug);
+  async (
+    _event,
+    payload: { baseUrl: string; slug: string; manifestToken?: string },
+  ) => {
+    return fetchManifest(payload.baseUrl, payload.slug, payload.manifestToken);
   },
 );
 

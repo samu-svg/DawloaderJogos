@@ -1,6 +1,6 @@
 {
-  "name": "dawloader-desktop",
-  "version": "0.2.2",
+  "name": "montahd-desktop",
+  "version": "0.4.0",
   "private": true,
   "description": "Baixa arquivos de um manifesto e organiza no HD",
   "main": "dist/main/main.js",
@@ -12,10 +12,10 @@
     "dist": "npm run build && electron-builder"
   },
   "build": {
-    "appId": "com.dawloader.desktop",
-    "productName": "Dawloader",
+    "appId": "com.montahd.desktop",
+    "productName": "MontaHD",
     "directories": {
-      "output": "release7"
+      "output": "release10"
     },
     "files": [
       "dist/**/*",
@@ -40,14 +40,14 @@
     },
     "protocols": [
       {
-        "name": "Dawloader",
+        "name": "MontaHD",
         "schemes": [
-          "dawloader"
+          "montahd"
         ]
       }
     ],
     "portable": {
-      "artifactName": "Dawloader-${version}-portable.exe"
+      "artifactName": "MontaHD-${version}-portable.exe"
     }
   },
   "devDependencies": {

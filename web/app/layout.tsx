@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Dawloader — Baixe jogos e instale no HD",
+  title: "MontaHD — O app que monta o seu HD",
   description:
-    "Catálogo de jogos para download. O app Dawloader baixa, descompacta e organiza cada jogo na pasta certa do seu HD.",
+    "Assine o app MontaHD e tenha o acervo completo liberado: download e extração automáticos, cada jogo na pasta certa do HD, sem anúncios.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

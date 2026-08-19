@@ -37,7 +37,7 @@ export async function extractZipToContentRoot(zipPath: string): Promise<{
   contentRoot: string;
   tempDir: string;
 }> {
-  const tempDir = await mkdtemp(path.join(os.tmpdir(), "dawloader-"));
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "montahd-"));
   await extract(zipPath, { dir: tempDir });
   const contentRoot = await detectContentRoot(tempDir);
   return { contentRoot, tempDir };

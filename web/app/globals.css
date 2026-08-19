@@ -1,26 +1,73 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #08080f;
+  --foreground: #f4f4f5;
+  --surface: #12121c;
+  --surface-hover: #1b1b28;
+  --border: #292938;
+  --accent: #8b5cf6;
+  --accent-hover: #a78bfa;
+  --accent-muted: rgba(139, 92, 246, 0.14);
+  --accent-2: #22d3ee;
+  --accent-3: #f472b6;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-muted: var(--accent-muted);
+  --color-accent-2: var(--accent-2);
+  --color-accent-3: var(--accent-3);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* Fundo vivo do topo: três halos de cor sobre o fundo escuro. */
+.hero-glow {
+  background:
+    radial-gradient(ellipse 70% 70% at 15% 0%, rgba(139, 92, 246, 0.45), transparent 70%),
+    radial-gradient(ellipse 60% 60% at 85% 10%, rgba(34, 211, 238, 0.22), transparent 70%),
+    radial-gradient(ellipse 70% 50% at 50% 100%, rgba(244, 114, 182, 0.18), transparent 70%),
+    linear-gradient(180deg, #14101f 0%, var(--background) 100%);
+}
+
+.text-gradient {
+  background: linear-gradient(100deg, #ffffff 10%, #c4b5fd 45%, #67e8f9 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.card-glow {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.25s ease,
+    border-color 0.2s ease;
+}
+
+.card-glow:hover {
+  transform: translateY(-5px);
+  border-color: rgba(167, 139, 250, 0.55);
+  box-shadow:
+    0 14px 44px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(139, 92, 246, 0.25);
+}
+
+.grid-lines {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 44px 44px;
 }

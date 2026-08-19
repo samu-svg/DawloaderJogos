@@ -14,7 +14,7 @@ function initial(title: string): string {
 function Fallback({ title, className = "" }: { title: string; className?: string }) {
   return (
     <div
-      className={`flex h-full w-full items-center justify-center bg-gradient-to-br from-zinc-200 to-zinc-300 text-3xl font-semibold text-zinc-600 dark:from-zinc-800 dark:to-zinc-900 dark:text-zinc-300 ${className}`}
+      className={`flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-900/40 via-zinc-900 to-zinc-950 text-3xl font-semibold text-violet-200/80 ${className}`}
       aria-hidden
     >
       {initial(title)}

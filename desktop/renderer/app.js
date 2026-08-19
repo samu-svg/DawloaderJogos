@@ -2,10 +2,10 @@
 /** @typedef {import('../src/shared/manifest').ResolvedManifestEntry} ResolvedManifestEntry */
 
 function init() {
-  if (!window.dawloader) {
+  if (!window.montahd) {
     document.body.innerHTML =
       '<div style="padding:24px;font-family:Segoe UI,sans-serif;color:#f4f4f5;background:#0a0a0a;min-height:100vh">' +
-      "<h1>Dawloader</h1>" +
+      "<h1>MontaHD</h1>" +
       "<p>Não foi possível iniciar a interface. Reinstale o aplicativo ou execute a versão mais recente.</p>" +
       "</div>";
     return;
@@ -52,6 +52,8 @@ function init() {
   let manifest = null;
   /** @type {string[] | null} */
   let pendingEntryFilter = null;
+  /** @type {string | null} */
+  let pendingManifestToken = null;
   /** @type {string | null} */
   let selectedRoot = null;
   /** @type {Map<string, HTMLElement>} */
@@ -173,14 +175,15 @@ function init() {
     /** @type {HTMLInputElement} */ (baseUrlInput).value = launch.baseUrl;
     /** @type {HTMLInputElement} */ (slugInput).value = launch.slug;
     pendingEntryFilter = launch.entryIds?.length ? launch.entryIds : null;
+    pendingManifestToken = launch.manifestToken ?? null;
     await loadManifest();
   }
 
-  window.dawloader.onCatalogLaunch((launch) => {
+  window.montahd.onCatalogLaunch((launch) => {
     void applyCatalogLaunch(launch);
   });
 
-  void window.dawloader.consumeCatalogLaunch().then((launch) => {
+  void window.montahd.consumeCatalogLaunch().then((launch) => {
     if (launch) void applyCatalogLaunch(launch);
   });
 
@@ -190,14 +193,16 @@ function init() {
     loadBtn.textContent = "Carregando...";
 
     try {
-      manifest = await window.dawloader.fetchManifest(
+      manifest = await window.montahd.fetchManifest(
         /** @type {HTMLInputElement} */ (baseUrlInput).value.trim(),
         /** @type {HTMLInputElement} */ (slugInput).value.trim(),
+        pendingManifestToken ?? undefined,
       );
 
       let entries = manifest.entries;
       const entryFilter = pendingEntryFilter;
       pendingEntryFilter = null;
+      pendingManifestToken = null;
 
       if (entryFilter?.length) {
         const allowed = new Set(entryFilter);
@@ -234,7 +239,7 @@ function init() {
   }
 
   selectFolderBtn.addEventListener("click", async () => {
-    const folder = await window.dawloader.selectFolder();
+    const folder = await window.montahd.selectFolder();
     if (!folder) return;
     selectedRoot = folder;
     rootPath.textContent = folder;
@@ -280,7 +285,7 @@ function init() {
     }
 
     try {
-      const result = await window.dawloader.startDownload(selectedRoot, entries);
+      const result = await window.montahd.startDownload(selectedRoot, entries);
       const okCount = result.results.filter((item) => item.ok).length;
       summary.textContent = `Concluído: ${okCount}/${result.results.length} jogo(s) instalados.`;
     } catch (error) {
@@ -294,13 +299,13 @@ function init() {
   });
 
   cancelBtn.addEventListener("click", async () => {
-    await window.dawloader.cancelDownload();
+    await window.montahd.cancelDownload();
     summary.textContent = "Download cancelado.";
     cancelBtn.classList.add("hidden");
     downloadBtn.disabled = false;
   });
 
-  window.dawloader.onDownloadProgress((event) => {
+  window.montahd.onDownloadProgress((event) => {
     const cell = statusCells.get(event.entryId);
     if (!cell) return;
 
@@ -325,7 +330,7 @@ function init() {
     }
   });
 
-  window.dawloader.onDownloadComplete(({ results }) => {
+  window.montahd.onDownloadComplete(({ results }) => {
     const okCount = results.filter((item) => item.ok).length;
     summary.textContent = `Concluído: ${okCount}/${results.length} jogo(s) instalados.`;
     cancelBtn.classList.add("hidden");

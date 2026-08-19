@@ -1,4 +1,4 @@
-# Organizador de Downloads
+# MontaHD
 
 Plataforma onde qualquer pessoa monta um **portfólio** — uma lista de arquivos com a
 pasta de destino de cada um — e um aplicativo de desktop baixa tudo e organiza
@@ -94,7 +94,7 @@ No app:
 
 O app nunca executa arquivos — apenas copia. Se o manifesto incluir SHA-256, o
 hash é verificado antes de finalizar. Downloads interrompidos retomam de onde
-pararam (arquivo `.dawloader.partial`).
+pararam (arquivo `.montahd.partial`).
 
 Para gerar um instalador Windows:
 

@@ -2,6 +2,7 @@ export type CatalogLaunch = {
   baseUrl: string;
   slug: string;
   entryIds: string[];
+  manifestToken: string | null;
 };
 
 function parseEntryIds(raw: string | null): string[] {
@@ -12,10 +13,10 @@ function parseEntryIds(raw: string | null): string[] {
     .filter(Boolean);
 }
 
-export function parseDawloaderDeepLink(rawUrl: string): CatalogLaunch | null {
+export function parseMontaHDDeepLink(rawUrl: string): CatalogLaunch | null {
   try {
     const url = new URL(rawUrl);
-    if (url.protocol !== "dawloader:") return null;
+    if (url.protocol !== "montahd:") return null;
 
     const baseUrl = url.searchParams.get("url")?.trim();
     const slugFromQuery = url.searchParams.get("slug")?.trim();
@@ -33,6 +34,7 @@ export function parseDawloaderDeepLink(rawUrl: string): CatalogLaunch | null {
       baseUrl: baseUrl.replace(/\/+$/, ""),
       slug,
       entryIds: parseEntryIds(url.searchParams.get("entries")),
+      manifestToken: url.searchParams.get("token")?.trim() || null,
     };
   } catch {
     return null;
@@ -40,5 +42,9 @@ export function parseDawloaderDeepLink(rawUrl: string): CatalogLaunch | null {
 }
 
 export function findDeepLinkInArgv(argv: string[]): string | null {
-  return argv.find((arg) => arg.startsWith("dawloader://")) ?? null;
+  return argv.find((arg) => arg.startsWith("montahd://")) ?? null;
+}
+
+export function entryIdsFromLaunch(launch: CatalogLaunch): string[] | null {
+  return launch.entryIds.length ? launch.entryIds : null;
 }

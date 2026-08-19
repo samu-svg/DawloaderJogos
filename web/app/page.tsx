@@ -1,141 +1,84 @@
-import Link from "next/link";
+import type { Metadata } from "next";
+import {
+  GameCatalog,
+  type CatalogGameItem,
+} from "@/components/game-catalog";
+import { MontaHDStrip } from "@/components/montahd-strip";
 import { SiteHeader } from "@/components/site-header";
+import { StoreFooter } from "@/components/store-footer";
 import { isPortfolioAdmin } from "@/lib/admin";
-import { listPublicPortfolios } from "@/lib/catalog";
+import { loadAcervo } from "@/lib/games";
+import { userHasCatalogAccess } from "@/lib/subscription";
 import { currentUser } from "@/lib/supabase/server";
 
-export default async function HomePage() {
-  const [user, portfolios] = await Promise.all([
+export const metadata: Metadata = {
+  title: "MontaHD — Downloads de jogos de Xbox 360",
+  description:
+    "Acervo de jogos de Xbox 360 para download. O app MontaHD baixa, descompacta e organiza cada jogo na pasta certa do seu HD.",
+};
+
+type PageProps = {
+  searchParams: Promise<{ colecao?: string }>;
+};
+
+export default async function HomePage({ searchParams }: PageProps) {
+  const [{ colecao }, user, { games, collections }] = await Promise.all([
+    searchParams,
     currentUser(),
-    listPublicPortfolios(),
+    loadAcervo(),
   ]);
+
   const isAdmin = isPortfolioAdmin(user?.email);
+  const hasAccess = user ? await userHasCatalogAccess(user) : false;
+
+  const items: CatalogGameItem[] = games.map((game) => ({
+    id: game.id,
+    slug: game.slug,
+    label: game.label,
+    coverUrl: game.coverUrl,
+    sizeBytes: game.totalBytes,
+    extraCount: game.extraCount,
+    collectionSlug: game.collectionSlug,
+    collectionTitle: game.collectionTitle,
+    platform: game.platform,
+  }));
 
   return (
     <>
-      <SiteHeader email={user?.email} showPainelLink={isAdmin} />
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-6 py-16 sm:py-20">
-        <div className="max-w-2xl space-y-6">
-          <p className="text-sm font-medium uppercase tracking-[0.2em] text-zinc-500">
-            Downloads para o seu HD
+      <SiteHeader
+        email={user?.email}
+        showPainelLink={isAdmin}
+        hasAccess={hasAccess}
+      />
+      <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-8">
+        <div className="mb-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-2">
+            Xbox 360
           </p>
-          <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-            Baixe jogos prontos e instale na pasta certa.
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            Downloads de jogos
           </h1>
-          <p className="text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Escolha um pacote no catálogo, abra o app Dawloader no Windows e
-            confirme o download. Arquivos .zip são descompactados sozinhos —
-            você recebe a pasta do jogo em <strong>Games</strong>,{" "}
-            <strong>Content</strong> ou onde estiver configurado.
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
+            Navegue pelo acervo, abra a página do jogo e instale no HD pelo app
+            MontaHD.
           </p>
-          <div className="flex flex-wrap gap-3 pt-2">
-            {user ? (
-              <Link
-                href="/baixar"
-                className="rounded-full bg-zinc-950 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200"
-              >
-                Ver catálogo
-              </Link>
-            ) : (
-              <>
-                <Link
-                  href="/cadastro"
-                  className="rounded-full bg-zinc-950 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200"
-                >
-                  Criar conta
-                </Link>
-                <Link
-                  href="/login"
-                  className="rounded-full border border-zinc-300 px-5 py-2.5 text-sm font-medium transition hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
-                >
-                  Entrar
-                </Link>
-              </>
-            )}
-            {isAdmin && (
-              <Link
-                href="/painel"
-                className="rounded-full border border-zinc-300 px-5 py-2.5 text-sm font-medium transition hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
-              >
-                Administrar
-              </Link>
-            )}
-          </div>
         </div>
 
-        <section id="catalogo" className="mt-16 scroll-mt-8">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h2 className="text-2xl font-semibold tracking-tight">Catálogo</h2>
-              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                {user
-                  ? "Pacotes disponíveis para download."
-                  : "Crie uma conta para acessar os pacotes completos."}
-              </p>
-            </div>
-            {user && portfolios.length > 0 && (
-              <Link
-                href="/baixar"
-                className="text-sm font-medium underline text-zinc-600 dark:text-zinc-400"
-              >
-                Ver todos
-              </Link>
-            )}
-          </div>
+        <MontaHDStrip hasAccess={hasAccess} />
 
-          {!portfolios.length ? (
-            <div className="mt-6 rounded-2xl border border-dashed border-zinc-300 p-10 text-center dark:border-zinc-700">
-              <p className="text-zinc-600 dark:text-zinc-400">
-                Nenhum pacote publicado ainda. Volte em breve.
-              </p>
-            </div>
-          ) : !user ? (
-            <div className="mt-6 rounded-2xl border border-zinc-200 bg-zinc-50 p-8 text-center dark:border-zinc-800 dark:bg-zinc-900/40">
-              <p className="text-zinc-700 dark:text-zinc-300">
-                {portfolios.length} pacote(s) disponíveis.
-              </p>
-              <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-                Crie uma conta gratuita para ver o catálogo e baixar.
-              </p>
-              <div className="mt-4 flex flex-wrap justify-center gap-3">
-                <Link
-                  href="/cadastro"
-                  className="rounded-full bg-zinc-950 px-5 py-2 text-sm font-medium text-white dark:bg-zinc-50 dark:text-zinc-950"
-                >
-                  Criar conta
-                </Link>
-                <Link
-                  href="/login"
-                  className="rounded-full border border-zinc-300 px-5 py-2 text-sm font-medium dark:border-zinc-700"
-                >
-                  Entrar
-                </Link>
-              </div>
-            </div>
-          ) : (
-            <ul className="mt-6 grid gap-4 sm:grid-cols-2">
-              {portfolios.slice(0, 4).map((portfolio) => (
-                <li key={portfolio.slug}>
-                  <Link
-                    href={`/baixar?catalog=${portfolio.slug}`}
-                    className="block h-full rounded-2xl border border-zinc-200 bg-white p-5 transition hover:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-600"
-                  >
-                    <h3 className="font-semibold">{portfolio.title}</h3>
-                    {portfolio.description && (
-                      <p className="mt-2 line-clamp-2 text-sm text-zinc-600 dark:text-zinc-400">
-                        {portfolio.description}
-                      </p>
-                    )}
-                    <p className="mt-4 text-xs text-zinc-500">
-                      {portfolio.entryCount} jogo(s) · atualizado{" "}
-                      {new Date(portfolio.updatedAt).toLocaleDateString("pt-BR")}
-                    </p>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+        <div className="mt-10">
+          <GameCatalog
+            games={items}
+            collections={collections}
+            initialCollection={
+              collections.some((item) => item.slug === colecao)
+                ? (colecao ?? null)
+                : null
+            }
+          />
+        </div>
+
+        <StoreFooter />
       </main>
     </>
   );

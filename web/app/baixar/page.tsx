@@ -5,9 +5,8 @@ import { listPublicCatalogs } from "@/lib/catalog";
 import { getSiteUrl } from "@/lib/site-url";
 
 export const metadata: Metadata = {
-  title: "Catálogos — Dawloader",
-  description:
-    "Veja os jogos disponíveis e baixe com o app Dawloader no Windows.",
+  title: "Meu acervo — MontaHD",
+  description: "Escolha os jogos do acervo e deixe o app montar o seu HD.",
 };
 
 type PageProps = {
@@ -25,14 +24,13 @@ export default async function BaixarPage({ searchParams }: PageProps) {
     catalogs.find((item) => item.slug === catalog)?.slug ?? catalogs[0]?.slug ?? "";
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
+      <DesktopDownloadCard />
       <CatalogBrowser
         catalogs={catalogs}
         activeSlug={activeSlug}
         siteUrl={siteUrl}
       />
-
-      <DesktopDownloadCard showSteps={false} />
     </div>
   );
 }

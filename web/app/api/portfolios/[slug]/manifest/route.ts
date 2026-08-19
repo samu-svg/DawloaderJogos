@@ -5,20 +5,33 @@ import {
   type ResolvedManifestEntry,
   validateDestination,
 } from "@/lib/manifest";
+import { resolveManifestAccess } from "@/lib/manifest-access";
 import { downloadUrlTtl, signDownloadUrl } from "@/lib/storage";
 import { createPublicReaderClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
+  const access = await resolveManifestAccess(request, slug);
+
+  if (!access.allowed) {
+    return NextResponse.json(
+      {
+        error:
+          access.status === 403
+            ? "Assinatura ativa necessária para baixar este catálogo."
+            : "Faça login ou abra o catálogo pelo site com sua conta.",
+      },
+      { status: access.status },
+    );
+  }
+
   const supabase = await createPublicReaderClient();
 
-  // Row level security limits this to public portfolios, so an unlisted one
-  // simply comes back empty.
   const { data: portfolio, error: portfolioError } = await supabase
     .from("portfolios")
     .select("id, slug, title, description, updated_at")
@@ -26,8 +39,6 @@ export async function GET(
     .eq("is_public", true)
     .maybeSingle();
 
-  // A failure to reach the database must not masquerade as "not found", or a
-  // misconfigured deployment looks like an empty catalogue.
   if (portfolioError) {
     console.error("Falha ao consultar o portfólio:", portfolioError);
     return NextResponse.json(
@@ -58,12 +69,12 @@ export async function GET(
     );
   }
 
+  const allowedIds = access.entryFilter ? new Set(access.entryFilter) : null;
   const entries: ResolvedManifestEntry[] = [];
 
   for (const row of rows ?? []) {
-    // The path was validated when it was saved and again by a database
-    // constraint, but it reaches a filesystem from here, so it is checked
-    // once more rather than trusted.
+    if (allowedIds && !allowedIds.has(row.id)) continue;
+
     const path = validateDestination(row.destination);
     if (!path.ok) continue;
 
@@ -86,6 +97,13 @@ export async function GET(
       group: row.group_name ?? undefined,
       downloadUrl,
     });
+  }
+
+  if (entries.length === 0) {
+    return NextResponse.json(
+      { error: "Nenhum jogo disponível neste catálogo." },
+      { status: 404 },
+    );
   }
 
   const manifest: Manifest = {

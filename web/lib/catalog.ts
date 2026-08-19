@@ -1,102 +1,20 @@
 import { createClient, createPublicReaderClient } from "@/lib/supabase/server";
 
-export type CatalogPortfolio = {
-  slug: string;
-  title: string;
-  description: string | null;
-  updatedAt: string;
-  entryCount: number;
-};
+export type {
+  CatalogEntry,
+  CatalogGame,
+  CatalogPortfolio,
+  CatalogPortfolioDetail,
+} from "@/lib/catalog-shared";
+export {
+  entryIdsForSelectedGames,
+  groupCatalogGames,
+  groupLabel,
+} from "@/lib/catalog-shared";
 
-export type CatalogEntry = {
-  id: string;
-  label: string;
-  destination: string;
-  sizeBytes: number;
-  optional: boolean;
-  group: string | null;
-  coverUrl: string | null;
-};
-
-export type CatalogPortfolioDetail = CatalogPortfolio & {
-  entries: CatalogEntry[];
-};
-
-export type CatalogGame = {
-  id: string;
-  label: string;
-  coverUrl: string | null;
-  sizeBytes: number;
-  optional: boolean;
-  extraCount: number;
-  totalBytes: number;
-  /** IDs de manifesto (jogo + extras vinculados). */
-  entryIds: string[];
-};
-
-export function groupCatalogGames(entries: CatalogEntry[]): CatalogGame[] {
-  const groups: CatalogGame[] = [];
-  let current: CatalogGame | null = null;
-
-  for (const entry of entries) {
-    if (entry.group === "jogo") {
-      current = {
-        id: entry.id,
-        label: entry.label,
-        coverUrl: entry.coverUrl,
-        sizeBytes: entry.sizeBytes,
-        optional: entry.optional,
-        extraCount: 0,
-        totalBytes: entry.sizeBytes,
-        entryIds: [entry.id],
-      };
-      groups.push(current);
-      continue;
-    }
-
-    if (entry.group === "conteudo" && current) {
-      current.extraCount += 1;
-      current.totalBytes += entry.sizeBytes;
-      current.entryIds.push(entry.id);
-      continue;
-    }
-
-    current = {
-      id: entry.id,
-      label: entry.label,
-      coverUrl: entry.coverUrl,
-      sizeBytes: entry.sizeBytes,
-      optional: entry.optional,
-      extraCount: 0,
-      totalBytes: entry.sizeBytes,
-      entryIds: [entry.id],
-    };
-    groups.push(current);
-  }
-
-  return groups;
-}
-
-export function entryIdsForSelectedGames(
-  games: CatalogGame[],
-  selectedGameIds: ReadonlySet<string>,
-): string[] {
-  const ids: string[] = [];
-  for (const game of games) {
-    if (selectedGameIds.has(game.id)) {
-      ids.push(...game.entryIds);
-    }
-  }
-  return ids;
-}
-
-export function groupLabel(group: string | null): string | null {
-  if (group === "jogo") return "Jogo";
-  if (group === "conteudo") return "DLC / Content";
-  return group;
-}
-
-export async function listPublicPortfolios(): Promise<CatalogPortfolio[]> {
+export async function listPublicPortfolios(): Promise<
+  import("@/lib/catalog-shared").CatalogPortfolio[]
+> {
   const supabase = await createPublicReaderClient();
   const { data, error } = await supabase
     .from("portfolios")
@@ -115,7 +33,9 @@ export async function listPublicPortfolios(): Promise<CatalogPortfolio[]> {
   }));
 }
 
-export async function listPublicCatalogs(): Promise<CatalogPortfolioDetail[]> {
+export async function listPublicCatalogs(): Promise<
+  import("@/lib/catalog-shared").CatalogPortfolioDetail[]
+> {
   const supabase = await createPublicReaderClient();
   const { data, error } = await supabase
     .from("portfolios")
@@ -153,7 +73,7 @@ export async function listPublicCatalogs(): Promise<CatalogPortfolioDetail[]> {
 
 export async function getPublicPortfolio(
   slug: string,
-): Promise<CatalogPortfolioDetail | null> {
+): Promise<import("@/lib/catalog-shared").CatalogPortfolioDetail | null> {
   const supabase = await createPublicReaderClient();
   const { data, error } = await supabase
     .from("portfolios")
