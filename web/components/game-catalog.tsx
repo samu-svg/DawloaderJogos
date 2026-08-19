@@ -84,13 +84,13 @@ export function GameCatalog({
   return (
     <section id="jogos" className="scroll-mt-20">
       <div className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-4 sm:p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <input
             type="search"
             value={search}
             onChange={(event) => update(() => setSearch(event.target.value))}
             placeholder="Buscar jogo por nome..."
-            className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-accent focus:ring-1 focus:ring-accent sm:max-w-sm"
+            className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-center text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-accent focus:ring-1 focus:ring-accent sm:max-w-md"
           />
           <div className="flex items-center gap-2 text-sm">
             <span className="text-zinc-500">Ordenar:</span>
@@ -109,7 +109,7 @@ export function GameCatalog({
         </div>
 
         {collections.length > 1 && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap justify-center gap-2">
             <button
               type="button"
               onClick={() => update(() => setCollection(null))}
@@ -139,7 +139,7 @@ export function GameCatalog({
         )}
 
         {availableLetters.length > 1 && (
-          <div className="flex flex-wrap gap-1.5 border-t border-border pt-3">
+          <div className="flex flex-wrap justify-center gap-1.5 border-t border-border pt-3">
             <button
               type="button"
               onClick={() => update(() => setLetter(null))}
@@ -169,7 +169,7 @@ export function GameCatalog({
         )}
       </div>
 
-      <p className="mt-4 text-sm text-zinc-500">
+      <p className="mt-4 text-center text-sm text-zinc-500">
         {filtered.length} jogo(s)
         {totalBytes > 0 ? ` · ${formatBytes(totalBytes)}` : ""}
         {totalPages > 1 ? ` · página ${currentPage} de ${totalPages}` : ""}

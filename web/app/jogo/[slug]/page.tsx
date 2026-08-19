@@ -59,8 +59,9 @@ export default async function GamePage({ params }: PageProps) {
         showPainelLink={isAdmin}
         hasAccess={hasAccess}
       />
-      <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-8">
-        <nav className="flex items-center gap-2 text-sm text-zinc-500">
+      <main className="content-narrow flex-1 px-6 py-8">
+        <div className="page-stack">
+        <nav className="flex flex-wrap items-center justify-center gap-2 text-center text-sm text-zinc-500">
           <Link href="/" className="hover:text-zinc-300">
             Jogos
           </Link>
@@ -70,8 +71,8 @@ export default async function GamePage({ params }: PageProps) {
           <span className="truncate text-zinc-300">{title}</span>
         </nav>
 
-        <div className="mt-6 grid gap-8 lg:grid-cols-[260px_1fr]">
-          <div className="mx-auto w-full max-w-[260px]">
+        <div className="mt-6 grid justify-items-center gap-8 lg:grid-cols-[260px_1fr] lg:items-start">
+          <div className="w-full max-w-[260px]">
             <div className="overflow-hidden rounded-2xl border border-border bg-surface">
               <div className="relative aspect-[3/4] w-full">
                 <GameCoverFrame title={game.label} coverUrl={game.coverUrl} />
@@ -79,7 +80,7 @@ export default async function GamePage({ params }: PageProps) {
             </div>
           </div>
 
-          <div className="space-y-7">
+          <div className="space-y-7 text-center">
             <div>
               <span className="rounded-md bg-emerald-500/15 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-300">
                 {game.platform}
@@ -163,7 +164,7 @@ export default async function GamePage({ params }: PageProps) {
 
         {related.length > 0 && (
           <section className="mt-16">
-            <h2 className="text-xl font-bold tracking-tight text-white">
+            <h2 className="section-heading text-xl sm:text-2xl">
               Mais jogos de {game.platform}
             </h2>
             <ul className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
@@ -184,6 +185,7 @@ export default async function GamePage({ params }: PageProps) {
         )}
 
         <StoreFooter />
+        </div>
       </main>
     </>
   );

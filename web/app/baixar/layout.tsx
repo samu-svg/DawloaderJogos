@@ -19,7 +19,9 @@ export default async function BaixarLayout({
   return (
     <>
       <SiteHeader email={user.email} showPainelLink={isAdmin} hasAccess />
-      <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-8">{children}</main>
+      <main className="content-narrow flex-1 px-6 py-8">
+        <div className="page-stack">{children}</div>
+      </main>
     </>
   );
 }

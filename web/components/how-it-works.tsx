@@ -19,14 +19,12 @@ const STEPS = [
 export function HowItWorks() {
   return (
     <section id="como-funciona" className="mt-20 scroll-mt-24">
-      <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-        Como funciona
-      </h2>
+      <h2 className="section-heading">Como funciona</h2>
       <ol className="mt-7 grid gap-4 sm:grid-cols-3">
         {STEPS.map((item) => (
           <li
             key={item.step}
-            className="relative overflow-hidden rounded-2xl border border-border bg-surface p-6"
+            className="relative overflow-hidden rounded-2xl border border-border bg-surface p-6 text-center"
           >
             <span className="absolute -right-1 -top-5 text-7xl font-bold text-white/5">
               {item.step}

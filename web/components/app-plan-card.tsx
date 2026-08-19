@@ -30,8 +30,8 @@ export function AppPlanCard({
 
   return (
     <section className="mt-20">
-      <div className="relative overflow-hidden rounded-3xl border border-accent/30 bg-gradient-to-br from-violet-600/15 via-surface to-cyan-500/10 p-8 sm:p-12">
-        <div className="grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:items-center">
+      <div className="relative overflow-hidden rounded-3xl border border-accent/30 bg-gradient-to-br from-violet-600/15 via-surface to-cyan-500/10 p-8 text-center sm:p-12">
+        <div className="mx-auto grid max-w-3xl gap-10">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-2">
               O que você compra
@@ -39,7 +39,7 @@ export function AppPlanCard({
             <h2 className="mt-3 text-2xl font-bold tracking-tight text-white sm:text-3xl">
               Acesso ao MontaHD
             </h2>
-            <p className="mt-3 max-w-xl leading-7 text-zinc-300">
+            <p className="mt-3 leading-7 text-zinc-300">
               A venda é do aplicativo — a ferramenta que baixa, descompacta e
               monta o seu HD. O acervo entra como parte do acesso.
             </p>
@@ -49,7 +49,7 @@ export function AppPlanCard({
                 Pagamentos em configuração — o acervo está aberto para testes.
               </p>
             )}
-            <div className="mt-7 flex flex-wrap items-center gap-3">
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
               <Link
                 href={href}
                 className="rounded-xl bg-accent px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-accent/25 transition hover:bg-accent-hover"
@@ -68,7 +68,7 @@ export function AppPlanCard({
             </div>
           </div>
 
-          <ul className="space-y-3">
+          <ul className="mx-auto max-w-md space-y-3 text-left">
             {INCLUDED.map((item) => (
               <li key={item} className="flex gap-3 text-sm leading-6 text-zinc-300">
                 <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/20 text-[11px] font-bold text-accent-hover">

@@ -14,7 +14,7 @@ export default async function PainelLayout({
   return (
     <>
       <SiteHeader email={user.email} showPainelLink={isPortfolioAdmin(user.email)} />
-      <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">{children}</main>
+      <main className="content-narrow flex-1 px-6 py-10">{children}</main>
     </>
   );
 }

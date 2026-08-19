@@ -34,7 +34,8 @@ export default async function AppPage() {
         showPainelLink={isAdmin}
         hasAccess={hasAccess}
       />
-      <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-8">
+      <main className="content-narrow flex-1 px-6 py-8">
+        <div className="page-stack">
         <AppHero
           loggedIn={Boolean(user)}
           hasAccess={hasAccess}
@@ -56,6 +57,7 @@ export default async function AppPage() {
         />
 
         <StoreFooter />
+        </div>
       </main>
     </>
   );

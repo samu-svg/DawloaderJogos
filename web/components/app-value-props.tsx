@@ -32,7 +32,7 @@ export function AppValueProps() {
         {PROPS.map((item) => (
           <article
             key={item.title}
-            className={`card-glow rounded-2xl border p-6 ${item.ring}`}
+            className={`card-glow rounded-2xl border p-6 text-center ${item.ring}`}
           >
             <h3 className={`text-base font-semibold ${item.accent}`}>
               {item.title}

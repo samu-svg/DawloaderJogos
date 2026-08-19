@@ -13,48 +13,51 @@ export function SiteHeader({
 }) {
   return (
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3.5">
-        <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2.5">
-            <Image
-              src="/montahd-icon.png"
-              alt=""
-              width={32}
-              height={32}
-              className="h-8 w-8 rounded-lg"
-              priority
-            />
-            <span className="text-lg font-semibold tracking-tight">
-              Monta<span className="text-gradient">HD</span>
-            </span>
+      <div className="content-narrow grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-6 py-3.5">
+        <nav className="hidden items-center gap-1 justify-self-start sm:flex">
+          <Link
+            href="/"
+            className="rounded-lg px-3 py-1.5 text-sm text-zinc-400 transition hover:bg-surface-hover hover:text-white"
+          >
+            Jogos
           </Link>
-          <nav className="hidden items-center gap-1 sm:flex">
-            <Link
-              href="/"
-              className="rounded-lg px-3 py-1.5 text-sm text-zinc-400 transition hover:bg-surface-hover hover:text-white"
-            >
-              Jogos
-            </Link>
-            <Link
-              href="/app"
-              className="rounded-lg px-3 py-1.5 text-sm text-zinc-400 transition hover:bg-surface-hover hover:text-white"
-            >
-              O app
-            </Link>
-          </nav>
-        </div>
-        <nav className="flex items-center gap-2 text-sm">
+          <Link
+            href="/app"
+            className="rounded-lg px-3 py-1.5 text-sm text-zinc-400 transition hover:bg-surface-hover hover:text-white"
+          >
+            O app
+          </Link>
           {showPainelLink && (
             <Link
               href="/painel"
-              className="hidden rounded-lg px-3 py-1.5 text-zinc-400 transition hover:bg-surface-hover hover:text-white sm:inline"
+              className="rounded-lg px-3 py-1.5 text-sm text-zinc-400 transition hover:bg-surface-hover hover:text-white"
             >
               Admin
             </Link>
           )}
+        </nav>
+
+        <Link
+          href="/"
+          className="flex items-center justify-center gap-2.5 justify-self-center"
+        >
+          <Image
+            src="/montahd-icon.png"
+            alt=""
+            width={32}
+            height={32}
+            className="h-8 w-8 rounded-lg"
+            priority
+          />
+          <span className="text-lg font-semibold tracking-tight">
+            Monta<span className="text-gradient">HD</span>
+          </span>
+        </Link>
+
+        <nav className="flex items-center justify-end gap-2 justify-self-end text-sm">
           {email ? (
             <>
-              <span className="hidden max-w-[160px] truncate text-zinc-500 lg:inline">
+              <span className="hidden max-w-[140px] truncate text-zinc-500 xl:inline">
                 {email}
               </span>
               <Link

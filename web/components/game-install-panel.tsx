@@ -63,7 +63,7 @@ export function GameInstallPanel({
 
   if (access === "anon") {
     return (
-      <div className="rounded-2xl border border-accent/30 bg-accent-muted p-6">
+      <div className="rounded-2xl border border-accent/30 bg-accent-muted p-6 text-center">
         <h2 className="text-base font-semibold text-white">
           Baixar {gameTitle}
         </h2>
@@ -71,7 +71,7 @@ export function GameInstallPanel({
           O download é feito pelo app MontaHD, que instala o jogo direto na
           pasta certa do HD. Crie sua conta para liberar o app e o acervo.
         </p>
-        <div className="mt-5 flex flex-wrap gap-3">
+        <div className="mt-5 flex flex-wrap justify-center gap-3">
           <Link
             href="/cadastro?next=/assinar"
             className="rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-hover"
@@ -91,14 +91,14 @@ export function GameInstallPanel({
 
   if (access === "sem-assinatura") {
     return (
-      <div className="rounded-2xl border border-accent/30 bg-accent-muted p-6">
+      <div className="rounded-2xl border border-accent/30 bg-accent-muted p-6 text-center">
         <h2 className="text-base font-semibold text-white">
           Baixar {gameTitle}
         </h2>
         <p className="mt-2 text-sm leading-6 text-zinc-400">
           Libere o app MontaHD para baixar este e qualquer outro jogo do acervo.
         </p>
-        <div className="mt-5 flex flex-wrap gap-3">
+        <div className="mt-5 flex flex-wrap justify-center gap-3">
           <Link
             href="/assinar?next=/"
             className="rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-hover"
@@ -117,7 +117,7 @@ export function GameInstallPanel({
   }
 
   return (
-    <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-6">
+    <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-6 text-center">
       <h2 className="text-base font-semibold text-white">Baixar {gameTitle}</h2>
       <p className="mt-2 text-sm leading-6 text-zinc-300">
         Abre o MontaHD já com este jogo marcado. Escolha a pasta raiz do HD e
@@ -128,7 +128,7 @@ export function GameInstallPanel({
           {error}
         </p>
       )}
-      <div className="mt-5 flex flex-wrap items-center gap-3">
+      <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
         <button
           type="button"
           disabled={loading}

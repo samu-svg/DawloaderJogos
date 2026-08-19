@@ -75,7 +75,7 @@ export function OpenMontaHDButton({
       )}
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-6 py-4 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="content-narrow flex flex-col items-center gap-3 px-6 text-center sm:flex-row sm:items-center sm:justify-center">
           <div>
             <p className="font-semibold text-white">
               {disabled
@@ -94,7 +94,7 @@ export function OpenMontaHDButton({
               </p>
             )}
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-end">
             <Link
               href={download.href}
               download={download.fileName}

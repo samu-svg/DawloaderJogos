@@ -50,7 +50,7 @@ export function GameStoreCard({
           </span>
         )}
       </div>
-      <div className={`space-y-1 ${compact ? "p-3" : "p-4"}`}>
+      <div className={`space-y-1 text-center ${compact ? "p-3" : "p-4"}`}>
         <h3
           className={`truncate font-semibold text-white ${compact ? "text-sm" : "text-base"}`}
           title={formatTitle(title)}
@@ -64,7 +64,7 @@ export function GameStoreCard({
     </>
   );
 
-  const className = `card-glow block w-full overflow-hidden rounded-2xl border bg-surface text-left ${
+  const className = `card-glow block w-full overflow-hidden rounded-2xl border bg-surface text-center ${
     selected
       ? "border-accent ring-1 ring-accent"
       : "border-border"

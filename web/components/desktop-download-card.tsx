@@ -10,9 +10,9 @@ export function DesktopDownloadCard({
   const download = getDesktopDownloadInfo();
 
   return (
-    <section className="rounded-2xl border border-border bg-surface p-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="max-w-xl space-y-2">
+    <section className="rounded-2xl border border-border bg-surface p-6 text-center">
+      <div className="mx-auto flex max-w-xl flex-col items-center gap-4">
+        <div className="space-y-2">
           <h2 className="text-base font-semibold text-white">{title}</h2>
           <p className="text-sm leading-6 text-zinc-400">{description}</p>
           <p className="text-xs text-zinc-600">

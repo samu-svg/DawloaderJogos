@@ -43,7 +43,7 @@ export function GameCard({
           Ver e baixar
         </span>
       </div>
-      <div className="space-y-1 p-3">
+      <div className="space-y-1 p-3 text-center">
         <h3
           className="truncate text-sm font-semibold text-white"
           title={formatTitle(title)}
