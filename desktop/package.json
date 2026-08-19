@@ -16,7 +16,7 @@
     "productName": "MontaHD",
     "icon": "build/icon.png",
     "directories": {
-      "output": "release10"
+      "output": "release11"
     },
     "files": [
       "dist/**/*",
