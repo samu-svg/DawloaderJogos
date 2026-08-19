@@ -30,7 +30,14 @@ export async function POST(request: Request) {
   }
 
   const entryIds = Array.isArray(body.entryIds)
-    ? body.entryIds.filter((id) => typeof id === "string" && id.trim())
+    ? [
+        ...new Set(
+          body.entryIds
+            .filter((id): id is string => typeof id === "string")
+            .map((id) => id.trim())
+            .filter(Boolean),
+        ),
+      ]
     : undefined;
 
   if (!subscriptionsEnabled()) {

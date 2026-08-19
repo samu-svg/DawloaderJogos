@@ -23,8 +23,18 @@ test("inclui ids selecionados e token no link profundo", () => {
     ["abc-123", "def-456"],
     "tok-xyz",
   );
-  assert.match(link, /entries=abc-123%2Cdef-456/);
+  assert.doesNotMatch(link, /entries=/);
   assert.match(link, /token=tok-xyz/);
+});
+
+test("inclui ids na url quando nao ha token", () => {
+  const link = buildMontaHDCatalogLink(
+    "https://montahd.vercel.app",
+    "jogos360",
+    ["abc-123", "def-456"],
+  );
+  assert.match(link, /entries=abc-123%2Cdef-456/);
+  assert.doesNotMatch(link, /token=/);
 });
 
 test("parseia ids do parametro entries", () => {

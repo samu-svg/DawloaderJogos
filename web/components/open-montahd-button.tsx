@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { buildMontaHDCatalogLink } from "@/lib/montahd-link";
 import { getDesktopDownloadInfo } from "@/lib/desktop-download";
+import { formatBytes } from "@/lib/manifest";
 
 type OpenMontaHDButtonProps = {
   siteUrl: string;
@@ -11,6 +12,7 @@ type OpenMontaHDButtonProps = {
   catalogTitle: string;
   entryIds: string[];
   selectedCount: number;
+  selectedTotalBytes?: number;
 };
 
 export function OpenMontaHDButton({
@@ -19,6 +21,7 @@ export function OpenMontaHDButton({
   catalogTitle,
   entryIds,
   selectedCount,
+  selectedTotalBytes = 0,
 }: OpenMontaHDButtonProps) {
   const download = getDesktopDownloadInfo();
   const disabled = selectedCount === 0;
@@ -83,7 +86,11 @@ export function OpenMontaHDButton({
             </p>
             {!disabled && (
               <p className="text-sm text-zinc-500">
-                Coleção <strong className="text-zinc-400">{catalogTitle}</strong>
+                Coleção{" "}
+                <strong className="text-zinc-400">{catalogTitle}</strong>
+                {selectedTotalBytes > 0
+                  ? ` · ${formatBytes(selectedTotalBytes)}`
+                  : ""}
               </p>
             )}
           </div>

@@ -11,67 +11,173 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="app">
-      <header class="header">
-        <div>
-          <h1>MontaHD</h1>
-          <p>Baixa arquivos de um portfólio e organiza no HD.</p>
+    <div class="app-shell">
+      <header class="titlebar" aria-label="Barra de título">
+        <div class="titlebar-brand">
+          <img class="logo" src="icon.png" alt="" width="24" height="24" />
+          <span class="titlebar-name">MontaHD</span>
         </div>
+        <span class="titlebar-sub">Organizador de HD</span>
       </header>
 
-      <section class="card">
-        <h2>1. Carregar portfólio</h2>
-        <div class="grid two">
-          <label>
-            <span>URL do site</span>
-            <input id="base-url" type="url" value="https://montahd.vercel.app" />
-          </label>
-          <label>
-            <span>Slug do portfólio</span>
-            <input id="slug" type="text" placeholder="meu-pacote" />
-          </label>
-        </div>
-        <button id="load-btn" class="primary">Carregar manifesto</button>
-        <p id="load-error" class="error hidden"></p>
-      </section>
+      <main class="content">
+        <section class="hero-panel" id="hero-panel">
+          <p class="eyebrow">Instalador para Windows</p>
+          <h1 id="hero-title">Escolha no site, instale aqui</h1>
+          <p class="hero-desc" id="hero-desc">
+            Abra o catálogo no navegador, marque os jogos e clique em
+            <strong>Instalar no HD</strong>. O app abre já com tudo pronto —
+            você só escolhe a pasta do HD.
+          </p>
+        </section>
 
-      <section id="manifest-section" class="card hidden">
-        <div class="manifest-header">
-          <div>
-            <h2 id="portfolio-title">Portfólio</h2>
-            <p id="portfolio-meta" class="muted"></p>
+        <nav class="steps" aria-label="Progresso">
+          <div class="step active" id="step-1">
+            <span class="step-num">1</span>
+            <span class="step-label">Catálogo</span>
           </div>
-          <button id="select-folder-btn" class="secondary">Escolher pasta de destino</button>
-        </div>
-        <p id="root-path" class="mono muted">Nenhuma pasta selecionada.</p>
-        <p class="muted" style="margin-top: 0.5rem; font-size: 0.85rem">
-          Escolha a pasta do HD, marque os jogos e clique em
-          <strong>Iniciar download</strong>. Arquivos .zip são descompactados
-          automaticamente na pasta certa (Games, Content…).
-        </p>
+          <div class="step-connector" aria-hidden="true"></div>
+          <div class="step" id="step-2">
+            <span class="step-num">2</span>
+            <span class="step-label">Instalar</span>
+          </div>
+        </nav>
 
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th><input id="select-all" type="checkbox" checked /></th>
-                <th>Jogo</th>
-                <th>Tipo</th>
-                <th>Pasta no HD (pode editar)</th>
-                <th>Tamanho</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="entries-body"></tbody>
-          </table>
-        </div>
+        <section class="panel welcome-panel" id="welcome-panel">
+          <div class="welcome-flow">
+            <div class="welcome-step">
+              <span class="welcome-step-num">1</span>
+              <div>
+                <strong>Abra o catálogo</strong>
+                <p class="muted">Escolha os jogos que quer no acervo.</p>
+              </div>
+            </div>
+            <div class="welcome-step">
+              <span class="welcome-step-num">2</span>
+              <div>
+                <strong>Clique em Instalar no HD</strong>
+                <p class="muted">O site envia a seleção para este app.</p>
+              </div>
+            </div>
+            <div class="welcome-step">
+              <span class="welcome-step-num">3</span>
+              <div>
+                <strong>Escolha a pasta e confirme</strong>
+                <p class="muted">Download, verificação e extração automáticos.</p>
+              </div>
+            </div>
+          </div>
 
-        <div class="actions">
-          <button id="download-btn" class="primary" disabled>Iniciar download</button>
-          <button id="cancel-btn" class="danger hidden">Cancelar</button>
+          <div class="panel-actions welcome-actions">
+            <button id="open-catalog-btn" class="btn btn-primary" type="button">
+              Abrir catálogo no site
+            </button>
+            <button id="toggle-advanced-btn" class="btn btn-ghost" type="button">
+              Carregamento manual
+            </button>
+          </div>
+
+          <div id="advanced-panel" class="advanced-panel hidden">
+            <p class="advanced-note muted">
+              Use apenas se souber o slug do portfólio. O fluxo normal é pelo site.
+            </p>
+            <div class="field-grid">
+              <label class="field">
+                <span class="field-label">URL do site</span>
+                <input id="base-url" type="url" spellcheck="false" />
+              </label>
+              <label class="field">
+                <span class="field-label">Slug do portfólio</span>
+                <input id="slug" type="text" placeholder="meu-pacote" spellcheck="false" />
+              </label>
+            </div>
+            <div class="panel-actions">
+              <button id="load-btn" class="btn btn-secondary" type="button">
+                <span class="btn-label">Carregar manifesto</span>
+              </button>
+            </div>
+          </div>
+
+          <p id="load-error" class="alert alert-error hidden" role="alert"></p>
+        </section>
+
+        <section id="manifest-section" class="panel hidden">
+          <div class="panel-head split">
+            <div>
+              <h2 id="portfolio-title">Portfólio</h2>
+              <p id="portfolio-meta" class="muted"></p>
+            </div>
+            <div class="head-actions">
+              <button id="open-catalog-again-btn" class="btn btn-secondary" type="button">
+                Escolher outros jogos
+              </button>
+              <button id="select-folder-btn" class="btn btn-secondary" type="button">
+                Escolher pasta de destino
+              </button>
+            </div>
+          </div>
+
+          <div class="path-card" id="root-path-card">
+            <span class="path-label">Pasta raiz do HD</span>
+            <p id="root-path" class="path-value muted">Nenhuma pasta selecionada.</p>
+          </div>
+
+          <p class="hint">
+            Confira os jogos selecionados e clique em
+            <strong>Iniciar download</strong>. Arquivos .zip são descompactados
+            automaticamente na pasta correta (Games, Content…).
+          </p>
+
+          <div class="table-shell">
+            <table>
+              <thead>
+                <tr>
+                  <th class="col-check">
+                    <label class="checkbox-wrap" title="Selecionar todos">
+                      <input id="select-all" type="checkbox" checked />
+                      <span class="checkbox-ui" aria-hidden="true"></span>
+                    </label>
+                  </th>
+                  <th>Jogo</th>
+                  <th>Tipo</th>
+                  <th>Pasta no HD</th>
+                  <th>Tamanho</th>
+                  <th>Progresso</th>
+                </tr>
+              </thead>
+              <tbody id="entries-body"></tbody>
+            </table>
+          </div>
+
+          <div class="panel-actions">
+            <button id="download-btn" class="btn btn-primary" type="button" disabled>
+              Iniciar download
+            </button>
+            <button id="cancel-btn" class="btn btn-danger hidden" type="button">
+              Cancelar
+            </button>
+          </div>
+        </section>
+      </main>
+
+      <footer class="status-bar">
+        <span id="summary" class="status-text muted">
+          Aguardando seleção pelo site…
+        </span>
+      </footer>
+    </div>
+
+    <div id="confirm-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+      <div class="modal-backdrop" data-dismiss="confirm"></div>
+      <div class="modal-card">
+        <h3 id="confirm-title">Confirmar download</h3>
+        <p id="confirm-message" class="muted"></p>
+        <pre id="confirm-preview" class="confirm-preview"></pre>
+        <div class="modal-actions">
+          <button id="confirm-cancel" class="btn btn-secondary" type="button">Voltar</button>
+          <button id="confirm-ok" class="btn btn-primary" type="button">Baixar agora</button>
         </div>
-        <p id="summary" class="muted"></p>
-      </section>
+      </div>
     </div>
 
     <script src="app.js" defer></script>

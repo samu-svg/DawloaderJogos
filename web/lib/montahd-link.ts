@@ -11,7 +11,8 @@ export function buildMontaHDCatalogLink(
     slug: slug.trim(),
   });
 
-  if (entryIds.length > 0) {
+  // Com token, o manifesto já vem filtrado no servidor — evita URL enorme e truncamento.
+  if (entryIds.length > 0 && !manifestToken) {
     params.set("entries", entryIds.join(","));
   }
 

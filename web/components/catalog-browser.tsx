@@ -62,6 +62,11 @@ export function CatalogBrowser({
     selectedGameIds.has(game.id),
   ).length;
   const selectedEntryIds = entryIdsForSelectedGames(games, selectedGameIds);
+  const selectedTotalBytes = games.reduce(
+    (sum, game) =>
+      selectedGameIds.has(game.id) ? sum + game.totalBytes : sum,
+    0,
+  );
 
   function toggleGame(gameId: string) {
     setSelectedGameIds((current) => {
@@ -127,6 +132,11 @@ export function CatalogBrowser({
             className="w-full rounded-xl border border-border bg-surface py-2.5 pl-4 pr-4 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-accent focus:ring-1 focus:ring-accent"
           />
         </div>
+        <p className="text-sm text-zinc-500">
+          Clique nos jogos para marcar ou desmarcar. Depois use{" "}
+          <strong className="font-medium text-zinc-400">Instalar no HD</strong>{" "}
+          para enviar todos de uma vez ao app.
+        </p>
       </div>
 
       {games.length === 0 ? (
@@ -150,7 +160,10 @@ export function CatalogBrowser({
               Selecionar todos
             </label>
             <p className="text-sm text-zinc-500">
-              {selectedCount} de {games.length} na biblioteca
+              {selectedCount} de {games.length} selecionado(s)
+              {selectedTotalBytes > 0
+                ? ` · ${formatBytes(selectedTotalBytes)}`
+                : ""}
             </p>
           </div>
 
@@ -177,6 +190,7 @@ export function CatalogBrowser({
         catalogTitle={activeCatalog.title}
         entryIds={selectedEntryIds}
         selectedCount={selectedCount}
+        selectedTotalBytes={selectedTotalBytes}
       />
     </div>
   );

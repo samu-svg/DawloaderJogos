@@ -12,6 +12,7 @@ export interface DownloadProgressEvent {
 }
 
 const api = {
+  openExternal: (url: string): Promise<void> => ipcRenderer.invoke("open-external", url),
   selectFolder: (): Promise<string | null> => ipcRenderer.invoke("select-folder"),
   fetchManifest: (baseUrl: string, slug: string, manifestToken?: string): Promise<Manifest> =>
     ipcRenderer.invoke("fetch-manifest", { baseUrl, slug, manifestToken }),

@@ -1,5 +1,5 @@
 import path from "node:path";
-import { app, BrowserWindow, dialog, ipcMain } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
 import type { CatalogLaunch } from "../shared/catalog-launch";
 import {
   findDeepLinkInArgv,
@@ -64,12 +64,24 @@ function handleDeepLink(rawUrl: string) {
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 960,
-    height: 720,
-    minWidth: 720,
-    minHeight: 560,
+    width: 980,
+    height: 740,
+    minWidth: 760,
+    minHeight: 580,
     title: "MontaHD",
+    icon: rendererPath("icon.png"),
     show: false,
+    backgroundColor: "#08080f",
+    titleBarStyle: "hidden",
+    ...(process.platform === "win32"
+      ? {
+          titleBarOverlay: {
+            color: "#08080f",
+            symbolColor: "#f4f4f5",
+            height: 36,
+          },
+        }
+      : {}),
     webPreferences: {
       preload: preloadPath(),
       contextIsolation: true,
@@ -183,6 +195,14 @@ if (gotSingleInstanceLock) {
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
+});
+
+ipcMain.handle("open-external", async (_event, rawUrl: string) => {
+  const url = rawUrl.trim();
+  if (!url.startsWith("https://") && !url.startsWith("http://")) {
+    throw new Error("URL inválida.");
+  }
+  await shell.openExternal(url);
 });
 
 ipcMain.handle("select-folder", async () => {
