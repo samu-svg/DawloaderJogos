@@ -366,5 +366,157 @@
     "audioNote": "O pacote não está marcado como dublado.",
     "installHint": "games",
     "dlcNotes": []
+  },
+  "c025ac83-ec12-4141-a0ae-efec96b28801": {
+    "displayTitle": "Baja: Edge of Control",
+    "description": "Corrida off-road da THQ no deserto da Baja, com buggy, trophy truck e motos em circuitos longos cheios de salto e poeira. O pacote tem default.xex na raiz e vai para a pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "f9b7c88c-eb29-4bf2-9fca-5f9553fb5c06": {
+    "displayTitle": "Fight Night Round 4",
+    "description": "Boxe da EA Sports com o controle analógico de socos da série Fight Night. Elenco de peso-pesado e lendas, modos carreira e exibição. Pacote XeX na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "847b5032-0c7b-42da-8824-b87295e06f6a": {
+    "displayTitle": "London 2012",
+    "description": "Jogo oficial dos Jogos Olímpicos de Londres 2012, da Sega. Várias modalidades em mini-eventos de timing e precisão, com as equipes daquele verão. Pacote na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "1add183b-1a23-46f9-b328-8f4b9d4a9539": {
+    "displayTitle": "Stoked: Big Air Edition",
+    "description": "Simulador de snowboard da Destineer, edição Big Air com mais pistas e truques. Descer montanha, pegar ar e encadear manobras. Pacote XeX na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "5f217943-5a06-4ba5-b796-c6f285679da4": {
+    "displayTitle": "Top Spin 4",
+    "description": "Tênis da 2K Czech com o swing analógico da série Top Spin. Circuito ATP/WTA da época, criador de jogador e os courts clássicos. Pacote na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "6e8fde22-d682-45ef-a2ba-1789b232b3ef": {
+    "displayTitle": "UFC Undisputed 3",
+    "description": "Luta livre da Yuke's/THQ com o elenco do UFC da época, incluindo o Pride mode. Striking, grappling e os eventos no octógono. Pacote XeX na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "d80f6c03-e072-4cfe-9d44-1ca5037cdd0a": {
+    "displayTitle": "Call of Duty 4: Modern Warfare",
+    "description": "FPS da Infinity Ward que levou a série à guerra contemporânea. Campanha cinematográfica e o multiplayer que definiu a geração no Xbox 360. Pacote XeX na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "3271e47f-3c82-4548-a7ac-74879e499dfe": {
+    "displayTitle": "Call of Duty: Black Ops",
+    "description": "FPS da Treyarch na Guerra Fria: campanha com Mason, zumbis e o multiplayer da época. O zip é a pasta inteira (jogo em Cod Black OPS/ mais a pasta DLC'S). Instalação na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": [
+      "DLC Title ID 41560855 existe no disco em DLC'S/Content, mas ainda não há zip separado no R2 para Content/0000000000000000/41560855 (a pasta TitleID tem ~4,5 GB). O conteúdo extra segue dentro do zip do jogo."
+    ]
+  },
+  "48742df4-917c-4ca2-bf8d-81217142b6d2": {
+    "displayTitle": "Medal of Honor 2010 PTBR",
+    "description": "FPS da Danger Close/EA que reacende a série na guerra no Afeganistão, com operadores Tier 1. O pacote do acervo está rotulado como PTBR e vai para a pasta Games.",
+    "audio": "pt-br",
+    "audioNote": "Pasta: Medal of Honor 2010 PTBR.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "4235a623-3cd5-42bc-9825-5e82e652a028": {
+    "displayTitle": "Medal of Honor: Airborne",
+    "description": "FPS da EA Los Angeles na Segunda Guerra: o jogador salta de paraquedas na Normandia e escolhe por onde atacar o mapa. No HD a pasta se chama «Medal of Honor Airbone [NTSCU]»; o pacote tem default.xex e vai para Games.",
+    "audio": "desconhecido",
+    "audioNote": "Pasta NTSC-U sem marca PT-BR. O áudio típico desta versão é em inglês.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "76ed2aa2-1838-423a-98f2-a768396c477e": {
+    "displayTitle": "Metro 2033 PTBR",
+    "description": "FPS da 4A Games no metrô de Moscou após um holocausto nuclear. Atmosfera fechada, munição como moeda e criaturas na superfície. O pacote do acervo está rotulado como PTBR.",
+    "audio": "pt-br",
+    "audioNote": "Pasta: Metro 2033 - PTBR.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "f73b47c6-f33a-40ee-b532-3cec198ec752": {
+    "displayTitle": "Brutal Legend",
+    "description": "Ação da Double Fine: Eddie Riggs cai num mundo de heavy metal, com palco, demônios e um modo de estratégia em campo. Combate, exploração e riffs. Pacote na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "6f6264fa-4acb-4df4-94fb-52c96d8f48fa": {
+    "displayTitle": "Dead Island",
+    "description": "RPG de ação da Techland numa ilha resort tomada por zumbis. Combate em primeira pessoa, armas improvisadas e coop. Pacote XeX na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "e379928c-7260-43cc-86f6-707c276cdcd0": {
+    "displayTitle": "Hitman: Blood Money",
+    "description": "Stealth da IO Interactive com o Agente 47 em assassinatos que o jogador planeja à sua maneira. Neste acervo o pacote é só conteúdo Xbox (Title ID 534307DB): instala na pasta Content, não em Games. Não há default.xex — o jogo aparece pelo cache/GOD da pasta Content.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 534307DB — destino Content/0000000000000000/534307DB. Pacote Content-only; não vai para Games. O zip no R2 é a pasta inteira (Content/0000000000000000/534307DB por dentro), no mesmo estilo de PES 2014 e Life is Strange: o app desaninha pastas únicas na extração."
+    ]
+  },
+  "06d1e7a2-cc2d-434b-aead-8b57d8c934f7": {
+    "displayTitle": "Star Wars: The Force Unleashed 2",
+    "description": "Ação da LucasArts com Starkiller, sabre e poderes da Força. O zip é a pasta inteira: o jogo em STAR WARS THE FORCE UNLEASHED 2/ mais a pasta DLC'S. Instalação na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": [
+      "DLC Title ID 4C4107F2 existe no disco em DLC'S/content, mas ainda não há zip separado no R2 para Content/0000000000000000/4C4107F2 (a pasta TitleID tem ~1,6 GB). O extra segue dentro do zip do jogo."
+    ]
+  },
+  "da29129a-5f20-42cb-b1c6-4a0ff4791921": {
+    "displayTitle": "Star Wars: The Force Unleashed Ultimate Sith Edition",
+    "description": "Ação da LucasArts com Starkiller a serviço de Vader, nesta Ultimate Sith Edition. O zip único traz Disc 1 e Disc 2; um único item no catálogo, destino Games. Capa do marketplace é a caixa Platinum Hits do Force Unleashed (mesmo Title ID 4C4107D2).",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": [
+      "Dois discos no mesmo zip (Disc 1 e Disc 2). Não há entradas separadas."
+    ]
+  },
+  "9a924ed9-2d51-49f9-97b0-338b58c23411": {
+    "displayTitle": "Titanfall",
+    "description": "Tiro da Respawn no Xbox 360, com pilotos ágeis e titãs mecânicos no multiplayer. Versão desta geração, mais enxuta que a de PC/Xbox One. Pacote XeX na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "0403964f-a497-467a-9fcd-81b9ab127409": {
+    "displayTitle": "Turok PT-BR",
+    "description": "FPS da Propaganda Games: o caçador Turok enfrenta dinossauros e soldados numa selva hostil. O pacote do acervo está rotulado como PT-BR e vai para a pasta Games.",
+    "audio": "pt-br",
+    "audioNote": "Pasta: TUROK PT-BR.",
+    "installHint": "games",
+    "dlcNotes": []
   }
 }

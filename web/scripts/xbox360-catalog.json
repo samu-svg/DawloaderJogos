@@ -8,7 +8,8 @@
     "Jogos com default.xex: destino Games/{pasta}.zip → Games/{pasta}/",
     "Pacotes Content/GOD/XBLA/DLC: destino Content/0000000000000000/{TitleID}.zip",
     "FIFA 15/19 dlc/ interno fica no jogo (Games), não é pasta Content da Xbox.",
-    "Medal of Honor Airborne está vazio no HD — omitido.",
+    "Medal of Honor Airborne (pasta Airbone [NTSCU]) tem default.xex (~5 GB) — incluído no catálogo.",
+    "O zip leftover jogos/Teenage Mutant Ninja Turtles In Time Re-Shelled.zip não entra: TMNT já usa jogos/content/584109D2.zip.",
     "Zips atuais no R2 são a pasta inteira. DLC separado precisa de zip extra (campo contentZip)."
   ],
   "games": [
@@ -98,6 +99,7 @@
       "contentSource": "DLC'S/Content/0000000000000000/41560855"
     },
     { "folder": "Medal of Honor 2010 PTBR", "kind": "games" },
+    { "folder": "Medal of Honor Airbone [NTSCU]", "kind": "games" },
     { "folder": "Metro 2033 - PTBR", "kind": "games" },
     { "folder": "Brutal Legend", "kind": "games" },
     { "folder": "Dead Island", "kind": "games" },
