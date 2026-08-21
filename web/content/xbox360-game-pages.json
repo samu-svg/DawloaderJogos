@@ -126,5 +126,245 @@
     "dlcNotes": [
       "Title ID 584109D2 — destino Content/0000000000000000/584109D2 (Xbox Live Arcade / GOD)."
     ]
+  },
+  "3f3c66d7-70ec-4a2d-9d01-ca328a84dff0": {
+    "displayTitle": "Pro Evolution Soccer 2014",
+    "description": "PES 2014 da Konami no Xbox 360. Neste acervo o pacote é só conteúdo Xbox (Title ID 4B4E0856): instala na pasta Content, não em Games. Não há default.xex — o jogo aparece pelo cache/GOD da pasta Content.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 4B4E0856 — destino Content/0000000000000000/4B4E0856. Pacote Content-only; não vai para Games."
+    ]
+  },
+  "c5cf14dd-326c-4d84-8967-a9fdf2082323": {
+    "displayTitle": "Dragon Age 2 PT-BR",
+    "description": "RPG da BioWare ambientado em Kirkwall, sequência de Dragon Age: Origins. Combate em tempo real com pausa tática e escolhas que moldam a história. O pacote do acervo está rotulado como PT-BR e vai para a pasta Games.",
+    "audio": "pt-br",
+    "audioNote": "Pasta: DRAGON AGE 2 PT-BR.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "c3effe68-85b7-4195-973a-485cef967863": {
+    "displayTitle": "Far Cry 2",
+    "description": "FPS da Ubisoft ambientado numa África fictícia em guerra civil. Mundo aberto, malária, armas que emperram e fogo que se espalha. Pacote XeX na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "2820c254-3d69-4948-a074-6b17dd66b68b": {
+    "displayTitle": "Half-Life 2: The Orange Box",
+    "description": "Coletânea da Valve com Half-Life 2, os episódios, Team Fortress 2 e Portal. No Xbox 360 o pacote do acervo vai para Games, com default.xex na raiz da pasta.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não indica dublagem. A coletânea original mistura inglês e, em algumas regiões, legendas.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "57a108e4-1a79-401c-8477-f2cb21a218b1": {
+    "displayTitle": "Life is Strange Completo",
+    "description": "Aventura episódica da Dontnod em que Max Caulfield rebobina o tempo para salvar amizades e a cidade de Arcadia Bay. No acervo é o pacote completo XBLA (Title ID 5841147C): pasta Content, não Games.",
+    "audio": "desconhecido",
+    "audioNote": "Pasta «LIFE IS STRANGE COMPLETO» sem marca PT-BR. O jogo original é em inglês, com legendas em várias línguas na versão de varejo.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 5841147C — destino Content/0000000000000000/5841147C (Xbox Live Arcade / episódios). Pacote Content-only."
+    ]
+  },
+  "bbbd64bc-ab71-4827-af80-fcb98b19c183": {
+    "displayTitle": "Mafia II",
+    "description": "Ação em mundo aberto da 2K Czech: Vito Scaletta volta da Segunda Guerra e entra no crime organizado dos anos 40–50. Dirigir, atirar e cumprir missões numa cidade inspirada no nordeste dos EUA. Pacote na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "50404115-5961-4fb8-8314-64e2c37b949c": {
+    "displayTitle": "Asura's Wrath PT-BR",
+    "description": "Ação cinematográfica da CyberConnect2/Capcom, com brigas em escala mitológica e trechos em QTE. O default.xex fica na subpasta Asuras Wrath; o pacote inclui pasta de tradução. Instalação na pasta Games.",
+    "audio": "pt-br",
+    "audioNote": "Pasta: Asuras Wrath PT-BR (com pasta Tradução).",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "df92d381-515f-43c0-ad42-cc75164fb7a8": {
+    "displayTitle": "Devil May Cry 4",
+    "description": "Hack and slash da Capcom com Nero e Dante. Combos, estilos e chefes em vertigem típicos da série. Pacote XeX na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "e9f69fad-1824-4796-ac36-1efe7f6d57ba": {
+    "displayTitle": "Devil May Cry HD Collection",
+    "description": "Coletânea em HD dos três primeiros Devil May Cry no Xbox 360. Ação em terceira pessoa com Dante, combos e os cenários clássicos da série. Pacote na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "79faa2f3-ee5b-4832-aaca-294e5f93ccda": {
+    "displayTitle": "DmC Devil May Cry",
+    "description": "Reboot da Ninja Theory/Capcom com um Dante mais jovem em Limbo City. Combate rápido e plataforma entre o mundo real e o Limbo. O zip traz o jogo em Games; o DLC Title ID 43430824 ainda não está separado na pasta Content deste catálogo.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": [
+      "DLC 43430824 existe no disco em DLC/Content, mas ainda não há zip separado no R2. O lote de upload não foi interrompido para gerar esse extra."
+    ]
+  },
+  "b75ed1ff-bf92-4e1c-9320-1746dd781002": {
+    "displayTitle": "Enslaved: Odyssey to the West",
+    "description": "Ação e plataforma da Ninja Theory inspirada em Jornada ao Oeste: Monkey e Trip atravessam os EUA em ruínas. Combate, quebra-cabeças e trechos de escolta. O pacote inclui pasta de tradução e vai para Games.",
+    "audio": "desconhecido",
+    "audioNote": "Há pasta Tradução no pacote; o áudio do jogo não está marcado como dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "d9241d79-cac3-4ea5-9310-3a268e2ad358": {
+    "displayTitle": "Copa do Mundo da FIFA Brasil 2014",
+    "description": "Jogo oficial da Copa de 2014 da EA Sports, com as 32 seleções e os estádios daquele Mundial. O pacote do acervo indica inglês e português (En,Pt) e instala na pasta Games.",
+    "audio": "pt-br",
+    "audioNote": "Pasta: Copa do Mundo da FIFA Brasil 2014 (Brazil) (En,Pt).",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "5e4ed040-46c5-44d9-a197-32f131cd9823": {
+    "displayTitle": "DiRT 3 Complete Edition",
+    "description": "Corrida rally da Codemasters com terra, asfalto, gelo e os Gymkhana. A Complete Edition junta o jogo com o conteúdo extra da época. Pacote XeX na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": [
+      "Complete Edition: extras da edição vêm no zip do jogo (Games), não como DLC na pasta Content."
+    ]
+  },
+  "d0195c32-9bb5-48d0-af1c-6a8eb15c2ac3": {
+    "displayTitle": "FIFA Street 3",
+    "description": "Futebol de rua da EA, com partidas curtas, truques e 3 contra 3. Estilo arcade, bem diferente do FIFA de gramado. Pacote na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "7640ad45-40d7-4cae-80b5-33db3ac23b78": {
+    "displayTitle": "Rumble Roses XX",
+    "description": "Luta livre feminina da Konami no Xbox 360. Lutas em ringue com personagens estilizadas e modos de exibição. Pacote XeX na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "d0c95662-1743-4a6b-93e9-17d2b63f9ed6": {
+    "displayTitle": "Saints Row: The Third",
+    "description": "Ação em mundo aberto da Volition: os Saints tomam Steelport com humor absurdo, armas ridículas e caos urbano. Pacote na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "8f29db94-f564-4f61-8b1b-0d6ec578c8bb": {
+    "displayTitle": "Skate 2",
+    "description": "Simulador de skate da EA Black Box, com o controle analógico de manobras e a cidade de New San Vanelona. Criar picos, filmar clips e andar solto. Pacote na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "0702f186-bb06-4a5e-851d-ad605163e147": {
+    "displayTitle": "Back to the Future: The Game",
+    "description": "Aventura ponta-e-clique da Telltale baseada em De Volta para o Futuro. Marty e Doc atravessam episódios com diálogo, itens e viagens no DeLorean. Pacote na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como dublado. A série Telltale costuma ser em inglês.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "477f0f06-f1d1-4a5b-88fe-df07974a5514": {
+    "displayTitle": "Bee Movie Game",
+    "description": "Aventura infantil da Activision baseada no filme Bee Movie. Barry B. Benson atravessa fases leves inspiradas na animação. Pacote na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como dublado. Versões brasileiras do filme são dubladas; o áudio deste pacote não foi conferido.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "54d79674-fa72-49e1-a836-a8fc9138a6cc": {
+    "displayTitle": "G-Force",
+    "description": "Ação da Disney baseada no filme G-Force: esquadrão de cobaias em mini-missões de infiltração. Plataforma e combate leve. Pacote na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "269309c9-e77c-44ac-b3a1-b3c65ccb93fd": {
+    "displayTitle": "Harry Potter and the Order of the Phoenix",
+    "description": "Ação e exploração da EA: Hogwarts aberta para andar, feitiços e a trama da Ordem da Fênix. Pacote XeX na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "60fa9ace-ed97-429f-8180-47429ad0b25d": {
+    "displayTitle": "Terminator Salvation",
+    "description": "Tiro em terceira pessoa da Grin/Evolved, ligado ao filme Exterminador do Futuro: A Salvação. Combate contra máquinas na resistência humana. Pacote na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "2972274c-8ff5-4ae5-9499-51d5432bc497": {
+    "displayTitle": "The Chronicles of Narnia: Prince Caspian",
+    "description": "Ação da Traveller's Tales baseada em Nárnia: Príncipe Caspian. Combate cooperativo, personagens do livro e fases de batalha. Pacote na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "090d0775-1047-4d72-8514-a4a5bd090387": {
+    "displayTitle": "Transformers: Fall of Cybertron",
+    "description": "Tiro em terceira pessoa da High Moon: a guerra em Cybertron com Autobots e Decepticons jogáveis. Transformar entre robô e veículo no meio do combate. Pacote na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "ef873916-e26c-44ff-9c1b-d8187f315538": {
+    "displayTitle": "Dragon Ball: Raging Blast",
+    "description": "Luta 3D da Spike/Namco Bandai com elenco clássico de Dragon Ball Z, transformações e cenários destrutíveis. Pacote XeX na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como dublado. A série costuma ter vozes em japonês ou inglês conforme a região.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "586ba480-2894-4211-92a4-359a1a3c2e2e": {
+    "displayTitle": "Dragon Ball: Raging Blast 2",
+    "description": "Sequência do Raging Blast, com mais lutadores e o mesmo combate 3D exagerado da Spike. Pacote na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "42d2f8f8-e7ba-4128-82a4-e20acea35a07": {
+    "displayTitle": "Dragon Ball Z: Ultimate Tenkaichi",
+    "description": "Luta da Spike com controle por gestos de batalha e modo história em Dragon Ball Z. Elenco amplo e transformações. Pacote XeX na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "9c6113be-30d3-428c-9afa-738f6b24f200": {
+    "displayTitle": "Dragon Ball Z: Burst Limit",
+    "description": "Luta 3D da Bandai Namco no Xbox 360, com o elenco clássico de Dragon Ball Z e combos no estilo Burst Limit. Pacote XeX na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como dublado.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "4ef233c7-66e5-4376-b768-cf7f94f13c82": {
+    "displayTitle": "Dragon Ball Z HD Collection",
+    "description": "Coletânea em HD com Dragon Ball Z: Budokai HD e Budokai 3 HD no Xbox 360. Lutas 3D clássicas da série Budokai, remasterizadas. Pacote na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como dublado.",
+    "installHint": "games",
+    "dlcNotes": []
   }
 }
