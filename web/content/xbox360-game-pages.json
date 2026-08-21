@@ -1,0 +1,130 @@
+{
+  "b78e07fc-5d14-450e-8f31-69c649f61563": {
+    "displayTitle": "Portal: Still Alive",
+    "description": "Puzzle em primeira pessoa da Valve, versão Xbox Live Arcade de Portal. O jogador usa portais para atravessar câmaras de teste da Aperture Science. No acervo o pacote está marcado como dublado.",
+    "audio": "dublado",
+    "audioNote": "O arquivo no catálogo se chama «Portal Still Alive - Dublado».",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "1ba41a65-c189-4b1f-8043-68d7c9af2b39": {
+    "displayTitle": "FIFA 06",
+    "description": "Jogo de futebol da EA Sports da temporada 2005/06, com clubes licenciados da época. No Xbox 360 costuma aparecer como FIFA 06: Road to FIFA World Cup. Pacote instalado na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O nome da pasta não indica PT-BR nem dublagem. FIFA dessa geração costuma ter comentários em vários idiomas, mas o áudio deste pacote não foi conferido.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "c3dbe2a1-43e6-4910-bf40-f4af8a1c41be": {
+    "displayTitle": "FIFA 15",
+    "description": "FIFA 15 no Xbox 360, com o motor da geração anterior e o modo carreira da época. O pacote do acervo está rotulado como PT-BR. Pacotes extras da EA (atualizações internas) ficam junto do jogo, não na pasta Content da Xbox.",
+    "audio": "pt-br",
+    "audioNote": "Pasta e título do catálogo: FIFA 15 PT-BR.",
+    "installHint": "games",
+    "dlcNotes": [
+      "DLC interno da EA permanece em Games/ com o jogo. Não vai para Content/0000000000000000/."
+    ]
+  },
+  "5f202930-2e60-4d33-84dc-786bf6dbfd8b": {
+    "displayTitle": "FIFA 19",
+    "description": "Último FIFA lançado no Xbox 360. Traz o elenco e os modos da temporada 2018/19 nesta geração. Pacotes extras da EA ficam dentro da pasta do jogo, não como DLC da pasta Content.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR. O FIFA 19 costuma incluir comentários em português em algumas regiões, mas isso não foi confirmado aqui.",
+    "installHint": "games",
+    "dlcNotes": [
+      "DLC interno da EA permanece em Games/ com o jogo. Não vai para Content/0000000000000000/."
+    ]
+  },
+  "d412001a-473c-406d-9bf1-1208060083c3": {
+    "displayTitle": "PES 2018",
+    "description": "Pro Evolution Soccer 2018 da Konami, último da série no Xbox 360. Foco em partidas e no modo Master League daquela temporada. O pacote do acervo está rotulado como PT-BR.",
+    "audio": "pt-br",
+    "audioNote": "Título no catálogo: PES 2018 PT-BR.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "cb2e042f-a2c7-442a-a1b5-17ca59bd9f54": {
+    "displayTitle": "Pro Evolution Soccer 2010",
+    "description": "PES 2010 da Konami, com as licenças UEFA da época e o modo Master League. No acervo o jogo vai para Games/; o DLC extra (title ID 4B4E0801) é instalado à parte na pasta Content.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
+    "installHint": "games",
+    "dlcNotes": [
+      "DLC 4B4E0801 disponível no catálogo, destino Content/0000000000000000/4B4E0801."
+    ]
+  },
+  "764c602c-1b14-4244-a613-19fbdc176e84": {
+    "displayTitle": "Mario 64 (Xbox 360)",
+    "description": "Port do Super Mario 64 para Xbox 360 (pacote «Corrigido» do acervo). É o clássico de plataforma da Nintendo 64, com Peach's Castle e as 120 estrelas, rodando nesta geração.",
+    "audio": "ingles",
+    "audioNote": "Port homebrew; o áudio original do N64 é em inglês. O pacote não indica dublagem.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "d54271fe-7acf-4d92-b842-4d34eeaeeb2d": {
+    "displayTitle": "Ridge Racer Collection",
+    "description": "Coletânea com os clássicos de fliperama Ridge Racer, Ridge Racer 2 e Rave Racer, em HD para Xbox 360. Corridas curtas com ênfase em drift, no estilo Namco dos anos 90.",
+    "audio": "desconhecido",
+    "audioNote": "A caixa do pacote está em português; o idioma dentro dos jogos de arcade não foi confirmado (em geral são em inglês).",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "246f78c3-edc5-415b-956f-d118c17ebc99": {
+    "displayTitle": "Barbie & Her Sisters: Puppy Rescue",
+    "description": "Aventura infantil da Little Orbit em que a Barbie e as irmãs resgatam e cuidam de filhotes. Exploração leve, cuidados com os cães e miniatividades. Pacote na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O nome da pasta não indica dublagem. Lançamento original em inglês; áudio deste pacote não conferido.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "52e06ece-ffcf-42b8-bd51-fd0fcaf94f5b": {
+    "displayTitle": "Bob Esponja: Truth or Square",
+    "description": "SpongeBob's Truth or Square (2009), plataforma 3D da THQ no Xbox 360. O Bob Esponja atravessa momentos da série com poderes variados. No HD a pasta se chama «Bob Esponja Calça Quadrada».",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como dublado. Versões brasileiras deste jogo às vezes trazem dublagem, mas isso não foi confirmado aqui.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "5185be31-d966-4c34-9e79-68266a1cd0bb": {
+    "displayTitle": "Hot Wheels: World's Best Driver",
+    "description": "Corrida arcade da Warner Bros. com pistas em loop estilo pista Hot Wheels e desafios das equipes coloridas. O pacote do acervo está marcado como dublado.",
+    "audio": "dublado",
+    "audioNote": "Pasta: HOT WHEELS WORLDS BEST DRIVERS - DUBLADO.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "6e66d037-ad3b-45cd-83c8-f075ca64f6b9": {
+    "displayTitle": "Sonic Unleashed",
+    "description": "Sonic Unleashed da Sega: fases rápidas de Sonic durante o dia e trechos do Werehog à noite. Versão de Xbox 360, na pasta Games. O pacote não indica dublagem.",
+    "audio": "desconhecido",
+    "audioNote": "Sem marca PT-BR ou DUBLADO no pacote. A versão de 360 costuma ter vozes em inglês; legendas não foram conferidas.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "99fe1ebf-b9ae-4105-8e00-0c41aa4f6497": {
+    "displayTitle": "The Smurfs 2",
+    "description": "Plataforma da Ubisoft/WayForward baseada no filme Os Smurfs 2. Os Smurfs atravessam fases até Paris para resgatar a Smurfette. Pacote na pasta Games.",
+    "audio": "desconhecido",
+    "audioNote": "O pacote não está marcado como dublado ou PT-BR.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "fd15402e-ff80-4168-9a12-561c2b24f690": {
+    "displayTitle": "Alice: Madness Returns",
+    "description": "Ação e plataforma da Spicy Horse/EA, sequência de American McGee's Alice. Alice volta a um País das Maravilhas distorcido. O pacote do acervo está rotulado como PT-BR.",
+    "audio": "pt-br",
+    "audioNote": "Título no catálogo: Alice: Madness Returns PT-BR.",
+    "installHint": "games",
+    "dlcNotes": []
+  },
+  "5edade5f-382c-4a10-893d-2bd7e95afb86": {
+    "displayTitle": "TMNT: Turtles in Time Re-Shelled",
+    "description": "Remake em HD do arcade Turtles in Time, lançado no Xbox Live Arcade em 2009. Beat 'em up das Tartarugas Ninja viajando no tempo. Neste acervo é um pacote XBLA: pasta Content, não Games.",
+    "audio": "ingles",
+    "audioNote": "Pacote XBLA sem marca de dublagem. O jogo original é em inglês.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 584109D2 — destino Content/0000000000000000/584109D2 (Xbox Live Arcade / GOD)."
+    ]
+  }
+}

@@ -20,6 +20,13 @@ export type CatalogPortfolioDetail = CatalogPortfolio & {
   entries: CatalogEntry[];
 };
 
+export type CatalogGameExtra = {
+  id: string;
+  label: string;
+  destination: string;
+  sizeBytes: number;
+};
+
 export type CatalogGame = {
   id: string;
   label: string;
@@ -30,6 +37,7 @@ export type CatalogGame = {
   totalBytes: number;
   /** IDs de manifesto (jogo + extras vinculados). */
   entryIds: string[];
+  extras: CatalogGameExtra[];
 };
 
 export function groupCatalogGames(entries: CatalogEntry[]): CatalogGame[] {
@@ -47,6 +55,7 @@ export function groupCatalogGames(entries: CatalogEntry[]): CatalogGame[] {
         extraCount: 0,
         totalBytes: entry.sizeBytes,
         entryIds: [entry.id],
+        extras: [],
       };
       groups.push(current);
       continue;
@@ -56,6 +65,12 @@ export function groupCatalogGames(entries: CatalogEntry[]): CatalogGame[] {
       current.extraCount += 1;
       current.totalBytes += entry.sizeBytes;
       current.entryIds.push(entry.id);
+      current.extras.push({
+        id: entry.id,
+        label: entry.label,
+        destination: entry.destination,
+        sizeBytes: entry.sizeBytes,
+      });
       continue;
     }
 
@@ -68,6 +83,7 @@ export function groupCatalogGames(entries: CatalogEntry[]): CatalogGame[] {
       extraCount: 0,
       totalBytes: entry.sizeBytes,
       entryIds: [entry.id],
+      extras: [],
     };
     groups.push(current);
   }

@@ -3,6 +3,7 @@ import {
   gameSlug,
   groupCatalogGames,
   platformLabel,
+  type CatalogGameExtra,
 } from "@/lib/catalog-shared";
 import { listPublicCatalogs } from "@/lib/catalog";
 
@@ -14,6 +15,7 @@ export type AcervoGame = {
   sizeBytes: number;
   totalBytes: number;
   extraCount: number;
+  extras: CatalogGameExtra[];
   entryIds: string[];
   destination: string | null;
   collectionSlug: string;
@@ -53,6 +55,7 @@ export async function loadAcervo(): Promise<Acervo> {
         sizeBytes: game.sizeBytes,
         totalBytes: game.totalBytes,
         extraCount: game.extraCount,
+        extras: game.extras,
         entryIds: game.entryIds,
         destination: entry?.destination ?? null,
         collectionSlug: catalog.slug,

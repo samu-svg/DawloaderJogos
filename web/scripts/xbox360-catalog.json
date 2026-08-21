@@ -1,0 +1,125 @@
+{
+  "portfolio": {
+    "title": "Xbox 360 — Acervo D:",
+    "slug": "xbox-360",
+    "description": "Jogos extraídos em Games/; DLC, XBLA e GOD em Content/0000000000000000/{TitleID}."
+  },
+  "notes": [
+    "Jogos com default.xex: destino Games/{pasta}.zip → Games/{pasta}/",
+    "Pacotes Content/GOD/XBLA/DLC: destino Content/0000000000000000/{TitleID}.zip",
+    "FIFA 15/19 dlc/ interno fica no jogo (Games), não é pasta Content da Xbox.",
+    "Medal of Honor Airborne está vazio no HD — omitido.",
+    "Zips atuais no R2 são a pasta inteira. DLC separado precisa de zip extra (campo contentZip)."
+  ],
+  "games": [
+    { "folder": "FIFA 06", "kind": "games" },
+    { "folder": "FIFA 15 PT-BR", "kind": "games" },
+    { "folder": "FIFA 19", "kind": "games" },
+    { "folder": "PES 2018 PT-BR", "kind": "games" },
+    {
+      "folder": "Pro Evolution Soccer 2010 + DLC",
+      "kind": "games",
+      "gameSubfolder": "Pro Evolution Soccer 2010",
+      "contentTitleId": "4B4E0801",
+      "contentSource": "DLC/Content/0000000000000000/4B4E0801"
+    },
+    {
+      "folder": "Pro Evolution Soccer 2014",
+      "kind": "content",
+      "contentTitleId": "4B4E0856",
+      "contentSource": "Content/0000000000000000/4B4E0856"
+    },
+    { "folder": "Mario 64 Xbox360 Corrigido", "kind": "games" },
+    { "folder": "RidgeRacerCollection", "kind": "games" },
+    { "folder": "Barbie & Her Sisters Puppy Rescue", "kind": "games" },
+    { "folder": "Bob Esponja Calça Quadrada", "kind": "games" },
+    { "folder": "HOT WHEELS WORLDS BEST DRIVERS - DUBLADO", "kind": "games" },
+    { "folder": "Sonic Unleashed", "kind": "games" },
+    {
+      "folder": "Teenage Mutant Ninja  Turtles In Time Re-Shelled",
+      "kind": "content",
+      "contentTitleId": "584109D2",
+      "contentSource": "Content/0000000000000000/584109D2",
+      "r2Key": "jogos/content/584109D2.zip"
+    },
+    { "folder": "The Smurfs 2", "kind": "games" },
+    { "folder": "ALICE MADNESS RETURNS PT-BR", "kind": "games" },
+    { "folder": "DRAGON AGE 2 PT-BR", "kind": "games" },
+    { "folder": "Far Cry 2", "kind": "games" },
+    { "folder": "HALF LIFE 2 THE ORANGE BOX", "kind": "games" },
+    {
+      "folder": "LIFE IS STRANGE COMPLETO",
+      "kind": "content",
+      "contentTitleId": "5841147C",
+      "contentSource": "Content/0000000000000000/5841147C"
+    },
+    { "folder": "Mafia 2", "kind": "games" },
+    { "folder": "Asuras Wrath PT-BR", "kind": "games", "gameSubfolder": "Asuras Wrath" },
+    { "folder": "DEVIL MAY CRY 4", "kind": "games" },
+    { "folder": "DEVIL MAY CRY HD COLLECTION", "kind": "games" },
+    {
+      "folder": "DMC DEVIL MAY CRY",
+      "kind": "games",
+      "gameSubfolder": "DMC DEVIL MAY CRY",
+      "contentTitleId": "43430824",
+      "contentSource": "DLC/Content/0000000000000000/43430824"
+    },
+    { "folder": "Enslaved Odyssey To The West", "kind": "games", "gameSubfolder": "Enslaved Odyssey To The West" },
+    { "folder": "Copa do Mundo da FIFA Brasil 2014 (Brazil) (En,Pt)", "kind": "games" },
+    { "folder": "DiRT 3 - Complete Edition", "kind": "games" },
+    { "folder": "FIFA Street 3", "kind": "games" },
+    { "folder": "Rumble Roses XX", "kind": "games" },
+    { "folder": "Saints Row - The Third", "kind": "games" },
+    { "folder": "Skate 2", "kind": "games" },
+    { "folder": "Back to the Future The Game", "kind": "games" },
+    { "folder": "Bee Movie", "kind": "games" },
+    { "folder": "G-Force", "kind": "games" },
+    { "folder": "Harry Potter and the Order of the Phoenix", "kind": "games" },
+    { "folder": "Terminator Salvation", "kind": "games" },
+    { "folder": "The Chronicles of Narnia Prince Caspian", "kind": "games" },
+    { "folder": "Transformers Fall Of Cybertron", "kind": "games" },
+    { "folder": "DRAGON BALL RAGING BLAST", "kind": "games" },
+    { "folder": "DRAGON BALL RAGING BLAST 2", "kind": "games" },
+    { "folder": "Dragon Ball Z - Ultimate Tenkaichi", "kind": "games" },
+    { "folder": "DRAGON BALL Z BURST LIMIT", "kind": "games" },
+    { "folder": "Dragon Ball Z HD Collection", "kind": "games" },
+    { "folder": "Baja Edge of Control", "kind": "games" },
+    { "folder": "Fight Night Round 4", "kind": "games" },
+    { "folder": "London 2012", "kind": "games" },
+    { "folder": "STOKED BIG AIR EDITION", "kind": "games" },
+    { "folder": "Top Spin 4", "kind": "games" },
+    { "folder": "UFC Undisputed 3", "kind": "games" },
+    { "folder": "Call Of Duty 4 Modern Warfare", "kind": "games" },
+    {
+      "folder": "Call Of Duty Black OPS",
+      "kind": "games",
+      "gameSubfolder": "Cod Black OPS",
+      "contentTitleId": "41560855",
+      "contentSource": "DLC'S/Content/0000000000000000/41560855"
+    },
+    { "folder": "Medal of Honor 2010 PTBR", "kind": "games" },
+    { "folder": "Metro 2033 - PTBR", "kind": "games" },
+    { "folder": "Brutal Legend", "kind": "games" },
+    { "folder": "Dead Island", "kind": "games" },
+    {
+      "folder": "Hitman - Blood Money",
+      "kind": "content",
+      "contentTitleId": "534307DB",
+      "contentSource": "Content/0000000000000000/534307DB"
+    },
+    {
+      "folder": "STAR WARS THE FORCE UNLEASHED 2 + DLC'S",
+      "kind": "games",
+      "gameSubfolder": "STAR WARS THE FORCE UNLEASHED 2",
+      "contentTitleId": "4C4107F2",
+      "contentSource": "DLC'S/content/0000000000000000/4C4107F2"
+    },
+    {
+      "folder": "STAR WARS THE FORCE UNLEASHED ULTIMATE SITH EDITION",
+      "kind": "games",
+      "discs": ["Disc 1", "Disc 2"]
+    },
+    { "folder": "Titanfall", "kind": "games" },
+    { "folder": "TUROK PT-BR", "kind": "games" }
+  ]
+}
