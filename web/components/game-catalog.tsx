@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { GameCard } from "@/components/game-card";
+import type { CatalogBadge } from "@/lib/catalog-badges";
 import { gameInitialGroup } from "@/lib/catalog-shared";
 import { formatBytes } from "@/lib/manifest";
 
@@ -9,12 +10,15 @@ export type CatalogGameItem = {
   id: string;
   slug: string;
   label: string;
+  displayTitle: string;
   coverUrl: string | null;
   sizeBytes: number;
   extraCount: number;
   collectionSlug: string;
   collectionTitle: string;
   platform: string;
+  badges: CatalogBadge[];
+  featuredRank: number | null;
 };
 
 export type CatalogCollectionItem = {
@@ -29,7 +33,7 @@ type GameCatalogProps = {
   initialCollection?: string | null;
 };
 
-type SortMode = "az" | "za" | "maiores";
+type SortMode = "populares" | "az" | "za" | "maiores";
 
 const PAGE_SIZE = 30;
 const LETTERS = ["#", ...Array.from({ length: 26 }, (_, i) =>
@@ -44,7 +48,7 @@ export function GameCatalog({
   const [search, setSearch] = useState("");
   const [collection, setCollection] = useState<string | null>(initialCollection);
   const [letter, setLetter] = useState<string | null>(null);
-  const [sort, setSort] = useState<SortMode>("az");
+  const [sort, setSort] = useState<SortMode>("populares");
   const [page, setPage] = useState(1);
 
   const availableLetters = useMemo(() => {
@@ -63,6 +67,12 @@ export function GameCatalog({
 
     return result.sort((a, b) => {
       if (sort === "maiores") return b.sizeBytes - a.sizeBytes;
+      if (sort === "populares") {
+        const rankA = a.featuredRank ?? 9999;
+        const rankB = b.featuredRank ?? 9999;
+        if (rankA !== rankB) return rankA - rankB;
+        return a.label.localeCompare(b.label, "pt-BR");
+      }
       const comparison = a.label.localeCompare(b.label, "pt-BR");
       return sort === "za" ? -comparison : comparison;
     });
@@ -101,6 +111,7 @@ export function GameCatalog({
               }
               className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-white outline-none focus:border-accent"
             >
+              <option value="populares">Mais populares</option>
               <option value="az">A → Z</option>
               <option value="za">Z → A</option>
               <option value="maiores">Maiores primeiro</option>
@@ -188,12 +199,13 @@ export function GameCatalog({
           {shown.map((game) => (
             <li key={game.id}>
               <GameCard
-                title={game.label}
+                title={game.displayTitle}
                 slug={game.slug}
                 coverUrl={game.coverUrl}
                 sizeBytes={game.sizeBytes}
                 platform={game.platform}
                 extraCount={game.extraCount}
+                badges={game.badges}
               />
             </li>
           ))}

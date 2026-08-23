@@ -1,7 +1,16 @@
 node_modules
 .next
-desktop/release
-desktop/node_modules
-web/node_modules
-web/.next
 .git
+.vercel
+agent-tools
+.cursor
+
+# App desktop — não faz parte do deploy web
+desktop
+
+# Builds locais
+web/.next
+web/node_modules
+
+# Extrações temporárias de capas
+web/public/covers/_extract

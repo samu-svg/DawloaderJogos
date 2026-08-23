@@ -6,7 +6,13 @@ import { GameCoverFrame } from "@/components/game-cover";
 import { GameInstallPanel } from "@/components/game-install-panel";
 import { SiteHeader } from "@/components/site-header";
 import { StoreFooter } from "@/components/store-footer";
-import { isPortfolioAdmin } from "@/lib/admin";
+import { currentAppUser } from "@/lib/auth";
+import {
+  catalogBadgesForGame,
+  catalogDisplayTitle,
+  resolveCoverUrl,
+} from "@/lib/catalog-badges";
+import { toCatalogGameItem } from "@/lib/catalog-items";
 import {
   audioLabel,
   gamePageMeta,
@@ -15,9 +21,9 @@ import {
 } from "@/lib/game-pages";
 import { findAcervoGame, relatedAcervoGames } from "@/lib/games";
 import { formatBytes } from "@/lib/manifest";
+import { canAccessPainel } from "@/lib/rbac";
 import { getSiteUrl } from "@/lib/site-url";
 import { userHasCatalogAccess } from "@/lib/subscription";
-import { currentUser } from "@/lib/supabase/server";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -51,16 +57,17 @@ export default async function GamePage({ params }: PageProps) {
   if (!game) notFound();
 
   const [user, siteUrl, related] = await Promise.all([
-    currentUser(),
+    currentAppUser(),
     getSiteUrl(),
     relatedAcervoGames(game),
   ]);
 
-  const isAdmin = isPortfolioAdmin(user?.email);
+  const isAdmin = user ? canAccessPainel(user.role) : false;
   const hasAccess = user ? await userHasCatalogAccess(user) : false;
   const access = !user ? "anon" : hasAccess ? "liberado" : "sem-assinatura";
   const meta = gamePageMeta(game.id);
-  const title = meta?.displayTitle ?? formatTitle(game.label);
+  const title = catalogDisplayTitle(game.id, game.label, game.extraCount);
+  const coverUrl = resolveCoverUrl(game.id, game.coverUrl, localCoverUrl);
   const folder = installFolderKind(game.destination, meta?.installHint);
   const dlcNotes = meta?.dlcNotes ?? [];
   const hasDlcInfo = game.extras.length > 0 || dlcNotes.length > 0;
@@ -95,7 +102,11 @@ export default async function GamePage({ params }: PageProps) {
               <div className="relative aspect-[3/4] w-full">
                 <GameCoverFrame
                   title={title}
-                  coverUrl={localCoverUrl(game.id) ?? game.coverUrl}
+                  coverUrl={coverUrl}
+                  badges={catalogBadgesForGame(game.id, game.extraCount).filter(
+                    (badge) => badge.kind === "audio",
+                  )}
+                  showTitle={!coverUrl}
                 />
               </div>
             </div>
@@ -253,21 +264,25 @@ export default async function GamePage({ params }: PageProps) {
         {related.length > 0 && (
           <section className="mt-16">
             <h2 className="section-heading text-xl sm:text-2xl">
-              Mais jogos de {game.platform}
+              Outros jogos populares
             </h2>
             <ul className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-              {related.map((item) => (
+              {related.map((item) => {
+                const card = toCatalogGameItem(item);
+                return (
                 <li key={item.id}>
                   <GameCard
-                    title={gamePageMeta(item.id)?.displayTitle ?? item.label}
-                    slug={item.slug}
-                    coverUrl={localCoverUrl(item.id) ?? item.coverUrl}
-                    sizeBytes={item.totalBytes}
-                    platform={item.platform}
-                    extraCount={item.extraCount}
+                    title={card.displayTitle}
+                    slug={card.slug}
+                    coverUrl={card.coverUrl}
+                    sizeBytes={card.sizeBytes}
+                    platform={card.platform}
+                    extraCount={card.extraCount}
+                    badges={card.badges}
                   />
                 </li>
-              ))}
+                );
+              })}
             </ul>
           </section>
         )}

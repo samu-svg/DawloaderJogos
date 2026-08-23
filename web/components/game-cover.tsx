@@ -1,9 +1,13 @@
 "use client";
 
+import type { CatalogBadge } from "@/lib/catalog-badges";
+
 type GameCoverFrameProps = {
   title: string;
   coverUrl?: string | null;
   className?: string;
+  badges?: CatalogBadge[];
+  showTitle?: boolean;
 };
 
 function initial(title: string): string {
@@ -11,13 +15,58 @@ function initial(title: string): string {
   return letter ? letter.toUpperCase() : "?";
 }
 
-function Fallback({ title, className = "" }: { title: string; className?: string }) {
+function badgeClass(tone: CatalogBadge["tone"]): string {
+  switch (tone) {
+    case "dublado":
+      return "bg-emerald-600/90 text-white";
+    case "pt-br":
+      return "bg-sky-600/90 text-white";
+    case "dlc":
+      return "bg-accent/85 text-white";
+  }
+}
+
+function Fallback({
+  title,
+  className = "",
+  badges = [],
+  showTitle = false,
+}: {
+  title: string;
+  className?: string;
+  badges?: CatalogBadge[];
+  showTitle?: boolean;
+}) {
+  const audioBadges = badges.filter((badge) => badge.kind === "audio");
+
   return (
     <div
-      className={`flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-900/40 via-zinc-900 to-zinc-950 text-3xl font-semibold text-violet-200/80 ${className}`}
+      className={`flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-violet-900/40 via-zinc-900 to-zinc-950 px-3 text-center ${className}`}
       aria-hidden
     >
-      {initial(title)}
+      {showTitle ? (
+        <>
+          <p className="line-clamp-3 text-xs font-semibold leading-snug text-white/90">
+            {title}
+          </p>
+          {audioBadges.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-1">
+              {audioBadges.map((badge) => (
+                <span
+                  key={badge.label}
+                  className={`rounded-md px-2 py-0.5 text-[10px] font-semibold ${badgeClass(badge.tone)}`}
+                >
+                  {badge.label}
+                </span>
+              ))}
+            </div>
+          )}
+        </>
+      ) : (
+        <span className="text-3xl font-semibold text-violet-200/80">
+          {initial(title)}
+        </span>
+      )}
     </div>
   );
 }
@@ -27,9 +76,18 @@ export function GameCoverFrame({
   title,
   coverUrl,
   className = "",
+  badges = [],
+  showTitle = false,
 }: GameCoverFrameProps) {
   if (!coverUrl) {
-    return <Fallback title={title} className={className} />;
+    return (
+      <Fallback
+        title={title}
+        className={className}
+        badges={badges}
+        showTitle={showTitle || badges.length > 0}
+      />
+    );
   }
 
   return (
