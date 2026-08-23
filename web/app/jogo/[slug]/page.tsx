@@ -16,6 +16,7 @@ import { toCatalogGameItem } from "@/lib/catalog-items";
 import {
   audioLabel,
   gamePageMeta,
+  hasPackageDetails,
   installFolderKind,
   localCoverUrl,
 } from "@/lib/game-pages";
@@ -70,7 +71,14 @@ export default async function GamePage({ params }: PageProps) {
   const coverUrl = resolveCoverUrl(game.id, game.coverUrl, localCoverUrl);
   const folder = installFolderKind(game.destination, meta?.installHint);
   const dlcNotes = meta?.dlcNotes ?? [];
-  const hasDlcInfo = game.extras.length > 0 || dlcNotes.length > 0;
+  const technicalNotes = meta?.technicalNotes ?? [];
+  const showPackageDetails = hasPackageDetails(
+    meta,
+    game.extras,
+    game.destination,
+    game.totalBytes,
+    game.sizeBytes,
+  );
 
   return (
     <>
@@ -139,7 +147,14 @@ export default async function GamePage({ params }: PageProps) {
             </div>
 
             {meta?.description && (
-              <p className="text-sm leading-6 text-zinc-300">{meta.description}</p>
+              <section className="rounded-2xl border border-border bg-surface p-5 text-left">
+                <h2 className="text-base font-semibold text-white">
+                  Sobre o jogo
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-zinc-400">
+                  {meta.description}
+                </p>
+              </section>
             )}
 
             <dl className="grid grid-cols-2 gap-4 rounded-2xl border border-border bg-surface p-5 sm:grid-cols-4">
@@ -175,35 +190,40 @@ export default async function GamePage({ params }: PageProps) {
               </div>
             </dl>
 
-            {meta?.audioNote && (
-              <p className="text-xs leading-5 text-zinc-500">{meta.audioNote}</p>
-            )}
-
-            <section className="rounded-2xl border border-border bg-surface p-5 text-left">
-              <h2 className="text-base font-semibold text-white">
-                Onde instala
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-zinc-400">
-                {folder.detail}
-              </p>
-              {game.destination && (
-                <p className="mt-2 truncate font-mono text-xs text-zinc-500">
-                  {game.destination}
-                </p>
-              )}
-              {game.totalBytes > game.sizeBytes && (
-                <p className="mt-2 text-sm text-zinc-400">
-                  Com extras: {formatBytes(game.totalBytes)}.
-                </p>
-              )}
-            </section>
-
-            <section className="rounded-2xl border border-border bg-surface p-5 text-left">
-              <h2 className="text-base font-semibold text-white">
-                DLC e conteúdo extra
-              </h2>
-              {hasDlcInfo ? (
-                <ul className="mt-3 space-y-2 text-sm leading-6 text-zinc-400">
+            {showPackageDetails && (
+              <section className="rounded-2xl border border-border bg-surface p-5 text-left">
+                <h2 className="text-base font-semibold text-white">
+                  Detalhes do pacote
+                </h2>
+                <ul className="mt-3 space-y-3 text-sm leading-6 text-zinc-400">
+                  <li>
+                    <span className="font-medium text-zinc-200">
+                      Instalação
+                    </span>
+                    <span className="mt-0.5 block">{folder.detail}</span>
+                    {game.destination && (
+                      <span className="mt-0.5 block truncate font-mono text-xs text-zinc-500">
+                        {game.destination}
+                      </span>
+                    )}
+                  </li>
+                  {meta?.audioNote && (
+                    <li>
+                      <span className="font-medium text-zinc-200">Áudio</span>
+                      <span className="mt-0.5 block">{meta.audioNote}</span>
+                    </li>
+                  )}
+                  {game.totalBytes > game.sizeBytes && (
+                    <li>
+                      <span className="font-medium text-zinc-200">
+                        Tamanho com extras
+                      </span>
+                      <span className="mt-0.5 block">
+                        {formatBytes(game.totalBytes)} (jogo principal:{" "}
+                        {formatBytes(game.sizeBytes)}).
+                      </span>
+                    </li>
+                  )}
                   {game.extras.map((extra) => (
                     <li key={extra.id}>
                       <span className="font-medium text-zinc-200">
@@ -220,14 +240,12 @@ export default async function GamePage({ params }: PageProps) {
                   {dlcNotes.map((note) => (
                     <li key={note}>{note}</li>
                   ))}
+                  {technicalNotes.map((note) => (
+                    <li key={note}>{note}</li>
+                  ))}
                 </ul>
-              ) : (
-                <p className="mt-3 text-sm leading-6 text-zinc-400">
-                  Nenhum DLC separado neste catálogo. O app instala só o jogo
-                  principal.
-                </p>
-              )}
-            </section>
+              </section>
+            )}
 
             <GameInstallPanel
               siteUrl={siteUrl}

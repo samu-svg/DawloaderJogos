@@ -9,7 +9,34 @@ export type GamePageMeta = {
   audioNote?: string;
   installHint?: "games" | "content";
   dlcNotes?: string[];
+  /** Notas técnicas extras (discos, Title ID, etc.) quando não couberem nos outros campos. */
+  technicalNotes?: string[];
 };
+
+export type CatalogExtra = {
+  label: string;
+  sizeBytes: number;
+  destination: string;
+};
+
+export function hasPackageDetails(
+  meta: GamePageMeta | null,
+  extras: CatalogExtra[],
+  destination: string | null,
+  totalBytes: number,
+  sizeBytes: number,
+): boolean {
+  if (extras.length > 0) return true;
+  if (destination) return true;
+  if (totalBytes > sizeBytes) return true;
+  if (!meta) return false;
+  return Boolean(
+    meta.audioNote ||
+      meta.dlcNotes?.length ||
+      meta.technicalNotes?.length ||
+      meta.installHint,
+  );
+}
 
 const PAGE_MAP = pages as Record<string, GamePageMeta>;
 
