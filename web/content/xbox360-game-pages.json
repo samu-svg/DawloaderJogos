@@ -1,7 +1,7 @@
 {
   "b78e07fc-5d14-450e-8f31-69c649f61563": {
     "displayTitle": "Portal: Still Alive",
-    "description": "Puzzle em primeira pessoa da Valve, versão Xbox Live Arcade de Portal. O jogador usa portais para atravessar câmaras de teste da Aperture Science. No acervo o pacote está marcado como dublado.",
+    "description": "Puzzle em primeira pessoa da Valve, versão expandida do Portal original para Xbox Live Arcade. O jogador usa a pistola de portais para resolver câmaras de teste cada vez mais complexas enquanto a GLaDOS comenta com sarcasmo seco. Inclui níveis extras além da campanha original e foi um dos títulos mais aclamados do XBLA.",
     "audio": "dublado",
     "audioNote": "O arquivo no catálogo se chama «Portal Still Alive - Dublado».",
     "installHint": "games",
@@ -9,7 +9,7 @@
   },
   "1ba41a65-c189-4b1f-8043-68d7c9af2b39": {
     "displayTitle": "FIFA 06",
-    "description": "Jogo de futebol da EA Sports da temporada 2005/06, com clubes licenciados da época. No Xbox 360 costuma aparecer como FIFA 06: Road to FIFA World Cup. Pacote instalado na pasta Games.",
+    "description": "Simulador de futebol da EA Sports da temporada 2005/06, com clubes e ligas licenciados da época. No Xbox 360 costuma aparecer como FIFA 06: Road to FIFA World Cup, com modos de carreira e amistosos que capturam o futebol daquele ciclo pré-Copa de 2006.",
     "audio": "desconhecido",
     "audioNote": "O nome da pasta não indica PT-BR nem dublagem. FIFA dessa geração costuma ter comentários em vários idiomas, mas o áudio deste pacote não foi conferido.",
     "installHint": "games",
@@ -17,7 +17,7 @@
   },
   "c3dbe2a1-43e6-4910-bf40-f4af8a1c41be": {
     "displayTitle": "FIFA 15",
-    "description": "FIFA 15 no Xbox 360, com o motor da geração anterior e o modo carreira da época. O pacote do acervo está rotulado como PT-BR. Pacotes extras da EA (atualizações internas) ficam junto do jogo, não na pasta Content da Xbox.",
+    "description": "Entrada da série FIFA no Xbox 360 com o motor Ignite da geração e física de jogadores mais expressiva. Modo carreira, Ultimate Team e partidas online refletem a temporada 2014/15, com elencos e ligas licenciados da época.",
     "audio": "pt-br",
     "audioNote": "Pasta e título do catálogo: FIFA 15 PT-BR.",
     "installHint": "games",
@@ -27,7 +27,7 @@
   },
   "5f202930-2e60-4d33-84dc-786bf6dbfd8b": {
     "displayTitle": "FIFA 19",
-    "description": "Último FIFA lançado no Xbox 360. Traz o elenco e os modos da temporada 2018/19 nesta geração. Pacotes extras da EA ficam dentro da pasta do jogo, não como DLC da pasta Content.",
+    "description": "Último FIFA lançado no Xbox 360, encerrando a longa presença da série nesta geração. Traz o elenco, estádios e modos da temporada 2018/19, incluindo carreira, Ultimate Team e partidas online com o visual e a jogabilidade finais da franquia no 360.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR. O FIFA 19 costuma incluir comentários em português em algumas regiões, mas isso não foi confirmado aqui.",
     "installHint": "games",
@@ -37,7 +37,7 @@
   },
   "d412001a-473c-406d-9bf1-1208060083c3": {
     "displayTitle": "PES 2018",
-    "description": "Pro Evolution Soccer 2018 da Konami, último da série no Xbox 360. Foco em partidas e no modo Master League daquela temporada. O pacote do acervo está rotulado como PT-BR.",
+    "description": "Último Pro Evolution Soccer da Konami no Xbox 360, com foco na simulação tática e no realismo das partidas. Master League, myClub e ligas licenciadas da temporada 2017/18 fecham a era PES nesta plataforma com controles refinados e animações mais naturais.",
     "audio": "pt-br",
     "audioNote": "Título no catálogo: PES 2018 PT-BR.",
     "installHint": "games",
@@ -45,7 +45,7 @@
   },
   "cb2e042f-a2c7-442a-a1b5-17ca59bd9f54": {
     "displayTitle": "Pro Evolution Soccer 2010",
-    "description": "PES 2010 da Konami, com as licenças UEFA da época e o modo Master League. No acervo o jogo vai para Games/; o DLC extra (title ID 4B4E0801) é instalado à parte na pasta Content.",
+    "description": "Simulador de futebol da Konami com licenças UEFA da época e o clássico modo Master League. Partidas mais táticas que o rival FIFA, com construção de time, transferências e competições europeias que marcaram a geração dos simuladores.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
@@ -55,15 +55,18 @@
   },
   "764c602c-1b14-4244-a613-19fbdc176e84": {
     "displayTitle": "Mario 64 (Xbox 360)",
-    "description": "Port do Super Mario 64 para Xbox 360 (pacote «Corrigido» do acervo). É o clássico de plataforma da Nintendo 64, com Peach's Castle e as 120 estrelas, rodando nesta geração.",
+    "description": "Port homebrew do clássico Super Mario 64 para Xbox 360, trazendo a aventura de plataforma original da Nintendo 64. O jogador explora Peach's Castle, coleta 120 Power Stars e enfrenta Bowser em fases que definiram o gênero 3D nos anos 90.",
     "audio": "ingles",
     "audioNote": "Port homebrew; o áudio original do N64 é em inglês. O pacote não indica dublagem.",
     "installHint": "games",
-    "dlcNotes": []
+    "dlcNotes": [],
+    "technicalNotes": [
+      "Port homebrew rotulado como «Corrigido» no acervo."
+    ]
   },
   "d54271fe-7acf-4d92-b842-4d34eeaeeb2d": {
     "displayTitle": "Ridge Racer Collection",
-    "description": "Coletânea com os clássicos de fliperama Ridge Racer, Ridge Racer 2 e Rave Racer, em HD para Xbox 360. Corridas curtas com ênfase em drift, no estilo Namco dos anos 90.",
+    "description": "Coletânea Namco com Ridge Racer, Ridge Racer 2 e Rave Racer remasterizados em HD. Corridas arcade de alta velocidade com ênfase em drift, pistas icônicas e trilha sonora techno que define a identidade da série desde os fliperamas.",
     "audio": "desconhecido",
     "audioNote": "A caixa do pacote está em português; o idioma dentro dos jogos de arcade não foi confirmado (em geral são em inglês).",
     "installHint": "games",
@@ -71,7 +74,7 @@
   },
   "246f78c3-edc5-415b-956f-d118c17ebc99": {
     "displayTitle": "Barbie & Her Sisters: Puppy Rescue",
-    "description": "Aventura infantil da Little Orbit em que a Barbie e as irmãs resgatam e cuidam de filhotes. Exploração leve, cuidados com os cães e miniatividades. Pacote na pasta Games.",
+    "description": "Aventura infantil da Little Orbit em que Barbie e as irmãs Skipper, Stacie e Chelsea resgatam e cuidam de filhotes perdidos. Exploração leve, minijogos de cuidados com os cães e atividades coloridas voltadas ao público jovem.",
     "audio": "desconhecido",
     "audioNote": "O nome da pasta não indica dublagem. Lançamento original em inglês; áudio deste pacote não conferido.",
     "installHint": "games",
@@ -79,15 +82,18 @@
   },
   "52e06ece-ffcf-42b8-bd51-fd0fcaf94f5b": {
     "displayTitle": "Bob Esponja: Truth or Square",
-    "description": "SpongeBob's Truth or Square (2009), plataforma 3D da THQ no Xbox 360. O Bob Esponja atravessa momentos da série com poderes variados. No HD a pasta se chama «Bob Esponja Calça Quadrada».",
+    "description": "Plataforma 3D da THQ baseada na série animada, com Bob Esponja revivendo momentos icônicos da Fenda do Bikini. Poderes variados, humor slapstick e fases inspiradas em episódios clássicos da Nickelodeon.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como dublado. Versões brasileiras deste jogo às vezes trazem dublagem, mas isso não foi confirmado aqui.",
     "installHint": "games",
-    "dlcNotes": []
+    "dlcNotes": [],
+    "technicalNotes": [
+      "No HD a pasta se chama «Bob Esponja Calça Quadrada»."
+    ]
   },
   "5185be31-d966-4c34-9e79-68266a1cd0bb": {
     "displayTitle": "Hot Wheels: World's Best Driver",
-    "description": "Corrida arcade da Warner Bros. com pistas em loop estilo pista Hot Wheels e desafios das equipes coloridas. O pacote do acervo está marcado como dublado.",
+    "description": "Corrida arcade da Warner Bros. com pistas impossíveis em loop, curvas verticais e desafios das quatro equipes coloridas. Física exagerada e truques estilo brinquedo Hot Wheels em pistas que desafiam a gravidade.",
     "audio": "dublado",
     "audioNote": "Pasta: HOT WHEELS WORLDS BEST DRIVERS - DUBLADO.",
     "installHint": "games",
@@ -95,7 +101,7 @@
   },
   "6e66d037-ad3b-45cd-83c8-f075ca64f6b9": {
     "displayTitle": "Sonic Unleashed",
-    "description": "Sonic Unleashed da Sega: fases rápidas de Sonic durante o dia e trechos do Werehog à noite. Versão de Xbox 360, na pasta Games. O pacote não indica dublagem.",
+    "description": "Aventura da Sega dividida entre fases diurnas de velocidade pura como Sonic e trechos noturnos de combate e plataforma como Werehog. Mundo dividido em continentes com estética distinta, história envolvendo Dark Gaia e a clássica fórmula de anéis e loops.",
     "audio": "desconhecido",
     "audioNote": "Sem marca PT-BR ou DUBLADO no pacote. A versão de 360 costuma ter vozes em inglês; legendas não foram conferidas.",
     "installHint": "games",
@@ -103,7 +109,7 @@
   },
   "99fe1ebf-b9ae-4105-8e00-0c41aa4f6497": {
     "displayTitle": "The Smurfs 2",
-    "description": "Plataforma da Ubisoft/WayForward baseada no filme Os Smurfs 2. Os Smurfs atravessam fases até Paris para resgatar a Smurfette. Pacote na pasta Games.",
+    "description": "Plataforma da Ubisoft/WayForward baseada no filme Os Smurfs 2, com os Smurfs atravessando Paris para resgatar a Smurfette. Fases cooperativas, power-ups temáticos e visual fiel ao universo dos personagens azuis de Peyo.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como dublado ou PT-BR.",
     "installHint": "games",
@@ -111,7 +117,7 @@
   },
   "fd15402e-ff80-4168-9a12-561c2b24f690": {
     "displayTitle": "Alice: Madness Returns",
-    "description": "Ação e plataforma da Spicy Horse/EA, sequência de American McGee's Alice. Alice volta a um País das Maravilhas distorcido. O pacote do acervo está rotulado como PT-BR.",
+    "description": "Ação e plataforma da Spicy Horse/EA, sequência de American McGee's Alice. Alice retorna a um País das Maravilhas distorcido e sombrio, usando lâminas e poderes sobrenaturais enquanto desvenda traumas e segredos de sua infância.",
     "audio": "pt-br",
     "audioNote": "Título no catálogo: Alice: Madness Returns PT-BR.",
     "installHint": "games",
@@ -119,7 +125,7 @@
   },
   "5edade5f-382c-4a10-893d-2bd7e95afb86": {
     "displayTitle": "TMNT: Turtles in Time Re-Shelled",
-    "description": "Remake em HD do arcade Turtles in Time, lançado no Xbox Live Arcade em 2009. Beat 'em up das Tartarugas Ninja viajando no tempo. Neste acervo é um pacote XBLA: pasta Content, não Games.",
+    "description": "Remake em HD do beat 'em up arcade Turtles in Time, relançado no Xbox Live Arcade em 2009. As Tartarugas Ninja viajam no tempo enfrentando hordas de Foot Clan com combos cooperativos e a nostalgia dos fliperamas dos anos 90.",
     "audio": "ingles",
     "audioNote": "Pacote XBLA sem marca de dublagem. O jogo original é em inglês.",
     "installHint": "content",
@@ -129,7 +135,7 @@
   },
   "3f3c66d7-70ec-4a2d-9d01-ca328a84dff0": {
     "displayTitle": "Pro Evolution Soccer 2014",
-    "description": "PES 2014 da Konami no Xbox 360. Neste acervo o pacote é só conteúdo Xbox (Title ID 4B4E0856): instala na pasta Content, não em Games. Não há default.xex — o jogo aparece pelo cache/GOD da pasta Content.",
+    "description": "Pro Evolution Soccer 2014 da Konami no Xbox 360, com motor Fox Engine debutando na série. Partidas mais fluidas, Master League aprimorado e licenças da temporada 2013/14 marcam a transição visual da franquia nesta geração.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "content",
@@ -139,7 +145,7 @@
   },
   "c5cf14dd-326c-4d84-8967-a9fdf2082323": {
     "displayTitle": "Dragon Age 2 PT-BR",
-    "description": "RPG da BioWare ambientado em Kirkwall, sequência de Dragon Age: Origins. Combate em tempo real com pausa tática e escolhas que moldam a história. O pacote do acervo está rotulado como PT-BR e vai para a pasta Games.",
+    "description": "RPG da BioWare ambientado em Kirkwall, sequência de Dragon Age: Origins. Combate em tempo real com pausa tática, escolhas morais que moldam a história de Hawke e companheiros memoráveis em uma narrativa mais pessoal e controversa.",
     "audio": "pt-br",
     "audioNote": "Pasta: DRAGON AGE 2 PT-BR.",
     "installHint": "games",
@@ -147,7 +153,7 @@
   },
   "c3effe68-85b7-4195-973a-485cef967863": {
     "displayTitle": "Far Cry 2",
-    "description": "FPS da Ubisoft ambientado numa África fictícia em guerra civil. Mundo aberto, malária, armas que emperram e fogo que se espalha. Pacote XeX na pasta Games.",
+    "description": "FPS em mundo aberto da Ubisoft ambientado numa África fictícia em guerra civil. O jogador percorre savanas e cidades enquanto lida com malária, armas que emperram e incêndios que se espalham pelo terreno. Foi um marco na geração por misturar liberdade de exploração com tensão de sobrevivência.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
@@ -155,15 +161,18 @@
   },
   "2820c254-3d69-4948-a074-6b17dd66b68b": {
     "displayTitle": "Half-Life 2: The Orange Box",
-    "description": "Coletânea da Valve com Half-Life 2, os episódios, Team Fortress 2 e Portal. No Xbox 360 o pacote do acervo vai para Games, com default.xex na raiz da pasta.",
+    "description": "Coletânea da Valve com Half-Life 2, Episodes One e Two, Team Fortress 2 e Portal numa única compilação. Campanha revolucionária de Gordon Freeman, multiplayer classe-based e o puzzle de portais que juntos definiram o padrão dos shooters narrativos da geração.",
     "audio": "desconhecido",
     "audioNote": "O pacote não indica dublagem. A coletânea original mistura inglês e, em algumas regiões, legendas.",
     "installHint": "games",
-    "dlcNotes": []
+    "dlcNotes": [],
+    "technicalNotes": [
+      "default.xex na raiz da pasta."
+    ]
   },
   "57a108e4-1a79-401c-8477-f2cb21a218b1": {
     "displayTitle": "Life is Strange Completo",
-    "description": "Aventura episódica da Dontnod em que Max Caulfield rebobina o tempo para salvar amizades e a cidade de Arcadia Bay. No acervo é o pacote completo XBLA (Title ID 5841147C): pasta Content, não Games.",
+    "description": "Aventura episódica da Dontnod em que Max Caulfield descobre o poder de rebobinar o tempo em Arcadia Bay. Escolhas ramificadas, fotografia, amizade com Chloe e uma trama emocional sobre consequências e memória que conquistou crítica e público.",
     "audio": "desconhecido",
     "audioNote": "Pasta «LIFE IS STRANGE COMPLETO» sem marca PT-BR. O jogo original é em inglês, com legendas em várias línguas na versão de varejo.",
     "installHint": "content",
@@ -173,7 +182,7 @@
   },
   "bbbd64bc-ab71-4827-af80-fcb98b19c183": {
     "displayTitle": "Mafia II",
-    "description": "Ação em mundo aberto da 2K Czech: Vito Scaletta volta da Segunda Guerra e entra no crime organizado dos anos 40–50. Dirigir, atirar e cumprir missões numa cidade inspirada no nordeste dos EUA. Pacote na pasta Games.",
+    "description": "Ação em mundo aberto da 2K Czech nos anos 40–50: Vito Scaletta volta da Segunda Guerra e entra no crime organizado de Empire Bay. Dirigir, atirar, cumprir missões e viver uma narrativa cinematográfica inspirada no cinema de gângster clássico.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
@@ -181,15 +190,18 @@
   },
   "50404115-5961-4fb8-8314-64e2c37b949c": {
     "displayTitle": "Asura's Wrath PT-BR",
-    "description": "Ação cinematográfica da CyberConnect2/Capcom, com brigas em escala mitológica e trechos em QTE. O default.xex fica na subpasta Asuras Wrath; o pacote inclui pasta de tradução. Instalação na pasta Games.",
+    "description": "Ação cinematográfica da CyberConnect2/Capcom com combates em escala mitológica e trechos intensos de QTE. Asura busca vingança contra deuses traidores em uma história épica que mistura anime, budismo e explosões cósmicas fora de proporção.",
     "audio": "pt-br",
     "audioNote": "Pasta: Asuras Wrath PT-BR (com pasta Tradução).",
     "installHint": "games",
-    "dlcNotes": []
+    "dlcNotes": [],
+    "technicalNotes": [
+      "default.xex fica na subpasta Asuras Wrath; inclui pasta Tradução."
+    ]
   },
   "df92d381-515f-43c0-ad42-cc75164fb7a8": {
     "displayTitle": "Devil May Cry 4",
-    "description": "Hack and slash da Capcom com Nero e Dante. Combos, estilos e chefes em vertigem típicos da série. Pacote XeX na pasta Games.",
+    "description": "Hack and slash da Capcom com Nero e Dante alternando estilos de combate distintos. Combos aéreos, estilos de luta, chefes memoráveis e o sistema de rank que premia criatividade e fluidez típicos da série.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
@@ -197,7 +209,7 @@
   },
   "e9f69fad-1824-4796-ac36-1efe7f6d57ba": {
     "displayTitle": "Devil May Cry HD Collection",
-    "description": "Coletânea em HD dos três primeiros Devil May Cry no Xbox 360. Ação em terceira pessoa com Dante, combos e os cenários clássicos da série. Pacote na pasta Games.",
+    "description": "Coletânea em HD dos três primeiros Devil May Cry no Xbox 360. Dante em ação frenética contra demônios, combos estilosos e cenários góticos clássicos remasterizados para revisitar a origem da franquia hack and slash.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
@@ -205,7 +217,7 @@
   },
   "79faa2f3-ee5b-4832-aaca-294e5f93ccda": {
     "displayTitle": "DmC Devil May Cry",
-    "description": "Reboot da Ninja Theory/Capcom com um Dante mais jovem em Limbo City. Combate rápido e plataforma entre o mundo real e o Limbo. O zip traz o jogo em Games; o DLC Title ID 43430824 ainda não está separado na pasta Content deste catálogo.",
+    "description": "Reboot da Ninja Theory/Capcom com um Dante mais jovem e rebelde em Limbo City, dimensão distorcida entre o mundo real e o infernal. Combate fluido, plataforma ágil e narrativa que reinventou a mitologia da série para uma nova geração.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
@@ -215,15 +227,18 @@
   },
   "b75ed1ff-bf92-4e1c-9320-1746dd781002": {
     "displayTitle": "Enslaved: Odyssey to the West",
-    "description": "Ação e plataforma da Ninja Theory inspirada em Jornada ao Oeste: Monkey e Trip atravessam os EUA em ruínas. Combate, quebra-cabeças e trechos de escolta. O pacote inclui pasta de tradução e vai para Games.",
+    "description": "Ação e plataforma da Ninja Theory inspirada em Jornada ao Oeste, com Monkey e Trip atravessando os EUA pós-apocalípticos. Combate corpo a corpo, quebra-cabeças ambientais e parceria emocional entre os protagonistas numa adaptação moderna do clássico chinês.",
     "audio": "desconhecido",
     "audioNote": "Há pasta Tradução no pacote; o áudio do jogo não está marcado como dublado.",
     "installHint": "games",
-    "dlcNotes": []
+    "dlcNotes": [],
+    "technicalNotes": [
+      "Inclui pasta Tradução no pacote."
+    ]
   },
   "d9241d79-cac3-4ea5-9310-3a268e2ad358": {
     "displayTitle": "Copa do Mundo da FIFA Brasil 2014",
-    "description": "Jogo oficial da Copa de 2014 da EA Sports, com as 32 seleções e os estádios daquele Mundial. O pacote do acervo indica inglês e português (En,Pt) e instala na pasta Games.",
+    "description": "Jogo oficial da Copa do Mundo de 2014 da EA Sports, com as 32 seleções, estádios brasileiros e o modo Road to Rio. Partidas, torneios e autenticidade daquele Mundial que o Brasil sediou, capturando a atmosfera da competição.",
     "audio": "pt-br",
     "audioNote": "Pasta: Copa do Mundo da FIFA Brasil 2014 (Brazil) (En,Pt).",
     "installHint": "games",
@@ -231,7 +246,7 @@
   },
   "5e4ed040-46c5-44d9-a197-32f131cd9823": {
     "displayTitle": "DiRT 3 Complete Edition",
-    "description": "Corrida rally da Codemasters com terra, asfalto, gelo e os Gymkhana. A Complete Edition junta o jogo com o conteúdo extra da época. Pacote XeX na pasta Games.",
+    "description": "Corrida rally da Codemasters com terra, asfalto, gelo e os espetaculares Gymkhana de Ken Block. Complete Edition reúne o jogo base com todo o conteúdo extra da época, modos online e dificuldade que equilibra arcade e simulação off-road.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
@@ -241,7 +256,7 @@
   },
   "d0195c32-9bb5-48d0-af1c-6a8eb15c2ac3": {
     "displayTitle": "FIFA Street 3",
-    "description": "Futebol de rua da EA, com partidas curtas, truques e 3 contra 3. Estilo arcade, bem diferente do FIFA de gramado. Pacote na pasta Games.",
+    "description": "Futebol de rua da EA com partidas 3 contra 3, truques de estilo e pistas urbanas. Gameplay arcade distante do FIFA tradicional, com gamebreakers, wall passes e personalidade de pelada de rua em cenários do mundo inteiro.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
@@ -249,7 +264,7 @@
   },
   "7640ad45-40d7-4cae-80b5-33db3ac23b78": {
     "displayTitle": "Rumble Roses XX",
-    "description": "Luta livre feminina da Konami no Xbox 360. Lutas em ringue com personagens estilizadas e modos de exibição. Pacote XeX na pasta Games.",
+    "description": "Luta livre feminina da Konami exclusiva do Xbox 360, com lutadoras estilizadas e modos de exibição exagerados. Ringue, submissions e o tom provocativo que diferenciou a série das lutas tradicionais da época.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
@@ -257,7 +272,7 @@
   },
   "d0c95662-1743-4a6b-93e9-17d2b63f9ed6": {
     "displayTitle": "Saints Row: The Third",
-    "description": "Ação em mundo aberto da Volition: os Saints tomam Steelport com humor absurdo, armas ridículas e caos urbano. Pacote na pasta Games.",
+    "description": "Ação em mundo aberto da Volition em Steelport, onde a gangue Saints abandona o realismo pelo humor absurdo. Armas ridículas, missões paródicas de blockbusters, personalização extrema e caos urbano que virou marca registrada da franquia.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
@@ -265,7 +280,7 @@
   },
   "8f29db94-f564-4f61-8b1b-0d6ec578c8bb": {
     "displayTitle": "Skate 2",
-    "description": "Simulador de skate da EA Black Box, com o controle analógico de manobras e a cidade de New San Vanelona. Criar picos, filmar clips e andar solto. Pacote na pasta Games.",
+    "description": "Simulador de skate da EA Black Box com controle analógico de manobras revolucionário para a época. New San Vanelona aberta para explorar, criar picos, filmar clips e encadear truques com física que prioriza autenticidade sobre arcade.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
@@ -273,7 +288,7 @@
   },
   "0702f186-bb06-4a5e-851d-ad605163e147": {
     "displayTitle": "Back to the Future: The Game",
-    "description": "Aventura ponta-e-clique da Telltale baseada em De Volta para o Futuro. Marty e Doc atravessam episódios com diálogo, itens e viagens no DeLorean. Pacote na pasta Games.",
+    "description": "Aventura episódica da Telltale baseada em De Volta para o Futuro, com Marty McFly e Doc Brown em viagens temporais. Diálogos ramificados, puzzles de inventário e referências fiéis à trilogia cinematográfica de Robert Zemeckis.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como dublado. A série Telltale costuma ser em inglês.",
     "installHint": "games",
@@ -281,7 +296,7 @@
   },
   "477f0f06-f1d1-4a5b-88fe-df07974a5514": {
     "displayTitle": "Bee Movie Game",
-    "description": "Aventura infantil da Activision baseada no filme Bee Movie. Barry B. Benson atravessa fases leves inspiradas na animação. Pacote na pasta Games.",
+    "description": "Aventura infantil da Activision baseada no filme Bee Movie da DreamWorks. Barry B. Benson atravessa fases leves de plataforma e voo inspiradas na animação sobre abelhas e o mundo humano visto em miniatura.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como dublado. Versões brasileiras do filme são dubladas; o áudio deste pacote não foi conferido.",
     "installHint": "games",
@@ -289,7 +304,7 @@
   },
   "54d79674-fa72-49e1-a836-a8fc9138a6cc": {
     "displayTitle": "G-Force",
-    "description": "Ação da Disney baseada no filme G-Force: esquadrão de cobaias em mini-missões de infiltração. Plataforma e combate leve. Pacote na pasta Games.",
+    "description": "Ação da Disney baseada no filme G-Force, com esquadrão de cobaias agentes secretas em missões de infiltração. Plataforma, combate leve e gadgets em aventura voltada ao público familiar inspirada na animação de espionagem.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como dublado.",
     "installHint": "games",
@@ -297,7 +312,7 @@
   },
   "269309c9-e77c-44ac-b3a1-b3c65ccb93fd": {
     "displayTitle": "Harry Potter and the Order of the Phoenix",
-    "description": "Ação e exploração da EA: Hogwarts aberta para andar, feitiços e a trama da Ordem da Fênix. Pacote XeX na pasta Games.",
+    "description": "Ação e exploração da EA baseada no quinto filme/livro, com Hogwarts aberta para explorar livremente. Aprender feitiços, montar o Exército de Dumbledore e viver a trama da Ordem da Fênix numa das adaptações mais ambiciosas da série no 360.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
@@ -305,7 +320,7 @@
   },
   "60fa9ace-ed97-429f-8180-47429ad0b25d": {
     "displayTitle": "Terminator Salvation",
-    "description": "Tiro em terceira pessoa da Grin/Evolved, ligado ao filme Exterminador do Futuro: A Salvação. Combate contra máquinas na resistência humana. Pacote na pasta Games.",
+    "description": "Tiro em terceira pessoa da Grin/Evolved ligado ao filme Exterminador do Futuro: A Salvação. Combate contra máquinas Skynet na resistência humana pós-juízo final, com cobertura, coop e a estética industrial do universo Terminator.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como dublado.",
     "installHint": "games",
@@ -313,7 +328,7 @@
   },
   "2972274c-8ff5-4ae5-9499-51d5432bc497": {
     "displayTitle": "The Chronicles of Narnia: Prince Caspian",
-    "description": "Ação da Traveller's Tales baseada em Nárnia: Príncipe Caspian. Combate cooperativo, personagens do livro e fases de batalha. Pacote na pasta Games.",
+    "description": "Ação da Traveller's Tales baseada em Nárnia: Príncipe Caspian, com combate cooperativo e personagens do universo de C.S. Lewis. Fases de batalha épica, criaturas fantásticas e aventura familiar na terra de Nárnia.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como dublado.",
     "installHint": "games",
@@ -321,7 +336,7 @@
   },
   "090d0775-1047-4d72-8514-a4a5bd090387": {
     "displayTitle": "Transformers: Fall of Cybertron",
-    "description": "Tiro em terceira pessoa da High Moon: a guerra em Cybertron com Autobots e Decepticons jogáveis. Transformar entre robô e veículo no meio do combate. Pacote na pasta Games.",
+    "description": "Tiro em terceira pessoa da High Moon sobre a guerra final em Cybertron entre Autobots e Decepticons. Transformação fluida entre forma robô e veículo no combate, elenco amplo e narrativa que fecha a duologia War for/Fall of Cybertron.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
@@ -329,7 +344,7 @@
   },
   "ef873916-e26c-44ff-9c1b-d8187f315538": {
     "displayTitle": "Dragon Ball: Raging Blast",
-    "description": "Luta 3D da Spike/Namco Bandai com elenco clássico de Dragon Ball Z, transformações e cenários destrutíveis. Pacote XeX na pasta Games.",
+    "description": "Luta 3D da Spike/Namco Bandai com elenco clássico de Dragon Ball Z, transformações e cenários destrutíveis. Combate aéreo exagerado, ki blasts e recriações de batalhas icônicas do anime em escala épica.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como dublado. A série costuma ter vozes em japonês ou inglês conforme a região.",
     "installHint": "games",
@@ -337,7 +352,7 @@
   },
   "586ba480-2894-4211-92a4-359a1a3c2e2e": {
     "displayTitle": "Dragon Ball: Raging Blast 2",
-    "description": "Sequência do Raging Blast, com mais lutadores e o mesmo combate 3D exagerado da Spike. Pacote na pasta Games.",
+    "description": "Sequência do Raging Blast com roster expandido, novos lutadores e o mesmo combate 3D frenético da Spike. Modos história, torneio e batalhas ambientais que elevam a destruição dos cenários à medida dos poderes dos personagens.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como dublado.",
     "installHint": "games",
@@ -345,7 +360,7 @@
   },
   "42d2f8f8-e7ba-4128-82a4-e20acea35a07": {
     "displayTitle": "Dragon Ball Z: Ultimate Tenkaichi",
-    "description": "Luta da Spike com controle por gestos de batalha e modo história em Dragon Ball Z. Elenco amplo e transformações. Pacote XeX na pasta Games.",
+    "description": "Luta da Spike com sistema de combate por gestos e modo história extenso em Dragon Ball Z. Criação de Saiyan customizado, transformações e batalhas que cobrem arcos clássicos do mangá/anime com liberdade de exploração 3D.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como dublado.",
     "installHint": "games",
@@ -353,7 +368,7 @@
   },
   "9c6113be-30d3-428c-9afa-738f6b24f200": {
     "displayTitle": "Dragon Ball Z: Burst Limit",
-    "description": "Luta 3D da Bandai Namco no Xbox 360, com o elenco clássico de Dragon Ball Z e combos no estilo Burst Limit. Pacote XeX na pasta Games.",
+    "description": "Luta 3D da Bandai Namco no Xbox 360 com elenco clássico de Dragon Ball Z e combos rápidos no estilo Burst Limit. Sistema de ki, transformações e batalhas cinematográficas que capturam a velocidade das lutas do anime.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como dublado.",
     "installHint": "games",
@@ -361,7 +376,7 @@
   },
   "4ef233c7-66e5-4376-b768-cf7f94f13c82": {
     "displayTitle": "Dragon Ball Z HD Collection",
-    "description": "Coletânea em HD com Dragon Ball Z: Budokai HD e Budokai 3 HD no Xbox 360. Lutas 3D clássicas da série Budokai, remasterizadas. Pacote na pasta Games.",
+    "description": "Coletânea em HD com Dragon Ball Z: Budokai HD e Budokai 3 HD remasterizados. Lutas 3D clássicas da série Budokai, modo Dragon Universe e nostalgia dos primeiros grandes jogos de luta da franquia em nova resolução.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como dublado.",
     "installHint": "games",
@@ -369,15 +384,18 @@
   },
   "c025ac83-ec12-4141-a0ae-efec96b28801": {
     "displayTitle": "Baja: Edge of Control",
-    "description": "Corrida off-road da THQ no deserto da Baja, com buggy, trophy truck e motos em circuitos longos cheios de salto e poeira. O pacote tem default.xex na raiz e vai para a pasta Games.",
+    "description": "Corrida off-road da THQ no deserto da Baja California, com buggies, trophy trucks e motos em circuitos longos. Saltos enormes, poeira, competição brutal e física exigente num dos poucos títulos dedicados ao off-road extremo do 360.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
-    "dlcNotes": []
+    "dlcNotes": [],
+    "technicalNotes": [
+      "default.xex na raiz da pasta."
+    ]
   },
   "f9b7c88c-eb29-4bf2-9fca-5f9553fb5c06": {
     "displayTitle": "Fight Night Round 4",
-    "description": "Boxe da EA Sports com o controle analógico de socos da série Fight Night. Elenco de peso-pesado e lendas, modos carreira e exibição. Pacote XeX na pasta Games.",
+    "description": "Simulador de boxe da EA Sports com controle analógico de socos que revolucionou lutas esportivas. Elenco de pesos-pesados e lendas, física de impacto realista e modos carreira e exibição que definiram o padrão do gênero.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
@@ -385,7 +403,7 @@
   },
   "847b5032-0c7b-42da-8824-b87295e06f6a": {
     "displayTitle": "London 2012",
-    "description": "Jogo oficial dos Jogos Olímpicos de Londres 2012, da Sega. Várias modalidades em mini-eventos de timing e precisão, com as equipes daquele verão. Pacote na pasta Games.",
+    "description": "Jogo oficial dos Jogos Olímpicos de Londres 2012 da Sega, com dezenas de modalidades em mini-eventos. Atletismo, natação, ginástica e mais, com equipes daquele verão olímpico e desafios de timing e precisão para toda a família.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
@@ -393,7 +411,7 @@
   },
   "1add183b-1a23-46f9-b328-8f4b9d4a9539": {
     "displayTitle": "Stoked: Big Air Edition",
-    "description": "Simulador de snowboard da Destineer, edição Big Air com mais pistas e truques. Descer montanha, pegar ar e encadear manobras. Pacote XeX na pasta Games.",
+    "description": "Simulador de snowboard da Destineer, edição Big Air com pistas extras e truques ampliados. Descer montanhas, pegar ar em saltos gigantes e encadear manobras com liberdade de exploração nas encostas.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
@@ -401,7 +419,7 @@
   },
   "5f217943-5a06-4ba5-b796-c6f285679da4": {
     "displayTitle": "Top Spin 4",
-    "description": "Tênis da 2K Czech com o swing analógico da série Top Spin. Circuito ATP/WTA da época, criador de jogador e os courts clássicos. Pacote na pasta Games.",
+    "description": "Simulador de tênis da 2K Czech com swing analógico refinado da série Top Spin. Circuito ATP/WTA da época, criador de jogador, torneios dos Grand Slams e partidas que equilibram simulação e acessibilidade.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
@@ -409,7 +427,7 @@
   },
   "6e8fde22-d682-45ef-a2ba-1789b232b3ef": {
     "displayTitle": "UFC Undisputed 3",
-    "description": "Luta livre da Yuke's/THQ com o elenco do UFC da época, incluindo o Pride mode. Striking, grappling e os eventos no octógono. Pacote XeX na pasta Games.",
+    "description": "Simulador de MMA da Yuke's/THQ com elenco completo do UFC da época, incluindo o modo Pride com regras e arena japonesas. Striking, grappling, apresentação televisiva e profundidade que fizeram da série referência em lutas no 360.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
@@ -417,7 +435,7 @@
   },
   "d80f6c03-e072-4cfe-9d44-1ca5037cdd0a": {
     "displayTitle": "Call of Duty 4: Modern Warfare",
-    "description": "FPS da Infinity Ward que levou a série à guerra contemporânea. Campanha cinematográfica e o multiplayer que definiu a geração no Xbox 360. Pacote XeX na pasta Games.",
+    "description": "FPS da Infinity Ward que redefiniu a série ao levar a guerra para o cenário contemporâneo. Campanha cinematográfica memorável — incluindo a sequência em Pripyat — e multiplayer class-based que se tornou o modelo da geração Xbox 360.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
@@ -425,17 +443,18 @@
   },
   "3271e47f-3c82-4548-a7ac-74879e499dfe": {
     "displayTitle": "Call of Duty: Black Ops",
-    "description": "FPS da Treyarch na Guerra Fria: campanha com Mason, zumbis e o multiplayer da época. O zip é a pasta inteira (jogo em Cod Black OPS/ mais a pasta DLC'S). Instalação na pasta Games.",
+    "description": "FPS da Treyarch ambientado na Guerra Fria, com campanha envolvendo o misterioso Mason e o modo Zombies cooperativo. Multiplayer com progressão, killstreaks e mapas icônicos que consolidaram Black Ops como subfranquia própria.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
     "dlcNotes": [
-      "DLC Title ID 41560855 existe no disco em DLC'S/Content, mas ainda não há zip separado no R2 para Content/0000000000000000/41560855 (a pasta TitleID tem ~4,5 GB). O conteúdo extra segue dentro do zip do jogo."
+      "DLC Title ID 41560855 existe no disco em DLC'S/Content, mas ainda não há zip separado no R2 para Content/0000000000000000/41560855 (a pasta TitleID tem ~4,5 GB). O conteúdo extra segue dentro do zip do jogo.",
+      "Zip contém jogo em Cod Black OPS/ e pasta DLC'S no mesmo pacote."
     ]
   },
   "48742df4-917c-4ca2-bf8d-81217142b6d2": {
     "displayTitle": "Medal of Honor 2010 PTBR",
-    "description": "FPS da Danger Close/EA que reacende a série na guerra no Afeganistão, com operadores Tier 1. O pacote do acervo está rotulado como PTBR e vai para a pasta Games.",
+    "description": "FPS da Danger Close/EA que reacende a série Medal of Honor na guerra moderna do Afeganistão. Campanha focada em operadores Tier 1 e multiplayer que tentou competir com Call of Duty trazendo autenticidade militar à época.",
     "audio": "pt-br",
     "audioNote": "Pasta: Medal of Honor 2010 PTBR.",
     "installHint": "games",
@@ -443,15 +462,18 @@
   },
   "4235a623-3cd5-42bc-9825-5e82e652a028": {
     "displayTitle": "Medal of Honor: Airborne",
-    "description": "FPS da EA Los Angeles na Segunda Guerra: o jogador salta de paraquedas na Normandia e escolhe por onde atacar o mapa. No HD a pasta se chama «Medal of Honor Airbone [NTSCU]»; o pacote tem default.xex e vai para Games.",
+    "description": "FPS da EA Los Angeles na Segunda Guerra Mundial, com mecânica inovadora de salto de paraquedas. O jogador escolhe onde pousar na Normandia e define a abordagem tática de cada missão, trazendo verticalidade rara ao gênero na época.",
     "audio": "desconhecido",
     "audioNote": "Pasta NTSC-U sem marca PT-BR. O áudio típico desta versão é em inglês.",
     "installHint": "games",
-    "dlcNotes": []
+    "dlcNotes": [],
+    "technicalNotes": [
+      "Pasta no HD: «Medal of Honor Airbone [NTSCU]»; default.xex na raiz."
+    ]
   },
   "76ed2aa2-1838-423a-98f2-a768396c477e": {
     "displayTitle": "Metro 2033 PTBR",
-    "description": "FPS da 4A Games no metrô de Moscou após um holocausto nuclear. Atmosfera fechada, munição como moeda e criaturas na superfície. O pacote do acervo está rotulado como PTBR.",
+    "description": "FPS survival horror da 4A Games nos túneis do metrô de Moscou após holocausto nuclear. Atmosfera claustrofóbica, munição como moeda, máscaras de gás e mutantes na superfície irradiada criam tensão constante num dos universos pós-apocalípticos mais marcantes da geração.",
     "audio": "pt-br",
     "audioNote": "Pasta: Metro 2033 - PTBR.",
     "installHint": "games",
@@ -459,7 +481,7 @@
   },
   "f73b47c6-f33a-40ee-b532-3cec198ec752": {
     "displayTitle": "Brutal Legend",
-    "description": "Ação da Double Fine: Eddie Riggs cai num mundo de heavy metal, com palco, demônios e um modo de estratégia em campo. Combate, exploração e riffs. Pacote na pasta Games.",
+    "description": "Ação e estratégia da Double Fine com Eddie Riggs, roadie transportado a um mundo de heavy metal. Combate com machado, exploração em cenários inspirados em capas de álbum e batalhas RTS no chão de palco com hordas de demônios e roadies.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
@@ -467,7 +489,7 @@
   },
   "6f6264fa-4acb-4df4-94fb-52c96d8f48fa": {
     "displayTitle": "Dead Island",
-    "description": "RPG de ação da Techland numa ilha resort tomada por zumbis. Combate em primeira pessoa, armas improvisadas e coop. Pacote XeX na pasta Games.",
+    "description": "RPG de ação em primeira pessoa da Techland num resort tropical tomado por zumbis. Combate corpo a corpo, armas improvisadas, coop online e a famosa trilha de apresentação que contrasta paraíso visual com horror de sobrevivência.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
@@ -475,7 +497,7 @@
   },
   "e379928c-7260-43cc-86f6-707c276cdcd0": {
     "displayTitle": "Hitman: Blood Money",
-    "description": "Stealth da IO Interactive com o Agente 47 em assassinatos que o jogador planeja à sua maneira. Neste acervo o pacote é só conteúdo Xbox (Title ID 534307DB): instala na pasta Content, não em Games. Não há default.xex — o jogo aparece pelo cache/GOD da pasta Content.",
+    "description": "Stealth da IO Interactive com Agente 47 em missões de assassinato abertas e planejáveis. Múltiplas abordagens, disfarces, acidentes \"naturais\" e níveis memoráveis como a ópera e a Casa Branca que consolidaram a série como referência do gênero.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "content",
@@ -485,17 +507,18 @@
   },
   "06d1e7a2-cc2d-434b-aead-8b57d8c934f7": {
     "displayTitle": "Star Wars: The Force Unleashed 2",
-    "description": "Ação da LucasArts com Starkiller, sabre e poderes da Força. O zip é a pasta inteira: o jogo em STAR WARS THE FORCE UNLEASHED 2/ mais a pasta DLC'S. Instalação na pasta Games.",
+    "description": "Ação da LucasArts continuando a história de Starkiller, clone do aprendiz secreto de Darth Vader. Sabre de luz, poderes da Força espetaculares e destruição ambiental em setpieces cinematográficos do universo Star Wars.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
     "dlcNotes": [
-      "DLC Title ID 4C4107F2 existe no disco em DLC'S/content, mas ainda não há zip separado no R2 para Content/0000000000000000/4C4107F2 (a pasta TitleID tem ~1,6 GB). O extra segue dentro do zip do jogo."
+      "DLC Title ID 4C4107F2 existe no disco em DLC'S/content, mas ainda não há zip separado no R2 para Content/0000000000000000/4C4107F2 (a pasta TitleID tem ~1,6 GB). O extra segue dentro do zip do jogo.",
+      "Zip contém jogo em STAR WARS THE FORCE UNLEASHED 2/ e pasta DLC'S no mesmo pacote."
     ]
   },
   "da29129a-5f20-42cb-b1c6-4a0ff4791921": {
     "displayTitle": "Star Wars: The Force Unleashed Ultimate Sith Edition",
-    "description": "Ação da LucasArts com Starkiller a serviço de Vader, nesta Ultimate Sith Edition com os capítulos extras da edição Sith.",
+    "description": "Ação da LucasArts com Starkiller a serviço de Darth Vader na Ultimate Sith Edition, reunindo o jogo base com capítulos exclusivos da edição Sith. Poderes da Força exagerados, combate com sabre e cenários icônicos expandidos além da campanha original.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
@@ -507,7 +530,7 @@
   },
   "9a924ed9-2d51-49f9-97b0-338b58c23411": {
     "displayTitle": "Titanfall",
-    "description": "Tiro da Respawn no Xbox 360, com pilotos ágeis e titãs mecânicos no multiplayer. Versão desta geração, mais enxuta que a de PC/Xbox One. Pacote XeX na pasta Games.",
+    "description": "Tiro multijogador da Respawn no Xbox 360, combinando pilotos ágeis em parkour com titãs mecânicos invocados em batalha. Partidas 6v6 dinâmicas, mapas verticais e a mistura única de combate infantry/mech que marcou a estreia do estúdio de ex-desenvolvedores de Call of Duty.",
     "audio": "desconhecido",
     "audioNote": "O pacote não está marcado como PT-BR ou dublado.",
     "installHint": "games",
@@ -515,7 +538,7 @@
   },
   "0403964f-a497-467a-9fcd-81b9ab127409": {
     "displayTitle": "Turok PT-BR",
-    "description": "FPS da Propaganda Games: o caçador Turok enfrenta dinossauros e soldados numa selva hostil. O pacote do acervo está rotulado como PT-BR e vai para a pasta Games.",
+    "description": "FPS da Propaganda Games com o caçador Turok em planeta alienígena repleto de dinossauros e soldados inimigos. Combate intenso, armas exóticas, ambientação de selva hostil e violência direta que modernizou a franquia clássica dos quadrinhos e dos N64.",
     "audio": "pt-br",
     "audioNote": "Pasta: TUROK PT-BR.",
     "installHint": "games",
