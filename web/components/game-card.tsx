@@ -11,7 +11,6 @@ type GameCardProps = {
   platform: string;
   extraCount?: number;
   badges?: CatalogBadge[];
-  showTitleOnCover?: boolean;
 };
 
 function formatTitle(label: string): string {
@@ -38,13 +37,11 @@ export function GameCard({
   platform,
   extraCount = 0,
   badges = [],
-  showTitleOnCover = false,
 }: GameCardProps) {
   const displayTitle = formatTitle(title);
   const audioBadges = badges.filter((badge) => badge.kind === "audio");
   const dlcBadges = badges.filter((badge) => badge.kind === "dlc");
   const hasCover = Boolean(coverUrl);
-  const showCoverTitle = showTitleOnCover || !hasCover;
 
   return (
     <Link
@@ -55,18 +52,18 @@ export function GameCard({
         <GameCoverFrame
           title={displayTitle}
           coverUrl={coverUrl}
-          badges={showCoverTitle ? audioBadges : []}
-          showTitle={showCoverTitle}
+          badges={audioBadges}
+          showTitle={!hasCover}
         />
         <span className="absolute left-2 top-2 rounded-md bg-black/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300 backdrop-blur">
           {platform}
         </span>
-        {audioBadges.length > 0 && hasCover && (
-          <div className="absolute bottom-2 left-2 flex max-w-[calc(100%-1rem)] flex-wrap gap-1">
+        {audioBadges.length > 0 && (
+          <div className="absolute bottom-2 left-2 z-10 flex max-w-[calc(100%-1rem)] flex-wrap gap-1">
             {audioBadges.map((badge) => (
               <span
                 key={badge.label}
-                className={`rounded-md px-2 py-0.5 text-[10px] font-semibold backdrop-blur ${badgeClass(badge.tone)}`}
+                className={`rounded-md px-2 py-0.5 text-[10px] font-semibold shadow-sm backdrop-blur ${badgeClass(badge.tone)}`}
               >
                 {badge.label}
               </span>
@@ -74,7 +71,7 @@ export function GameCard({
           </div>
         )}
         {(dlcBadges.length > 0 || extraCount > 0) && (
-          <span className="absolute right-2 top-2 rounded-md bg-accent/85 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur">
+          <span className="absolute right-2 top-2 rounded-md bg-accent/85 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm backdrop-blur">
             {dlcBadges[0]?.label ?? `+${extraCount} DLC`}
           </span>
         )}
@@ -86,6 +83,18 @@ export function GameCard({
         <h3 className="truncate text-sm font-semibold text-white" title={displayTitle}>
           {displayTitle}
         </h3>
+        {audioBadges.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-1">
+            {audioBadges.map((badge) => (
+              <span
+                key={`title-${badge.label}`}
+                className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${badgeClass(badge.tone)}`}
+              >
+                {badge.label}
+              </span>
+            ))}
+          </div>
+        )}
         <p className="text-xs text-zinc-500">
           {sizeBytes > 0 ? formatBytes(sizeBytes) : "Tamanho sob consulta"}
         </p>

@@ -18,7 +18,7 @@ export function audioCatalogBadge(
     return { kind: "audio", label: "Dublado", tone: "dublado" };
   }
   if (audio === "pt-br") {
-    return { kind: "audio", label: "PT-BR", tone: "pt-br" };
+    return { kind: "audio", label: "Legendado PT-BR", tone: "pt-br" };
   }
   return null;
 }
@@ -67,7 +67,7 @@ export function catalogDisplayTitle(
   if (audio === "dublado" && !titleAlreadyHas(title, "dublado")) {
     suffixes.push("Dublado");
   } else if (audio === "pt-br" && !titleAlreadyHas(title, "pt-br")) {
-    suffixes.push("PT-BR");
+    suffixes.push("Legendado PT-BR");
   }
 
   const dlcFromNotes = (meta?.dlcNotes?.length ?? 0) > 0;

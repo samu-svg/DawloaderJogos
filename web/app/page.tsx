@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { FeaturedGamesStrip } from "@/components/featured-games-strip";
 import { GameCatalog } from "@/components/game-catalog";
 import { MontaHDStrip } from "@/components/montahd-strip";
 import { SiteHeader } from "@/components/site-header";
@@ -53,15 +52,7 @@ export default async function HomePage({ searchParams }: PageProps) {
 
         <MontaHDStrip hasAccess={hasAccess} />
 
-        <FeaturedGamesStrip games={items} />
-
-        <div className="mt-12">
-          <div className="mb-5 text-center">
-            <h2 className="section-heading text-xl sm:text-2xl">Catálogo completo</h2>
-            <p className="mt-2 text-sm text-zinc-500">
-              Todos os jogos do acervo, com filtros e busca.
-            </p>
-          </div>
+        <div className="mt-10">
           <GameCatalog
             games={items}
             collections={collections}
