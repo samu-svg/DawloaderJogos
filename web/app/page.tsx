@@ -4,11 +4,11 @@ import { GameCatalog } from "@/components/game-catalog";
 import { MontaHDStrip } from "@/components/montahd-strip";
 import { SiteHeader } from "@/components/site-header";
 import { StoreFooter } from "@/components/store-footer";
-import { currentAppUser } from "@/lib/auth";
+import { isPortfolioAdmin } from "@/lib/admin";
 import { toCatalogGameItems } from "@/lib/catalog-items";
 import { loadAcervo } from "@/lib/games";
-import { canAccessPainel } from "@/lib/rbac";
 import { userHasCatalogAccess } from "@/lib/subscription";
+import { currentUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "MontaHD — Downloads de jogos de Xbox 360",
@@ -23,11 +23,11 @@ type PageProps = {
 export default async function HomePage({ searchParams }: PageProps) {
   const [{ colecao }, user, { games, collections }] = await Promise.all([
     searchParams,
-    currentAppUser(),
+    currentUser(),
     loadAcervo(),
   ]);
 
-  const isAdmin = user ? canAccessPainel(user.role) : false;
+  const isAdmin = isPortfolioAdmin(user?.email);
   const hasAccess = user ? await userHasCatalogAccess(user) : false;
 
   const items = toCatalogGameItems(games);

@@ -6,7 +6,7 @@ import { GameCoverFrame } from "@/components/game-cover";
 import { GameInstallPanel } from "@/components/game-install-panel";
 import { SiteHeader } from "@/components/site-header";
 import { StoreFooter } from "@/components/store-footer";
-import { currentAppUser } from "@/lib/auth";
+import { isPortfolioAdmin } from "@/lib/admin";
 import {
   catalogBadgesForGame,
   catalogDisplayTitle,
@@ -21,9 +21,9 @@ import {
 } from "@/lib/game-pages";
 import { findAcervoGame, relatedAcervoGames } from "@/lib/games";
 import { formatBytes } from "@/lib/manifest";
-import { canAccessPainel } from "@/lib/rbac";
 import { getSiteUrl } from "@/lib/site-url";
 import { userHasCatalogAccess } from "@/lib/subscription";
+import { currentUser } from "@/lib/supabase/server";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -57,12 +57,12 @@ export default async function GamePage({ params }: PageProps) {
   if (!game) notFound();
 
   const [user, siteUrl, related] = await Promise.all([
-    currentAppUser(),
+    currentUser(),
     getSiteUrl(),
     relatedAcervoGames(game),
   ]);
 
-  const isAdmin = user ? canAccessPainel(user.role) : false;
+  const isAdmin = isPortfolioAdmin(user?.email);
   const hasAccess = user ? await userHasCatalogAccess(user) : false;
   const access = !user ? "anon" : hasAccess ? "liberado" : "sem-assinatura";
   const meta = gamePageMeta(game.id);
