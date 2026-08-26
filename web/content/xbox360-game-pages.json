@@ -598,9 +598,9 @@
     "audio": "pt-br",
     "audioNote": "Pasta: Dead Space PT-BR.",
     "installHint": "games",
-    "dlcNotes": []
-  },
-  "a1b2c3d1-0001-4000-8000-000000000008": {
+    "dlcNotes": [
+      "DLC opcional Title ID 45410857 — destino Content/0000000000000000/45410857.zip (storage_key jogos/content/45410857.zip). Também pode vir aninhado dentro do zip do jogo; o app copia para Content/ automaticamente."
+    ] {
     "displayTitle": "Dragon Ball Z: Battle of Z",
     "description": "Luta em equipe da Artdink com batalhas massivas entre guerreiros Z. Combate aéreo acelerado, especiais icônicos e modos cooperativos para reviver confrontos clássicos do anime em arenas amplas.",
     "audio": "desconhecido",
@@ -630,9 +630,9 @@
     "audio": "pt-br",
     "audioNote": "Pasta: GEARS OF WAR PT-BR.",
     "installHint": "games",
-    "dlcNotes": []
-  },
-  "a1b2c3d1-0001-4000-8000-000000000012": {
+    "dlcNotes": [
+      "DLC opcional Title ID 4D5307D5 — destino Content/0000000000000000/4D5307D5.zip (storage_key jogos/content/4D5307D5.zip)."
+    ] {
     "displayTitle": "The King of Fighters XIII",
     "description": "Luta 2D da SNK Playmore com elenco massivo da série KOF e sprites detalhados. Sistema de combates em equipe, EX moves e profundidade competitiva que fez desta entrada um dos melhores fighters da geração.",
     "audio": "desconhecido",
@@ -646,9 +646,9 @@
     "audio": "desconhecido",
     "audioNote": "Pacote inclui DLCs na pasta original.",
     "installHint": "games",
-    "dlcNotes": []
-  },
-  "a1b2c3d1-0001-4000-8000-000000000014": {
+    "dlcNotes": [
+      "DLC opcional Title ID 4156082F — destino Content/0000000000000000/4156082F.zip (storage_key jogos/content/4156082F.zip)."
+    ] {
     "displayTitle": "Mindjack",
     "description": "Tiro em terceira pessoa da Square Enix com agente Jim Corbynn capaz de invadir mentes de inimigos e aliados. Combate híbrido online e mecânica de controle mental em cenário futurista distópico.",
     "audio": "desconhecido",
@@ -782,9 +782,9 @@
     "audio": "pt-br",
     "audioNote": "Pacote indica PT-BR + DLC's na pasta original.",
     "installHint": "games",
-    "dlcNotes": []
-  },
-  "a1b2c3d1-0001-4000-8000-000000000025": {
+    "dlcNotes": [
+      "DLC opcional Title ID 534307EC — destino Content/0000000000000000/534307EC.zip (storage_key jogos/content/534307EC.zip)."
+    ] {
     "displayTitle": "Warhammer 40,000: Space Marine",
     "description": "Tiro em terceira pessoa da Relic Entertainment com um Space Marine Ultramarine contra hordas de Orks. Combate brutal corpo a corpo e com armas, campanha cooperativa e universo Warhammer 40K fiel.",
     "audio": "desconhecido",
