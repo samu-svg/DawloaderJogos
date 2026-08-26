@@ -23,13 +23,20 @@ export async function copyDirectory(
   destDir: string,
   onProgress?: (copiedBytes: number, totalBytes: number) => void,
   signal?: AbortSignal,
+  shouldCopy?: (relativePath: string) => boolean,
 ): Promise<{ filesCopied: number; bytesCopied: number }> {
   const files = await listFiles(sourceDir);
-  const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
+  const filtered = shouldCopy
+    ? files.filter((file) => {
+        const relative = path.relative(sourceDir, file.absPath).replace(/\\/g, "/");
+        return shouldCopy(relative);
+      })
+    : files;
+  const totalBytes = filtered.reduce((sum, file) => sum + file.size, 0);
   let copiedBytes = 0;
   let filesCopied = 0;
 
-  for (const file of files) {
+  for (const file of filtered) {
     if (signal?.aborted) throw new Error("Operação cancelada.");
 
     const relative = path.relative(sourceDir, file.absPath);

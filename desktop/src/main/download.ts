@@ -5,7 +5,14 @@ import path from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { copyDirectory } from "./copy-dir";
-import { extractZipToContentRoot, isZipFile, removeTempDir } from "./zip-extract";
+import {
+  extractZipToContentRoot,
+  findContentInstallTrees,
+  isGamesDestination,
+  isZipFile,
+  removeTempDir,
+  shouldCopyGameFile,
+} from "./zip-extract";
 
 export interface DownloadProgress {
   entryId: string;
@@ -78,16 +85,18 @@ export async function downloadEntry(options: {
   label: string;
   url: string;
   destPath: string;
+  hdRoot?: string;
   expectedSize?: number;
   expectedSha256?: string;
   onProgress: (progress: DownloadProgress) => void;
   signal?: AbortSignal;
-}): Promise<void> {
+}): Promise<{ installedPath: string }> {
   const {
     entryId,
     label,
     url,
     destPath,
+    hdRoot,
     expectedSize = 0,
     expectedSha256,
     onProgress,
@@ -150,10 +159,14 @@ export async function downloadEntry(options: {
       status: "extracting",
     });
 
-    const { contentRoot, tempDir } = await extractZipToContentRoot(tempPath);
+    const { contentRoot, tempDir } = await extractZipToContentRoot(tempPath, installDir);
     let installed = { filesCopied: 0, bytesCopied: 0 };
     try {
       await mkdir(installDir, { recursive: true });
+      const installRel = hdRoot
+        ? path.relative(hdRoot, installDir).replace(/\\/g, "/")
+        : installDir.replace(/\\/g, "/");
+      const copyFilter = isGamesDestination(installRel) ? shouldCopyGameFile : undefined;
       installed = await copyDirectory(
         contentRoot,
         installDir,
@@ -167,7 +180,30 @@ export async function downloadEntry(options: {
           });
         },
         signal,
+        copyFilter,
       );
+
+      if (hdRoot && isGamesDestination(installRel)) {
+        const contentTrees = await findContentInstallTrees(tempDir);
+        for (const contentTree of contentTrees) {
+          const nested = await copyDirectory(
+            contentTree,
+            path.join(hdRoot, "Content"),
+            (copied, total) => {
+              onProgress({
+                entryId,
+                label,
+                downloadedBytes: installed.bytesCopied + copied,
+                totalBytes: installed.bytesCopied + total,
+                status: "installing",
+              });
+            },
+            signal,
+          );
+          installed.filesCopied += nested.filesCopied;
+          installed.bytesCopied += nested.bytesCopied;
+        }
+      }
     } finally {
       await removeTempDir(tempDir);
       await removeZipDownloadArtifacts(destPath);
@@ -180,7 +216,7 @@ export async function downloadEntry(options: {
       totalBytes: installed.bytesCopied,
       status: "done",
     });
-    return;
+    return { installedPath: installDir };
   }
 
   if (existsSync(destPath)) unlinkSync(destPath);
@@ -193,6 +229,7 @@ export async function downloadEntry(options: {
     totalBytes: expectedSize || fileSize,
     status: "done",
   });
+  return { installedPath: destPath };
 }
 
 async function writeStream(

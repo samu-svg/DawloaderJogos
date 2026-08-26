@@ -12,7 +12,15 @@ import {
 } from "../shared/manifest";
 import { preloadPath, rendererPath } from "./app-paths";
 import { downloadEntry, type DownloadProgress } from "./download";
+import {
+  deleteHdItem,
+  listHdLibrary,
+  rememberHdLabels,
+  recordInstalled,
+} from "./hd-library";
 import { resolveUnderRoot } from "./paths";
+import { computeHdFingerprint } from "../shared/hd-fingerprint";
+import type { HdLibraryHint } from "../shared/hd-library";
 
 const PROTOCOL = "montahd";
 
@@ -140,9 +148,15 @@ async function fetchManifest(
 
   const response = await fetch(url, { headers });
   if (response.status === 401 || response.status === 403) {
-    throw new Error(
-      "Assinatura ativa necessária. Abra o catálogo pelo site e clique em Abrir no MontaHD.",
-    );
+    let detail =
+      "Assinatura ativa necessária. Abra o catálogo pelo site e clique em Instalar no HD.";
+    try {
+      const body = (await response.json()) as { error?: string };
+      if (body.error) detail = body.error;
+    } catch {
+      // mantém mensagem padrão
+    }
+    throw new Error(detail);
   }
   if (response.status === 404) {
     throw new Error("Portfólio não encontrado ou não está público.");
@@ -167,6 +181,42 @@ async function fetchManifest(
   }
 
   return manifest;
+}
+
+async function requestManifestToken(
+  baseUrl: string,
+  payload: {
+    session?: string;
+    slug?: string;
+    entryIds?: string[];
+    hdFingerprint: string;
+  },
+): Promise<string | null> {
+  const response = await fetch(`${normalizeBaseUrl(baseUrl)}/api/manifest-token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  let data: { error?: string; token?: string | null } = {};
+  try {
+    data = (await response.json()) as { error?: string; token?: string | null };
+  } catch {
+    // resposta não JSON
+  }
+
+  if (response.status === 403) {
+    throw new Error(
+      data.error ?? "Seu plano não permite usar este HD. Use o HD registrado na sua conta.",
+    );
+  }
+  if (!response.ok) {
+    throw new Error(
+      data.error ?? `Não foi possível autorizar o HD (${response.status}).`,
+    );
+  }
+
+  return data.token ?? null;
 }
 
 if (gotSingleInstanceLock) {
@@ -214,6 +264,31 @@ ipcMain.handle("select-folder", async () => {
   return result.filePaths[0];
 });
 
+ipcMain.handle("compute-hd-fingerprint", (_event, rootDir: string) => {
+  return computeHdFingerprint(rootDir);
+});
+
+ipcMain.handle(
+  "request-manifest-token",
+  async (
+    _event,
+    payload: {
+      baseUrl: string;
+      session?: string;
+      slug?: string;
+      entryIds?: string[];
+      hdFingerprint: string;
+    },
+  ) => {
+    return requestManifestToken(payload.baseUrl, {
+      session: payload.session,
+      slug: payload.slug,
+      entryIds: payload.entryIds,
+      hdFingerprint: payload.hdFingerprint,
+    });
+  },
+);
+
 ipcMain.handle(
   "fetch-manifest",
   async (
@@ -234,6 +309,27 @@ ipcMain.handle("cancel-download", () => {
   abortController?.abort();
   abortController = null;
 });
+
+ipcMain.handle(
+  "list-hd-library",
+  async (_event, payload: { rootDir: string; hints?: HdLibraryHint[] }) => {
+    return listHdLibrary(payload.rootDir, payload.hints ?? []);
+  },
+);
+
+ipcMain.handle(
+  "remember-hd-labels",
+  async (_event, payload: { rootDir: string; hints: HdLibraryHint[] }) => {
+    await rememberHdLabels(payload.rootDir, payload.hints ?? []);
+  },
+);
+
+ipcMain.handle(
+  "delete-hd-item",
+  async (_event, payload: { rootDir: string; destination: string }) => {
+    return deleteHdItem(payload.rootDir, payload.destination);
+  },
+);
 
 ipcMain.handle(
   "start-download",
@@ -268,16 +364,33 @@ ipcMain.handle(
       }
 
       try {
-        await downloadEntry({
+        const downloaded = await downloadEntry({
           entryId: entry.id,
           label: entry.label,
           url: entry.downloadUrl,
           destPath: resolved.fullPath,
+          hdRoot: payload.rootDir,
           expectedSize: entry.sizeBytes,
           expectedSha256: entry.sha256,
           signal,
           onProgress: (progress) => send("download-progress", progress),
         });
+        const installedRel = path
+          .relative(payload.rootDir, downloaded.installedPath)
+          .replace(/\\/g, "/");
+        if (
+          installedRel &&
+          !installedRel.startsWith("..") &&
+          !path.isAbsolute(installedRel)
+        ) {
+          await recordInstalled(payload.rootDir, {
+            id: entry.id,
+            label: entry.label,
+            destination: installedRel,
+            group: entry.group,
+            sizeBytes: entry.sizeBytes,
+          }).catch(() => undefined);
+        }
         results.push({ entryId: entry.id, ok: true });
       } catch (error) {
         const message =

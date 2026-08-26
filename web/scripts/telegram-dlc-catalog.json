@@ -1,0 +1,38 @@
+[
+  {
+    "id": "a1b2c3d1-0001-4000-8000-00000000002d",
+    "label": "Dead Space — DLC Extraction",
+    "contentTitleId": "45410857",
+    "absPath": "C:\\Users\\doura\\Downloads\\Telegram Desktop\\Pack - 31  TERROR\\Pack - 31  TERROR\\Dead Space PT-BR\\DLC\\Content\\0000000000000000\\45410857",
+    "parentGameId": "a1b2c3d1-0001-4000-8000-000000000007",
+    "description": "DLC de extração para Dead Space no Xbox 360.",
+    "size_bytes": 191686028
+  },
+  {
+    "id": "a1b2c3d1-0001-4000-8000-00000000002e",
+    "label": "Marvel Ultimate Alliance 2 — DLC",
+    "contentTitleId": "4156082F",
+    "absPath": "C:\\Users\\doura\\Downloads\\Telegram Desktop\\PACK - 34  Super Hero\\PACK - 34  Super Hero\\Marvel Ultimatre Alliance 2  + DLCS\\DLC'S\\Content\\0000000000000000\\4156082F",
+    "parentGameId": "a1b2c3d1-0001-4000-8000-000000000013",
+    "description": "Conteúdo extra de Marvel Ultimate Alliance 2.",
+    "size_bytes": 163266938
+  },
+  {
+    "id": "a1b2c3d1-0001-4000-8000-00000000002f",
+    "label": "Gears of War — Map Pack DLC",
+    "contentTitleId": "4D5307D5",
+    "absPath": "C:\\Users\\doura\\Downloads\\Telegram Desktop\\Pack - 37 Gears Colection\\Pack - 37 Gears Colection\\Gears of War  PT-BR\\DLC'S\\Content\\0000000000000000\\4D5307D5",
+    "parentGameId": "a1b2c3d1-0001-4000-8000-000000000011",
+    "description": "Mapas e conteúdo extra do Gears of War original.",
+    "size_bytes": 344805746
+  },
+  {
+    "id": "a1b2c3d1-0001-4000-8000-000000000030",
+    "label": "Tomb Raider Underworld — DLC Beneath the Ashes",
+    "contentTitleId": "534307EC",
+    "absPath": "C:\\Users\\doura\\Downloads\\Telegram Desktop\\PACK - 51 Os Melhores Jogos\\PACK - 51 Os Melhores Jogos\\TOMB RAIDER UNDERWORLD + PT BR + DLC'S\\DLC'S\\content\\0000000000000000\\534307EC",
+    "parentGameId": "a1b2c3d1-0001-4000-8000-000000000024",
+    "description": "DLC Beneath the Ashes e Lara's Shadow para Tomb Raider Underworld.",
+    "size_bytes": 2463454208
+  }
+]

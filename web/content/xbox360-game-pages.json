@@ -799,5 +799,65 @@
     "audioNote": "Pasta: Wolfestein PT-BR (grafia do acervo).",
     "installHint": "games",
     "dlcNotes": []
+  },
+  "a1b2c3d1-0001-4000-8000-000000000027": {
+    "displayTitle": "Minecraft: Xbox 360 Edition",
+    "description": "A versão de console do Minecraft no Xbox 360, com modo sobrevivência, criativo e multijogador split-screen. Este pacote inclui a edição completa com DLCs integradas para skins, texturas e mundos extras.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD (Content). Copie a pasta Content para a raiz do HD; Title ID 584111F7.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 584111F7 — destino Content/0000000000000000/584111F7. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "a1b2c3d1-0001-4000-8000-000000000028": {
+    "displayTitle": "Ben 10: Ultimate Alien — Cosmic Destruction",
+    "description": "Ação e aventura 3D com Ben Tennyson transformando-se em alienígenas da Omnitrix para combater uma ameaça cósmica. Exploração, puzzles e combates contra inimigos em cenários inspirados na série animada.",
+    "audio": "pt-br",
+    "audioNote": "Pasta com sufixo br. Pacote GOD (Content); Title ID 445007F7.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 445007F7 — destino Content/0000000000000000/445007F7. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "a1b2c3d1-0001-4000-8000-000000000029": {
+    "displayTitle": "Battlefield: Bad Company 2",
+    "description": "FPS da DICE com campanha irreverente da Bad Company e multijogador massivo com veículos, destruição ambiental e mapas icônicos como Valparaíso e Isla Inocentes.",
+    "audio": "pt-br",
+    "audioNote": "Pasta: BattleField Bad Company 2 PT-BR. Pacote GOD; Title ID 454108A8.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 454108A8 — destino Content/0000000000000000/454108A8. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "a1b2c3d1-0001-4000-8000-00000000002a": {
+    "displayTitle": "Borderlands 2",
+    "description": "Action RPG shooter da Gearbox em Pandora, com loot procedural, humor ácido e cooperação para até quatro jogadores. Campanha longa com vault hunters, armas raras e chefes memoráveis.",
+    "audio": "pt-br",
+    "audioNote": "Pasta original: Bordelands 2 PT-BR. Pacote GOD; Title ID 5454087C.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 5454087C — destino Content/0000000000000000/5454087C. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "a1b2c3d1-0001-4000-8000-00000000002b": {
+    "displayTitle": "Prototype 2",
+    "description": "Ação open world da Radical Entertainment com James Heller transformando corpo e adquirindo poderes mutantes em Nova York tomada pelo vírus Blacklight. Combate brutal, parkour e destruição em escala.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD (Content); Title ID 415608A7.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 415608A7 — destino Content/0000000000000000/415608A7. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "a1b2c3d1-0001-4000-8000-00000000002c": {
+    "displayTitle": "Gears of War: Judgment",
+    "description": "Prequel da série com Baird e Kilo Squad julgados por desobedecer ordens durante a invasão Locust em Halvo Bay. Campanha cooperativa, modo Survival e combate cover-to-cover clássico da franquia.",
+    "audio": "dublado",
+    "audioNote": "Pasta: Gears of War Judgment - Dublado. Pacote GOD; Title ID 4D530A26.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 4D530A26 — destino Content/0000000000000000/4D530A26. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
   }
 }
