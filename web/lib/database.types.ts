@@ -107,6 +107,30 @@ export type Database = {
         Update: { display_name?: string };
         Relationships: [];
       };
+      user_hds: {
+        Row: {
+          id: string;
+          user_id: string;
+          fingerprint: string;
+          label: string | null;
+          registered_at: string;
+          last_used_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          fingerprint: string;
+          label?: string | null;
+          registered_at?: string;
+          last_used_at?: string;
+        };
+        Update: {
+          fingerprint?: string;
+          label?: string | null;
+          last_used_at?: string;
+        };
+        Relationships: [];
+      };
       subscriptions: {
         Row: {
           id: string;

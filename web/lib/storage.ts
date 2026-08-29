@@ -4,6 +4,7 @@ import {
   CreateMultipartUploadCommand,
   DeleteObjectCommand,
   GetObjectCommand,
+  HeadObjectCommand,
   S3Client,
   UploadPartCommand,
 } from "@aws-sdk/client-s3";
@@ -135,4 +136,16 @@ export async function deleteObject(storageKey: string): Promise<void> {
   await client().send(
     new DeleteObjectCommand({ Bucket: bucket(), Key: storageKey }),
   );
+}
+
+/** Confirms an object exists in the bucket and returns its size (for R2 import). */
+export async function headObjectSize(storageKey: string): Promise<number> {
+  const result = await client().send(
+    new HeadObjectCommand({ Bucket: bucket(), Key: storageKey }),
+  );
+  const size = Number(result.ContentLength ?? 0);
+  if (!Number.isFinite(size) || size <= 0) {
+    throw new Error("Objeto R2 sem tamanho válido.");
+  }
+  return size;
 }

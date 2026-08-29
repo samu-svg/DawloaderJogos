@@ -1,24 +1,14 @@
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
 
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`${name} não está definida.`);
-  }
-  return value;
-}
-
-/** Cliente com service role — só para webhooks Stripe no servidor. */
+/** Só no servidor (webhooks Stripe, tokens do desktop). Não importe no browser. */
 export function createServiceRoleClient() {
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-  if (!serviceKey) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!url || !key) {
     throw new Error("SUPABASE_SERVICE_ROLE_KEY não está definida.");
   }
-
-  return createSupabaseClient<Database>(
-    requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
-    serviceKey,
-    { auth: { persistSession: false, autoRefreshToken: false } },
-  );
+  return createClient<Database>(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
 }

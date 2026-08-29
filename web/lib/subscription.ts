@@ -1,11 +1,11 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { isPortfolioAdmin } from "@/lib/admin";
+import type { AppUser } from "@/lib/auth";
+import { hasSubscriptionBypass } from "@/lib/rbac";
 import {
   ACTIVE_SUBSCRIPTION_STATUSES,
   subscriptionsEnabled,
 } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
-import type { User } from "@supabase/supabase-js";
 
 export type SubscriptionRow = {
   status: string;
@@ -17,12 +17,14 @@ export async function getUserSubscription(
   userId: string,
 ): Promise<SubscriptionRow | null> {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("subscriptions")
     .select("status, current_period_end, stripe_subscription_id")
     .eq("user_id", userId)
     .maybeSingle();
 
+  if (error) throw new Error(error.message);
+  if (!data) return null;
   return data;
 }
 
@@ -33,8 +35,8 @@ export function subscriptionIsActive(
   return ACTIVE_SUBSCRIPTION_STATUSES.has(subscription.status);
 }
 
-export async function userHasCatalogAccess(user: User): Promise<boolean> {
-  if (isPortfolioAdmin(user.email)) return true;
+export async function userHasCatalogAccess(user: AppUser): Promise<boolean> {
+  if (hasSubscriptionBypass(user.role)) return true;
   if (!subscriptionsEnabled()) return true;
 
   const subscription = await getUserSubscription(user.id);
@@ -45,6 +47,7 @@ export type ManifestTokenPayload = {
   sub: string;
   slug: string;
   entries?: string[];
+  hd?: string;
   exp: number;
 };
 
@@ -56,6 +59,7 @@ export function createManifestAccessToken(input: {
   userId: string;
   slug: string;
   entryIds?: string[];
+  hdFingerprint?: string;
   ttlSeconds?: number;
 }): string | null {
   const secret = manifestTokenSecret();
@@ -69,6 +73,10 @@ export function createManifestAccessToken(input: {
 
   if (input.entryIds?.length) {
     payload.entries = input.entryIds;
+  }
+
+  if (input.hdFingerprint) {
+    payload.hd = input.hdFingerprint.trim().toLowerCase();
   }
 
   const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
