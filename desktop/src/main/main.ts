@@ -1,8 +1,9 @@
 import path from "node:path";
-import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
+import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import type { CatalogLaunch } from "../shared/catalog-launch";
 import {
   findDeepLinkInArgv,
+  normalizeSiteUrl,
   parseMontaHDDeepLink,
 } from "../shared/catalog-launch";
 import type { Manifest, ResolvedManifestEntry } from "../shared/manifest";
@@ -28,6 +29,7 @@ import { computeHdFingerprint } from "../shared/hd-fingerprint";
 import type { HdLibraryHint } from "../shared/hd-library";
 import { largestPcStagingBytes, notEnoughPcSpaceMessage } from "../shared/pc-space";
 import { ensureStagingRoot, getFreeBytes } from "./staging";
+import { openExternalUrl } from "./open-external";
 
 const PROTOCOL = "montahd";
 
@@ -145,7 +147,7 @@ function send(channel: string, payload: unknown) {
 }
 
 function normalizeBaseUrl(input: string): string {
-  return input.replace(/\/+$/, "");
+  return normalizeSiteUrl(input);
 }
 
 async function fetchManifest(
@@ -266,7 +268,7 @@ ipcMain.handle("open-external", async (_event, rawUrl: string) => {
   if (!url.startsWith("https://") && !url.startsWith("http://")) {
     throw new Error("URL inválida.");
   }
-  await shell.openExternal(url);
+  await openExternalUrl(url);
 });
 
 ipcMain.handle("get-pc-disk-space", async () => {

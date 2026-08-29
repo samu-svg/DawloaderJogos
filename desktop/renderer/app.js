@@ -4,6 +4,22 @@
 const DEFAULT_SITE_URL = "https://montahd.vercel.app";
 const SITE_URL_STORAGE_KEY = "montahd.siteUrl";
 
+function normalizeSiteUrl(input) {
+  const raw = (input?.trim() || DEFAULT_SITE_URL).replace(/\/+$/, "");
+  try {
+    const parsed = new URL(raw);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return DEFAULT_SITE_URL;
+    }
+    if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
+      return DEFAULT_SITE_URL;
+    }
+    return raw;
+  } catch {
+    return DEFAULT_SITE_URL;
+  }
+}
+
 function init() {
   if (!window.montahd) {
     document.body.innerHTML =
@@ -134,11 +150,11 @@ function init() {
 
   function getSiteUrl() {
     const stored = localStorage.getItem(SITE_URL_STORAGE_KEY);
-    return (stored || DEFAULT_SITE_URL).replace(/\/+$/, "");
+    return normalizeSiteUrl(stored);
   }
 
   function saveSiteUrl(url) {
-    localStorage.setItem(SITE_URL_STORAGE_KEY, url.replace(/\/+$/, ""));
+    localStorage.setItem(SITE_URL_STORAGE_KEY, normalizeSiteUrl(url));
   }
 
   function catalogUrl() {
@@ -194,7 +210,13 @@ function init() {
     setSteps("library");
   }
 
-  async function openCatalogInBrowser() {
+  async function openCatalogInBrowser(button) {
+    const target = button ?? openCatalogBtn;
+    const previousLabel = target.textContent;
+    target.disabled = true;
+    target.textContent = "Abrindo…";
+    setSummary("Abrindo o catálogo no navegador…");
+
     try {
       await window.montahd.openExternal(catalogUrl());
       setSummary("Catálogo aberto no navegador. Selecione jogos e clique em Instalar no HD.");
@@ -203,6 +225,9 @@ function init() {
         error instanceof Error ? error.message : "Não foi possível abrir o navegador.",
         "error",
       );
+    } finally {
+      target.disabled = false;
+      target.textContent = previousLabel;
     }
   }
 
@@ -624,11 +649,11 @@ function init() {
   }
 
   openCatalogBtn.addEventListener("click", () => {
-    void openCatalogInBrowser();
+    void openCatalogInBrowser(openCatalogBtn);
   });
 
   openCatalogAgainBtn.addEventListener("click", () => {
-    void openCatalogInBrowser();
+    void openCatalogInBrowser(openCatalogAgainBtn);
   });
 
   toggleAdvancedBtn.addEventListener("click", () => {

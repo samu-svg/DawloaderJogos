@@ -1,6 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseMontaHDDeepLink } from "./catalog-launch.ts";
+import { normalizeSiteUrl, parseMontaHDDeepLink } from "./catalog-launch.ts";
+
+test("normalizeSiteUrl descarta localhost e URLs inválidas", () => {
+  assert.equal(normalizeSiteUrl("http://localhost:3000"), "https://montahd.vercel.app");
+  assert.equal(normalizeSiteUrl("http://127.0.0.1:3000"), "https://montahd.vercel.app");
+  assert.equal(normalizeSiteUrl("ftp://example.com"), "https://montahd.vercel.app");
+  assert.equal(normalizeSiteUrl("https://montahd.vercel.app/"), "https://montahd.vercel.app");
+});
 
 test("parseia varios ids no parametro entries", () => {
   const launch = parseMontaHDDeepLink(

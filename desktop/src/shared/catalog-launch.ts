@@ -6,6 +6,25 @@ export type CatalogLaunch = {
   manifestToken: string | null;
 };
 
+export const DEFAULT_SITE_URL = "https://montahd.vercel.app";
+
+/** URL do site usada pelo app; descarta localhost e valores inválidos. */
+export function normalizeSiteUrl(input: string | null | undefined): string {
+  const raw = (input?.trim() || DEFAULT_SITE_URL).replace(/\/+$/, "");
+  try {
+    const parsed = new URL(raw);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return DEFAULT_SITE_URL;
+    }
+    if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
+      return DEFAULT_SITE_URL;
+    }
+    return raw;
+  } catch {
+    return DEFAULT_SITE_URL;
+  }
+}
+
 function parseEntryIds(raw: string | null): string[] {
   if (!raw?.trim()) return [];
   return raw

@@ -24,11 +24,6 @@ export interface PipelineResult {
   error?: string;
 }
 
-interface PrefetchHandle {
-  entryId: string;
-  promise: Promise<PreparedDownload>;
-}
-
 export async function canPrefetchDownload(
   catalogSize: number,
   hdRoot: string,
@@ -61,7 +56,27 @@ function buildPrepareOptions(
   };
 }
 
-/** Baixa o próximo jogo em paralelo enquanto o anterior extrai/copia para o HD. */
+function failResult(
+  item: PipelineEntry,
+  message: string,
+  onProgress: (progress: DownloadProgress) => void,
+): PipelineResult {
+  onProgress({
+    entryId: item.entry.id,
+    label: item.entry.label,
+    downloadedBytes: 0,
+    totalBytes: item.entry.sizeBytes,
+    status: "error",
+    error: message,
+  });
+  return { entryId: item.entry.id, ok: false, error: message };
+}
+
+/**
+ * Um download por vez (rede). Extração/cópia em paralelo.
+ * Ao terminar um download, o próximo começa na hora se houver espaço —
+ * mesmo com extrações anteriores ainda em andamento.
+ */
 export async function runPipelinedDownloads(
   items: PipelineEntry[],
   options: {
@@ -71,84 +86,88 @@ export async function runPipelinedDownloads(
     onProgress: (progress: DownloadProgress) => void;
   },
 ): Promise<PipelineResult[]> {
-  const results: PipelineResult[] = [];
-  let prefetch: PrefetchHandle | null = null;
+  const results: (PipelineResult | undefined)[] = new Array(items.length);
+  const extracts = new Set<Promise<void>>();
+  let nextIndex = 0;
 
-  for (let index = 0; index < items.length; index += 1) {
-    if (options.signal?.aborted) break;
+  const waitForAnyExtract = async () => {
+    if (extracts.size === 0) return;
+    await Promise.race(extracts);
+  };
 
+  const startExtract = (index: number, prepared: PreparedDownload) => {
     const item = items[index];
-    let prepared: PreparedDownload;
-
-    try {
-      if (prefetch?.entryId === item.entry.id) {
-        prepared = await prefetch.promise;
-        prefetch = null;
-      } else {
-        prepared = await prepareDownloadEntry(
-          buildPrepareOptions(item, options.hdRoot, options.stagingRoot, options.onProgress, options.signal),
+    const task = (async () => {
+      try {
+        const installed = await installPreparedEntry(
+          prepared,
+          options.onProgress,
+          options.signal,
         );
+        results[index] = {
+          entryId: item.entry.id,
+          ok: true,
+          installedPath: installed.installedPath,
+        };
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Erro na instalação.";
+        results[index] = failResult(item, message, options.onProgress);
       }
+    })();
+    extracts.add(task);
+    void task.finally(() => extracts.delete(task));
+  };
+
+  const downloadThenExtract = async (index: number) => {
+    const item = items[index];
+    try {
+      const prepared = await prepareDownloadEntry(
+        buildPrepareOptions(
+          item,
+          options.hdRoot,
+          options.stagingRoot,
+          options.onProgress,
+          options.signal,
+        ),
+      );
+      if (options.signal?.aborted) {
+        results[index] = failResult(item, "Download cancelado.", options.onProgress);
+        return;
+      }
+      startExtract(index, prepared);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro no download.";
-      options.onProgress({
-        entryId: item.entry.id,
-        label: item.entry.label,
-        downloadedBytes: 0,
-        totalBytes: item.entry.sizeBytes,
-        status: "error",
-        error: message,
-      });
-      results.push({ entryId: item.entry.id, ok: false, error: message });
-      prefetch = null;
+      results[index] = failResult(item, message, options.onProgress);
+    }
+  };
+
+  while (nextIndex < items.length && !options.signal?.aborted) {
+    const pending = items[nextIndex];
+    const hasSpace = await canPrefetchDownload(
+      pending.entry.sizeBytes ?? 0,
+      options.hdRoot,
+      options.stagingRoot,
+    );
+
+    if (!hasSpace && extracts.size > 0) {
+      await waitForAnyExtract();
       continue;
     }
 
-    const next = items[index + 1];
-    if (next && !options.signal?.aborted) {
-      const ok = await canPrefetchDownload(
-        next.entry.sizeBytes ?? 0,
-        options.hdRoot,
-        options.stagingRoot,
-      );
-      if (ok) {
-        prefetch = {
-          entryId: next.entry.id,
-          promise: prepareDownloadEntry(
-            buildPrepareOptions(next, options.hdRoot, options.stagingRoot, options.onProgress, options.signal),
-          ),
-        };
-      } else {
-        prefetch = null;
-      }
-    } else {
-      prefetch = null;
-    }
-
-    try {
-      const installed = await installPreparedEntry(prepared, options.onProgress, options.signal);
-      results.push({
-        entryId: item.entry.id,
-        ok: true,
-        installedPath: installed.installedPath,
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Erro na instalação.";
-      options.onProgress({
-        entryId: item.entry.id,
-        label: item.entry.label,
-        downloadedBytes: 0,
-        totalBytes: item.entry.sizeBytes,
-        status: "error",
-        error: message,
-      });
-      results.push({ entryId: item.entry.id, ok: false, error: message });
-      prefetch = null;
-      if (options.signal?.aborted) break;
-    }
+    await downloadThenExtract(nextIndex);
+    nextIndex += 1;
   }
 
-  return results;
+  await Promise.all([...extracts]);
+
+  return items.map((item, index) => {
+    if (results[index]) return results[index]!;
+    const message = options.signal?.aborted
+      ? "Download cancelado."
+      : "Instalação não concluída.";
+    return failResult(item, message, options.onProgress);
+  });
 }
 
 export function installedRelativePath(hdRoot: string, installedPath: string): string | null {
