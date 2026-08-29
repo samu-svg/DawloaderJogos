@@ -1,4 +1,5 @@
 import path from "node:path";
+import { isPathUnderRoot } from "../shared/path-safety";
 import { validateDestination } from "../shared/manifest";
 
 /**
@@ -12,11 +13,8 @@ export function resolveUnderRoot(
   const validated = validateDestination(destination);
   if (!validated.ok) return validated;
 
-  const root = path.resolve(rootDir);
-  const fullPath = path.resolve(root, ...validated.destination.split("/"));
-
-  const relative = path.relative(root, fullPath);
-  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+  const fullPath = path.resolve(rootDir, ...validated.destination.split("/"));
+  if (!isPathUnderRoot(rootDir, fullPath)) {
     return { ok: false, error: "O destino tenta sair da pasta raiz escolhida." };
   }
 

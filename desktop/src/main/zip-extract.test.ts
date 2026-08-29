@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, symlink, link, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -89,6 +89,15 @@ test("assertZipEntryPath rejeita zip-slip e caminhos absolutos", () => {
   assert.throws(() => assertZipEntryPath(root, "C:/Windows/System32/a.dll"), /absoluto/);
 });
 
+test("assertZipEntryPath rejeita barra invertida no Windows", () => {
+  const root = path.resolve("/tmp/montahd-extract-root");
+  assert.throws(
+    () => assertZipEntryPath(root, "Games\\..\\..\\evil.txt"),
+    /fora da pasta/,
+  );
+  assert.throws(() => assertZipEntryPath(root, "..\\evil.txt"), /fora da pasta/);
+});
+
 test("isZipSymlinkEntry detecta modo Unix symlink", () => {
   assert.equal(
     isZipSymlinkEntry({
@@ -114,9 +123,31 @@ test("assertNoSymlinks recusa atalho na árvore extraída", async () => {
     const target = path.join(temp, "real.txt");
     await writeFile(target, "ok");
     await symlink(target, path.join(temp, "alias"));
-    await assert.rejects(() => assertNoSymlinks(temp), /symlink/);
+    await assert.rejects(() => assertNoSymlinks(temp), /symlink|link/);
   } finally {
     await rm(temp, { recursive: true, force: true });
+  }
+});
+
+test("assertNoSymlinks recusa hardlink para arquivo fora da pasta", async () => {
+  const temp = await mkdtemp(path.join(os.tmpdir(), "montahd-hardlink-test-"));
+  const outside = await mkdtemp(path.join(os.tmpdir(), "montahd-outside-"));
+  try {
+    const target = path.join(outside, "secret.txt");
+    await writeFile(target, "secret");
+    try {
+      await link(target, path.join(temp, "hardlink.txt"));
+      await assert.rejects(() => assertNoSymlinks(temp), /hardlink/);
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code;
+      if (code === "EPERM" || code === "ENOTSUP" || code === "EXDEV") {
+        return;
+      }
+      throw error;
+    }
+  } finally {
+    await rm(temp, { recursive: true, force: true });
+    await rm(outside, { recursive: true, force: true });
   }
 });
 
@@ -186,6 +217,20 @@ test("extractZipToContentRoot recusa zip-slip", async () => {
   try {
     const zipPath = path.join(temp, "evil.zip");
     await writeFile(zipPath, makeStoredZip([{ name: "../evil.txt", data: "pwned" }]));
+    await assert.rejects(() => extractZipToContentRoot(zipPath), /fora da pasta/);
+  } finally {
+    await rm(temp, { recursive: true, force: true });
+  }
+});
+
+test("extractZipToContentRoot recusa zip-slip com barra invertida", async () => {
+  const temp = await mkdtemp(path.join(os.tmpdir(), "montahd-zip-slip-bs-"));
+  try {
+    const zipPath = path.join(temp, "evil.zip");
+    await writeFile(
+      zipPath,
+      makeStoredZip([{ name: "..\\evil.txt", data: "pwned" }]),
+    );
     await assert.rejects(() => extractZipToContentRoot(zipPath), /fora da pasta/);
   } finally {
     await rm(temp, { recursive: true, force: true });
