@@ -1,4 +1,4 @@
-export const DESKTOP_APP_VERSION = "0.5.0";
+export const DESKTOP_APP_VERSION = "0.5.1";
 
 export const DESKTOP_PORTABLE_FILENAME = `MontaHD-${DESKTOP_APP_VERSION}-portable.exe`;
 

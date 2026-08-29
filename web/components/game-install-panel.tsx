@@ -29,7 +29,7 @@ export function GameInstallPanel({
     setLoading(true);
 
     try {
-      const response = await fetch("/api/manifest-token", {
+      const response = await fetch("/api/install-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ slug: collectionSlug, entryIds }),
@@ -45,12 +45,12 @@ export function GameInstallPanel({
         throw new Error(data.error ?? "Não foi possível preparar o download.");
       }
 
-      const data = (await response.json()) as { token?: string | null };
+      const data = (await response.json()) as { session?: string | null };
       window.location.href = buildMontaHDCatalogLink(
         siteUrl,
         collectionSlug,
         entryIds,
-        data.token ?? null,
+        { installSession: data.session ?? null },
       );
     } catch (caught) {
       setError(
@@ -69,7 +69,8 @@ export function GameInstallPanel({
         </h2>
         <p className="mt-2 text-sm leading-6 text-zinc-400">
           O download é feito pelo app MontaHD, que instala o jogo direto na
-          pasta certa do HD. Crie sua conta para liberar o app e o acervo.
+          pasta certa do HD. Crie sua conta e assine o software — os arquivos
+          não são vendidos separadamente.
         </p>
         <div className="mt-5 flex flex-wrap justify-center gap-3">
           <Link
@@ -96,7 +97,8 @@ export function GameInstallPanel({
           Baixar {gameTitle}
         </h2>
         <p className="mt-2 text-sm leading-6 text-zinc-400">
-          Libere o app MontaHD para baixar este e qualquer outro jogo do acervo.
+          Assine o software MontaHD para baixar este e qualquer outro jogo do
+          acervo. Você paga pelo app, não pelos arquivos.
         </p>
         <div className="mt-5 flex flex-wrap justify-center gap-3">
           <Link
@@ -120,8 +122,8 @@ export function GameInstallPanel({
     <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-6 text-center">
       <h2 className="text-base font-semibold text-white">Baixar {gameTitle}</h2>
       <p className="mt-2 text-sm leading-6 text-zinc-300">
-        Abre o MontaHD já com este jogo marcado. Escolha a pasta raiz do HD e
-        confirme — o app baixa, verifica e descompacta sozinho.
+        Abre o MontaHD já com este jogo marcado. Escolha a pasta raiz do seu HD
+        (vinculado à assinatura) e confirme — o app baixa, verifica e descompacta sozinho.
       </p>
       {error && (
         <p className="mt-3 rounded-lg border border-red-900/50 bg-red-950/40 px-4 py-2.5 text-sm text-red-300">

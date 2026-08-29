@@ -11,7 +11,7 @@ import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 export type ManifestAccessResult =
   | { allowed: true; entryFilter: string[] | null; user?: AppUser | null }
-  | { allowed: false; status: 401 | 403 | 503 };
+  | { allowed: false; status: 401 | 403 | 503; error?: string };
 
 async function subscriptionStatusForUser(userId: string): Promise<string | null> {
   try {
@@ -43,7 +43,11 @@ export async function resolveManifestAccess(
   if (bearer) {
     const payload = verifyManifestAccessToken(bearer, slug);
     if (!payload) {
-      return { allowed: false, status: 401 };
+      return {
+        allowed: false,
+        status: 401,
+        error: "Link de instalação inválido ou expirado. Volte ao site e clique em Instalar no HD.",
+      };
     }
 
     let role: "admin" | "user" = "user";
@@ -71,12 +75,22 @@ export async function resolveManifestAccess(
     }
 
     if (!payload.hd) {
-      return { allowed: false, status: 403 };
+      return {
+        allowed: false,
+        status: 403,
+        error:
+          "Autorize a pasta do HD no app antes de baixar. Volte ao site, clique em Instalar no HD e escolha a pasta do disco.",
+      };
     }
 
     const ownsHd = await userOwnsHdFingerprint(payload.sub, payload.hd);
     if (!ownsHd) {
-      return { allowed: false, status: 403 };
+      return {
+        allowed: false,
+        status: 403,
+        error:
+          "Este HD não está vinculado à sua conta. Use o HD registrado ou troque em /conta se o plano permitir.",
+      };
     }
 
     return {

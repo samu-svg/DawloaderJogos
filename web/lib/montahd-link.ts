@@ -3,7 +3,10 @@ export function buildMontaHDCatalogLink(
   siteUrl: string,
   slug: string,
   entryIds: string[] = [],
-  manifestToken?: string | null,
+  options?: {
+    installSession?: string | null;
+    manifestToken?: string | null;
+  },
 ): string {
   const base = siteUrl.trim().replace(/\/+$/, "");
   const params = new URLSearchParams({
@@ -11,12 +14,17 @@ export function buildMontaHDCatalogLink(
     slug: slug.trim(),
   });
 
-  // Com token, o manifesto já vem filtrado no servidor — evita URL enorme e truncamento.
-  if (entryIds.length > 0 && !manifestToken) {
+  const installSession = options?.installSession?.trim();
+  const manifestToken = options?.manifestToken?.trim();
+
+  // Com sessão ou token, o manifesto vem filtrado no servidor — evita URL enorme.
+  if (entryIds.length > 0 && !installSession && !manifestToken) {
     params.set("entries", entryIds.join(","));
   }
 
-  if (manifestToken) {
+  if (installSession) {
+    params.set("session", installSession);
+  } else if (manifestToken) {
     params.set("token", manifestToken);
   }
 

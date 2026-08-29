@@ -590,6 +590,19 @@ function init() {
     void loadManifest({ fromSite: false });
   });
 
+  function formatInstallError(error) {
+    const message = error instanceof Error ? error.message : "Erro desconhecido.";
+    if (/HD|hd|vinculad|registrad|plano permite/i.test(message)) {
+      return message;
+    }
+    if (/403|401|Assinatura|autoriz/i.test(message)) {
+      return (
+        `${message} Volte ao site, clique em Instalar no HD de novo e escolha a pasta do disco.`
+      );
+    }
+    return message;
+  }
+
   async function applyCatalogLaunch(launch) {
     if (catalogLaunchInFlight) return;
     catalogLaunchInFlight = true;
@@ -614,6 +627,21 @@ function init() {
         heroDesc.textContent =
           "Jogos selecionados no site. Escolha a pasta raiz do HD vinculado à sua assinatura para carregar a lista.";
         setSummary("Clique em Escolher pasta do HD para continuar.");
+        return;
+      }
+
+      if (pendingManifestToken) {
+        pendingCatalogFromSite = true;
+        setSummary("Recebendo jogos do site…");
+        try {
+          await loadManifest({ fromSite: true });
+        } catch (error) {
+          pendingManifestToken = null;
+          showWelcomeView();
+          loadError.textContent = formatInstallError(error);
+          loadError.classList.remove("hidden");
+          setSummary("Não foi possível carregar os jogos.", "error");
+        }
         return;
       }
 
@@ -694,8 +722,7 @@ function init() {
           : `${manifest.entries.length} jogo(s) recebidos do site. Escolha a pasta de destino.`,
       );
     } catch (error) {
-      loadError.textContent =
-        error instanceof Error ? error.message : "Erro ao carregar manifesto.";
+      loadError.textContent = formatInstallError(error);
       loadError.classList.remove("hidden");
       setSummary("Não foi possível carregar os jogos.", "error");
       if (fromSite) showWelcomeView();
@@ -735,10 +762,11 @@ function init() {
         await loadManifest({ fromSite: true });
       } catch (error) {
         pickHdSiteBtn.disabled = false;
-        loadError.textContent =
-          error instanceof Error ? error.message : "Erro ao autorizar HD.";
+        loadError.textContent = formatInstallError(error);
         loadError.classList.remove("hidden");
         setSummary("Não foi possível autorizar este HD.", "error");
+      } finally {
+        pickHdSiteBtn.disabled = false;
       }
       return;
     }

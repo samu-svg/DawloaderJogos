@@ -82,11 +82,12 @@ export async function GET(
       return NextResponse.json(
         {
           error:
-            access.status === 403
+            access.error ??
+            (access.status === 403
               ? "Assinatura ativa necessária para baixar este catálogo."
               : access.status === 503
                 ? "Servidor temporariamente indisponível. Tente novamente em instantes."
-                : "Faça login ou abra o catálogo pelo site com sua conta.",
+                : "Faça login ou abra o catálogo pelo site com sua conta."),
         },
         { status: access.status },
       );

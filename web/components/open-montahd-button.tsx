@@ -33,7 +33,7 @@ export function OpenMontaHDButton({
     setLoading(true);
 
     try {
-      const response = await fetch("/api/manifest-token", {
+      const response = await fetch("/api/install-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ slug, entryIds }),
@@ -49,13 +49,10 @@ export function OpenMontaHDButton({
         throw new Error(data.error ?? "Não foi possível preparar a instalação.");
       }
 
-      const data = (await response.json()) as { token?: string | null };
-      const deepLink = buildMontaHDCatalogLink(
-        siteUrl,
-        slug,
-        entryIds,
-        data.token ?? null,
-      );
+      const data = (await response.json()) as { session?: string | null };
+      const deepLink = buildMontaHDCatalogLink(siteUrl, slug, entryIds, {
+        installSession: data.session ?? null,
+      });
       window.location.href = deepLink;
     } catch (caught) {
       setError(
