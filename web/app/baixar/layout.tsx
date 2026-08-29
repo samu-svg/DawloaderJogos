@@ -1,18 +1,17 @@
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
-import { isPortfolioAdmin } from "@/lib/admin";
+import { requireAppUser } from "@/lib/auth";
+import { canAccessPainel } from "@/lib/rbac";
 import { userHasCatalogAccess } from "@/lib/subscription";
-import { currentUser } from "@/lib/supabase/server";
 
 export default async function BaixarLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await currentUser();
-  if (!user) redirect("/login?next=/baixar");
+  const user = await requireAppUser();
 
-  const isAdmin = isPortfolioAdmin(user.email);
+  const isAdmin = canAccessPainel(user.role);
   const hasAccess = await userHasCatalogAccess(user);
   if (!hasAccess) redirect("/assinar?next=/baixar");
 

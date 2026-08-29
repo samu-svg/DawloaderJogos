@@ -5,25 +5,25 @@ import { AppValueProps } from "@/components/app-value-props";
 import { HowItWorks } from "@/components/how-it-works";
 import { SiteHeader } from "@/components/site-header";
 import { StoreFooter } from "@/components/store-footer";
-import { isPortfolioAdmin } from "@/lib/admin";
+import { currentAppUser } from "@/lib/auth";
 import { loadAcervo } from "@/lib/games";
+import { canAccessPainel } from "@/lib/rbac";
 import { stripePlanLabel, subscriptionsEnabled } from "@/lib/stripe";
 import { userHasCatalogAccess } from "@/lib/subscription";
-import { currentUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "O app MontaHD — baixa e organiza os jogos no seu HD",
   description:
-    "O MontaHD baixa, verifica, descompacta e coloca cada jogo na pasta certa do HD. Assine o app e libere o acervo completo, sem anúncios.",
+    "Você paga pelo software MontaHD, não pelos arquivos. O app baixa, verifica, descompacta e coloca cada jogo na pasta certa do HD. Acervo incluído na assinatura, sem anúncios.",
 };
 
 export default async function AppPage() {
   const [user, { games, collections }] = await Promise.all([
-    currentUser(),
+    currentAppUser(),
     loadAcervo(),
   ]);
 
-  const isAdmin = isPortfolioAdmin(user?.email);
+  const isAdmin = user ? canAccessPainel(user.role) : false;
   const hasAccess = user ? await userHasCatalogAccess(user) : false;
   const totalBytes = games.reduce((sum, game) => sum + game.totalBytes, 0);
 

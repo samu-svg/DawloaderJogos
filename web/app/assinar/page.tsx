@@ -5,18 +5,19 @@ import {
   SubscribeCheckoutButton,
 } from "@/components/subscribe-checkout-button";
 import { SiteHeader } from "@/components/site-header";
-import { isPortfolioAdmin } from "@/lib/admin";
+import { requireAppUser } from "@/lib/auth";
+import { canAccessPainel, hasSubscriptionBypass } from "@/lib/rbac";
+import { safeInternalPath } from "@/lib/safe-redirect";
 import { stripePlanLabel, subscriptionsEnabled } from "@/lib/stripe";
 import {
   getUserSubscription,
   subscriptionIsActive,
   userHasCatalogAccess,
 } from "@/lib/subscription";
-import { currentUser } from "@/lib/supabase/server";
 
 const INCLUDED = [
-  "App MontaHD para Windows",
-  "Acervo completo liberado",
+  "Licença do software MontaHD para Windows",
+  "Acervo completo incluído — sem pagar por jogo ou arquivo",
   "Download e extração automáticos",
   "Sem anúncios e sem encurtadores",
 ];
@@ -26,18 +27,17 @@ type PageProps = {
 };
 
 export default async function AssinarPage({ searchParams }: PageProps) {
-  const user = await currentUser();
-  if (!user) redirect("/login?next=/assinar");
+  const user = await requireAppUser();
 
   const { cancelado, next } = await searchParams;
-  const isAdmin = isPortfolioAdmin(user.email);
+  const isAdmin = canAccessPainel(user.role);
   const enabled = subscriptionsEnabled();
   const hasAccess = await userHasCatalogAccess(user);
   const subscription = enabled ? await getUserSubscription(user.id) : null;
   const active = subscriptionIsActive(subscription);
 
-  if (hasAccess && next?.startsWith("/")) {
-    redirect(next);
+  if (hasAccess && next) {
+    redirect(safeInternalPath(next, "/baixar"));
   }
 
   return (
@@ -50,14 +50,15 @@ export default async function AssinarPage({ searchParams }: PageProps) {
       <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-16">
         <div className="space-y-3 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-2">
-            Acesso ao app
+            Assinatura do software
           </p>
           <h1 className="text-3xl font-bold tracking-tight text-white">
             Libere o MontaHD
           </h1>
           <p className="mx-auto max-w-lg text-sm leading-6 text-zinc-400">
-            A assinatura dá acesso ao aplicativo que monta o seu HD — e o acervo
-            inteiro vem junto.
+            Você paga pelo <strong className="text-zinc-200">software MontaHD</strong>,
+            não pelos arquivos dos portfólios. A assinatura libera o app que monta
+            o seu HD — e o acervo inteiro vem incluído no acesso.
           </p>
         </div>
 
@@ -67,7 +68,7 @@ export default async function AssinarPage({ searchParams }: PageProps) {
               Pagamentos ainda não estão ativos neste ambiente. O acervo
               permanece aberto para testes.
             </p>
-          ) : isAdmin ? (
+          ) : hasSubscriptionBypass(user.role) ? (
             <p className="text-sm leading-6 text-zinc-400">
               Sua conta de administrador já tem acesso completo ao app e ao
               acervo.
@@ -110,8 +111,9 @@ export default async function AssinarPage({ searchParams }: PageProps) {
                 <p className="mt-2 text-sm leading-6 text-zinc-400">
                   Pague com <strong className="text-zinc-200">cartão</strong> ou{" "}
                   <strong className="text-zinc-200">PIX</strong> no checkout
-                  seguro da Stripe. O acesso é liberado assim que o pagamento
-                  for confirmado.
+                  seguro da Stripe. O valor é pela licença do software — não
+                  pelos jogos. O acesso é liberado assim que o pagamento for
+                  confirmado.
                 </p>
               </div>
               <ul className="space-y-2.5">
