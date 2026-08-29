@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PortfolioEditor } from "@/components/portfolio-editor";
 import { requireRole } from "@/lib/auth";
+import { requireEditablePortfolio } from "@/lib/catalog";
 import { isR2Configured } from "@/lib/r2-configured";
 import { canDeletePortfolio } from "@/lib/rbac";
 import { createClient } from "@/lib/supabase/server";
@@ -13,12 +14,18 @@ export default async function PortfolioPage({
 }) {
   const { slug } = await params;
   const user = await requireRole("admin", "editor");
+  const owned = await requireEditablePortfolio(slug, user);
+  if (!owned) {
+    redirect("/painel");
+  }
+
   const supabase = await createClient();
 
   const { data: portfolio } = await supabase
     .from("portfolios")
     .select("*")
     .eq("slug", slug)
+    .eq("owner_id", user.id)
     .maybeSingle();
 
   if (!portfolio) {

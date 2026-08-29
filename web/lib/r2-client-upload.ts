@@ -1,6 +1,9 @@
+import { Sha256 } from "@/lib/sha256-stream";
+
 export type R2UploadResult = {
   storageKey: string;
   sizeBytes: number;
+  sha256: string;
 };
 
 type UploadPart = { partNumber: number; etag: string };
@@ -54,6 +57,7 @@ export async function uploadFileToR2(options: {
   const chunkSize = start.partSize || partSize;
   const totalParts = Math.max(1, Math.ceil(file.size / chunkSize));
   const parts: UploadPart[] = [];
+  const hasher = new Sha256();
   let loaded = 0;
 
   try {
@@ -64,7 +68,10 @@ export async function uploadFileToR2(options: {
 
       const startByte = (partNumber - 1) * chunkSize;
       const endByte = Math.min(startByte + chunkSize, file.size);
-      const chunk = file.slice(startByte, endByte);
+      const bytes = new Uint8Array(
+        await file.slice(startByte, endByte).arrayBuffer(),
+      );
+      hasher.update(bytes);
 
       const { url } = await postJson<{ url: string }>("/api/upload/sign-part", {
         portfolioSlug,
@@ -75,7 +82,7 @@ export async function uploadFileToR2(options: {
 
       const response = await fetch(url, {
         method: "PUT",
-        body: chunk,
+        body: bytes,
         signal,
       });
 
@@ -100,7 +107,11 @@ export async function uploadFileToR2(options: {
       parts,
     });
 
-    return { storageKey: start.storageKey, sizeBytes: file.size };
+    return {
+      storageKey: start.storageKey,
+      sizeBytes: file.size,
+      sha256: hasher.digestHex(),
+    };
   } catch (error) {
     await abortUpload(portfolioSlug, start.storageKey, start.uploadId);
     throw error;

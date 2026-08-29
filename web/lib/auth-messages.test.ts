@@ -18,3 +18,10 @@ test("esconde mensagens técnicas", () => {
   const msg = authErrorMessage("Postgres connection failed via supabase");
   assert.doesNotMatch(msg.toLowerCase(), /supabase|postgres/);
 });
+
+test("mapeia excesso de tentativas", () => {
+  assert.equal(
+    authErrorMessage("Too many requests"),
+    "Muitas tentativas. Aguarde um instante.",
+  );
+});

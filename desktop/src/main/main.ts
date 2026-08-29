@@ -38,6 +38,7 @@ import type { HdLibraryHint } from "../shared/hd-library";
 import { largestPcStagingBytes, notEnoughPcSpaceMessage } from "../shared/pc-space";
 import { ensureStagingRoot, getFreeBytes } from "./staging";
 import { openExternalUrl } from "./open-external";
+import { startAutoUpdate } from "./auto-update";
 
 const PROTOCOL = "montahd";
 
@@ -272,6 +273,7 @@ if (gotSingleInstanceLock) {
   app.whenReady().then(() => {
     registerProtocolClient();
     createWindow();
+    startAutoUpdate();
 
     const deepLink = findDeepLinkInArgv(process.argv);
     if (deepLink) handleDeepLink(deepLink);

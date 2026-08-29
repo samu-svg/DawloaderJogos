@@ -5,7 +5,6 @@ export function buildMontaHDCatalogLink(
   entryIds: string[] = [],
   options?: {
     installSession?: string | null;
-    manifestToken?: string | null;
   },
 ): string {
   const base = siteUrl.trim().replace(/\/+$/, "");
@@ -15,17 +14,15 @@ export function buildMontaHDCatalogLink(
   });
 
   const installSession = options?.installSession?.trim();
-  const manifestToken = options?.manifestToken?.trim();
 
-  // Com sessão ou token, o manifesto vem filtrado no servidor — evita URL enorme.
-  if (entryIds.length > 0 && !installSession && !manifestToken) {
+  // Com sessão, o manifesto vem filtrado no servidor — evita URL enorme.
+  // Tokens HMAC antigos não entram mais na query (ficavam no histórico/logs).
+  if (entryIds.length > 0 && !installSession) {
     params.set("entries", entryIds.join(","));
   }
 
   if (installSession) {
     params.set("session", installSession);
-  } else if (manifestToken) {
-    params.set("token", manifestToken);
   }
 
   return `montahd://open?${params.toString()}`;

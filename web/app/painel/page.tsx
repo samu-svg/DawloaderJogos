@@ -12,6 +12,7 @@ export default async function PainelPage() {
   const { data: portfolios, error } = await supabase
     .from("portfolios")
     .select("id, slug, title, description, is_public")
+    .eq("owner_id", user.id)
     .order("updated_at", { ascending: false });
 
   if (error) throw new Error(error.message);

@@ -14,6 +14,10 @@ export function authErrorMessage(raw: string): string {
     return "Enviamos um código para seu e-mail. Confirme antes de entrar.";
   }
 
+  if (lower.includes("muitas tentativas") || lower.includes("too many")) {
+    return "Muitas tentativas. Aguarde um instante.";
+  }
+
   if (
     lower.includes("invalid login") ||
     lower.includes("invalid credentials") ||

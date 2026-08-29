@@ -39,6 +39,8 @@ const nextConfig: NextConfig = {
             value: "camera=(), microphone=(), geolocation=()",
           },
           { key: "Content-Security-Policy", value: csp },
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
+          { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
         ],
       },
     ];

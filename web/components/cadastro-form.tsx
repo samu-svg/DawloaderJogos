@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { authErrorMessage, SIGNUP_CONFIRM_MESSAGE } from "@/lib/auth-messages";
 import { PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
-import { createClient } from "@/lib/supabase/client";
 
 export function CadastroForm() {
   const router = useRouter();
@@ -28,30 +27,39 @@ export function CadastroForm() {
 
     setLoading(true);
 
-    const supabase = createClient();
-    const { data, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { display_name: displayName },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+    try {
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, displayName }),
+      });
+      const payload = (await response.json()) as {
+        error?: string;
+        session?: boolean;
+      };
 
-    setLoading(false);
+      if (response.status === 429) {
+        setError("Muitas tentativas. Aguarde um instante.");
+        return;
+      }
 
-    if (authError) {
-      setError(authErrorMessage(authError.message));
-      return;
+      if (!response.ok) {
+        setError(authErrorMessage(payload.error ?? ""));
+        return;
+      }
+
+      if (payload.session) {
+        router.push("/baixar");
+        router.refresh();
+        return;
+      }
+
+      setMessage(SIGNUP_CONFIRM_MESSAGE);
+    } catch {
+      setError("Não foi possível concluir. Tente novamente em instantes.");
+    } finally {
+      setLoading(false);
     }
-
-    if (data.session) {
-      router.push("/baixar");
-      router.refresh();
-      return;
-    }
-
-    setMessage(SIGNUP_CONFIRM_MESSAGE);
   }
 
   return (

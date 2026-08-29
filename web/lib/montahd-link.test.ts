@@ -27,7 +27,7 @@ test("inclui sessao de instalacao no link profundo", () => {
   assert.match(link, /session=sess-xyz/);
 });
 
-test("inclui ids na url quando nao ha sessao nem token", () => {
+test("inclui ids na url quando nao ha sessao", () => {
   const link = buildMontaHDCatalogLink(
     "https://montahd.vercel.app",
     "jogos360",
@@ -35,6 +35,16 @@ test("inclui ids na url quando nao ha sessao nem token", () => {
   );
   assert.match(link, /entries=abc-123%2Cdef-456/);
   assert.doesNotMatch(link, /session=/);
+  assert.doesNotMatch(link, /token=/);
+});
+
+test("nunca coloca token HMAC na query do deep link", () => {
+  const link = buildMontaHDCatalogLink(
+    "https://montahd.vercel.app",
+    "jogos360",
+    ["abc"],
+    { installSession: null },
+  );
   assert.doesNotMatch(link, /token=/);
 });
 

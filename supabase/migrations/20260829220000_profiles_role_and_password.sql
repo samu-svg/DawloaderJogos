@@ -21,6 +21,13 @@ alter table public.profiles
 revoke update on table public.profiles from anon, authenticated;
 grant update (display_name) on table public.profiles to authenticated;
 
+drop policy if exists profiles_update_own on public.profiles;
+
+create policy profiles_update_own on public.profiles
+  for update to authenticated
+  using ((select auth.uid()) = id)
+  with check ((select auth.uid()) = id);
+
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql

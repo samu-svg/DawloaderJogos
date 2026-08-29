@@ -12,6 +12,7 @@ import { buildDestination, type FolderPreset } from "@/lib/install-presets";
 import { logError } from "@/lib/logger";
 import { validateDestination } from "@/lib/manifest";
 import { canCreatePortfolio, canDeletePortfolio } from "@/lib/rbac";
+import { requireHostedSha256 } from "@/lib/sha256";
 import { slugify, validateSlug } from "@/lib/slug";
 import { deleteObject, headObjectSize } from "@/lib/storage";
 import {
@@ -144,7 +145,8 @@ export async function updatePortfolio(
       description: description || null,
       is_public: isPublic,
     })
-    .eq("slug", slug);
+    .eq("slug", slug)
+    .eq("owner_id", user.id);
   if (error) return { ok: false, error: "Não foi possível atualizar o portfólio." };
 
   await recordAudit({
@@ -177,7 +179,7 @@ export async function deletePortfolio(slug: string): Promise<ActionResult> {
 
   await deleteHostedObjects(hostedEntries ?? []);
 
-  const { error } = await supabase.from("portfolios").delete().eq("slug", slug);
+  const { error } = await supabase.from("portfolios").delete().eq("slug", slug).eq("owner_id", user.id);
   if (error) return { ok: false, error: "Não foi possível excluir o portfólio." };
 
   await recordAudit({
@@ -254,6 +256,9 @@ async function insertEntry(
     return { ok: false, error: "Chave R2 inválida." };
   }
 
+  const hash = requireHostedSha256(data.source.kind, data.sha256);
+  if (!hash.ok) return hash;
+
   const supabase = await createClient();
   const { error } = await supabase.from("entries").insert({
     portfolio_id: portfolioId,
@@ -263,7 +268,7 @@ async function insertEntry(
     storage_key: data.source.kind === "hosted" ? data.source.storageKey : null,
     kind: data.source.kind,
     size_bytes: data.sizeBytes,
-    sha256: data.sha256,
+    sha256: hash.sha256,
     group_name: data.groupName,
     is_optional: data.isOptional,
     sort_order: data.sortOrder,
@@ -362,6 +367,7 @@ export async function addGamePackage(
   const gameStorageKeyRaw = String(formData.get("game_storage_key") ?? "").trim();
   const gameImportKeyRaw = String(formData.get("game_import_key") ?? "").trim();
   const gameSizeRaw = String(formData.get("game_size_bytes") ?? "").trim();
+  const gameSha256Raw = String(formData.get("game_sha256") ?? "").trim();
   const gameFolder = parseFolderPreset(String(formData.get("game_folder") ?? "games"));
   const gameCustomPath = String(formData.get("game_custom_path") ?? "").trim();
   const gameContentId = String(formData.get("game_content_id") ?? "").trim();
@@ -374,6 +380,7 @@ export async function addGamePackage(
   const extraStorageKeyRaw = String(formData.get("extra_storage_key") ?? "").trim();
   const extraImportKeyRaw = String(formData.get("extra_import_key") ?? "").trim();
   const extraSizeRaw = String(formData.get("extra_size_bytes") ?? "").trim();
+  const extraSha256Raw = String(formData.get("extra_sha256") ?? "").trim();
   const extraFolder = parseFolderPreset(String(formData.get("extra_folder") ?? "content"));
   const extraCustomPath = String(formData.get("extra_custom_path") ?? "").trim();
   const extraContentId = String(formData.get("extra_content_id") ?? "").trim();
@@ -426,6 +433,7 @@ export async function addGamePackage(
     source: EntryInsertSource;
     destination: string;
     sizeBytes: number;
+    sha256: string | null;
   } | null = null;
 
   if (includeExtra) {
@@ -448,6 +456,7 @@ export async function addGamePackage(
         source: { kind: "hosted", storageKey: hosted.storageKey },
         destination: extraDestination.destination,
         sizeBytes: hosted.sizeBytes,
+        sha256: extraSha256Raw,
       };
     } else if (extraSource === "r2-import") {
       const imported = await parseR2Import(
@@ -459,6 +468,7 @@ export async function addGamePackage(
         source: { kind: "hosted", storageKey: imported.storageKey },
         destination: extraDestination.destination,
         sizeBytes: imported.sizeBytes,
+        sha256: extraSha256Raw,
       };
     } else {
       const extraUrl = parseUrl(extraUrlRaw);
@@ -470,6 +480,7 @@ export async function addGamePackage(
         source: { kind: "external", externalUrl: extraUrl.url },
         destination: extraDestination.destination,
         sizeBytes: extraProbe.sizeBytes,
+        sha256: extraSha256Raw || null,
       };
     }
   }
@@ -492,7 +503,7 @@ export async function addGamePackage(
     groupName: "jogo",
     isOptional: false,
     sizeBytes: gameSizeBytes,
-    sha256: null,
+    sha256: gameSha256Raw || null,
     sortOrder: sortOrder++,
     coverUrl: gameCover.url,
   });
@@ -506,7 +517,7 @@ export async function addGamePackage(
       groupName: "conteudo",
       isOptional: true,
       sizeBytes: extra.sizeBytes,
-      sha256: null,
+      sha256: extra.sha256,
       sortOrder: sortOrder++,
     });
     if (!extraInsert.ok) return extraInsert;

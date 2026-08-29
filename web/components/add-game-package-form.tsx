@@ -179,6 +179,7 @@ export function AddGamePackageForm({
           if (!uploaded) throw new Error("Falha ao enviar o jogo para o R2.");
           formData.set("game_storage_key", uploaded.storageKey);
           formData.set("game_size_bytes", String(uploaded.sizeBytes));
+          formData.set("game_sha256", uploaded.sha256);
         }
 
         if (includeExtra && extraSource === "r2") {
@@ -190,6 +191,7 @@ export function AddGamePackageForm({
           if (!uploaded) throw new Error("Falha ao enviar o extra para o R2.");
           formData.set("extra_storage_key", uploaded.storageKey);
           formData.set("extra_size_bytes", String(uploaded.sizeBytes));
+          formData.set("extra_sha256", uploaded.sha256);
         }
 
         setUploadLabel("Salvando jogo…");
@@ -310,7 +312,20 @@ export function AddGamePackageForm({
               className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 font-mono outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900"
             />
             <span className="text-xs text-zinc-500">
-              Caminho dentro do bucket <code>montahd-games</code>, sem barra no início.
+              Caminho dentro do bucket, começando com <code>jogos/</code>, sem barra no início.
+            </span>
+          </label>
+          <label className="block space-y-1.5 sm:col-span-2">
+            <span className="text-sm font-medium">SHA-256 do arquivo</span>
+            <input
+              name="game_sha256"
+              required
+              pattern="[0-9a-fA-F]{64}"
+              placeholder="64 caracteres hex"
+              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 font-mono outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900"
+            />
+            <span className="text-xs text-zinc-500">
+              Obrigatório para jogos no R2. Ex.: <code>sha256sum Halo3.zip</code>
             </span>
           </label>
           <label className="block space-y-1.5 sm:col-span-2">
@@ -416,6 +431,16 @@ export function AddGamePackageForm({
                     const base = key.split("/").pop();
                     if (base) setExtraFileName(base);
                   }}
+                  className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 font-mono outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900"
+                />
+              </label>
+              <label className="block space-y-1.5 sm:col-span-2">
+                <span className="text-sm font-medium">SHA-256 do extra</span>
+                <input
+                  name="extra_sha256"
+                  required={includeExtra}
+                  pattern="[0-9a-fA-F]{64}"
+                  placeholder="64 caracteres hex"
                   className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 font-mono outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-900"
                 />
               </label>
