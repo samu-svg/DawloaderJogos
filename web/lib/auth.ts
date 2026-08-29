@@ -1,7 +1,12 @@
 import { redirect } from "next/navigation";
 import { passwordIsExpired } from "@/lib/password-policy";
-import { isBootstrapAdminEmail, type Role } from "@/lib/rbac";
+import {
+  isBootstrapAdminEmail,
+  parseRole,
+  type Role,
+} from "@/lib/rbac";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 export type AppUser = {
   id: string;
@@ -11,45 +16,20 @@ export type AppUser = {
   passwordChangedAt: Date;
 };
 
-function parsePasswordChangedAt(user: {
-  user_metadata?: Record<string, unknown>;
-}): Date {
-  const raw = user.user_metadata?.password_changed_at;
-  if (typeof raw === "string" && raw) {
-    const parsed = new Date(raw);
-    if (!Number.isNaN(parsed.getTime())) return parsed;
+function parseTimestamp(raw: string | null | undefined): Date | null {
+  if (typeof raw !== "string" || !raw) return null;
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed;
+}
+
+async function promoteBootstrapAdmin(userId: string): Promise<void> {
+  try {
+    const supabase = createServiceRoleClient();
+    await supabase.from("profiles").update({ role: "admin" }).eq("id", userId);
+  } catch {
+    // In-process role still comes from the email bootstrap below.
   }
-  return new Date();
-}
-
-function appUserFromAuthUser(user: {
-  id: string;
-  email: string;
-  user_metadata?: Record<string, unknown>;
-}): AppUser {
-  const email = user.email.trim().toLowerCase();
-  const displayName =
-    (typeof user.user_metadata?.display_name === "string" &&
-      user.user_metadata.display_name) ||
-    email.split("@")[0];
-
-  return {
-    id: user.id,
-    email,
-    displayName,
-    role: isBootstrapAdminEmail(email) ? "admin" : "user",
-    passwordChangedAt: parsePasswordChangedAt(user),
-  };
-}
-
-function syncDisplayName(userId: string, displayName: string) {
-  void (async () => {
-    const supabase = await createClient();
-    await supabase
-      .from("profiles")
-      .update({ display_name: displayName })
-      .eq("id", userId);
-  })();
 }
 
 export async function upsertUserFromAuth(input: {
@@ -59,8 +39,6 @@ export async function upsertUserFromAuth(input: {
 }): Promise<AppUser> {
   const email = input.email.trim().toLowerCase();
   const displayName = input.displayName.trim() || email.split("@")[0];
-  syncDisplayName(input.id, displayName);
-
   return {
     id: input.id,
     email,
@@ -77,13 +55,35 @@ export async function currentAppUser(): Promise<AppUser | null> {
   } = await supabase.auth.getUser();
   if (!user?.email) return null;
 
-  const appUser = appUserFromAuthUser({
+  const email = user.email.trim().toLowerCase();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name, role, password_changed_at")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const displayName =
+    (typeof profile?.display_name === "string" && profile.display_name) ||
+    (typeof user.user_metadata?.display_name === "string" &&
+      user.user_metadata.display_name) ||
+    email.split("@")[0];
+
+  let role = parseRole(profile?.role);
+  if (isBootstrapAdminEmail(email) && role !== "admin") {
+    role = "admin";
+    void promoteBootstrapAdmin(user.id);
+  }
+
+  const passwordChangedAt =
+    parseTimestamp(profile?.password_changed_at) ?? new Date(0);
+
+  return {
     id: user.id,
-    email: user.email,
-    user_metadata: user.user_metadata,
-  });
-  syncDisplayName(appUser.id, appUser.displayName);
-  return appUser;
+    email,
+    displayName,
+    role,
+    passwordChangedAt,
+  };
 }
 
 export async function requireAppUser(options?: {

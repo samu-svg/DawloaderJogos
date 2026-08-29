@@ -3,7 +3,7 @@ import { GameCatalog } from "@/components/game-catalog";
 import { MontaHDStrip } from "@/components/montahd-strip";
 import { SiteHeader } from "@/components/site-header";
 import { StoreFooter } from "@/components/store-footer";
-import { isPortfolioAdmin } from "@/lib/admin";
+import { canAccessPainel } from "@/lib/rbac";
 import { toCatalogGameItems } from "@/lib/catalog-items";
 import { loadAcervo } from "@/lib/games";
 import { currentAppUser } from "@/lib/auth";
@@ -26,7 +26,7 @@ export default async function HomePage({ searchParams }: PageProps) {
     loadAcervo(),
   ]);
 
-  const isAdmin = isPortfolioAdmin(appUser?.email);
+  const isAdmin = appUser ? canAccessPainel(appUser.role) : false;
   const hasAccess = appUser ? await userHasCatalogAccess(appUser) : false;
 
   const items = toCatalogGameItems(games);

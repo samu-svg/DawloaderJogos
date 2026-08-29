@@ -30,13 +30,18 @@ export function hasSubscriptionBypass(role: Role): boolean {
   return role === "admin";
 }
 
+export function parseRole(value: string | null | undefined): Role {
+  if (value === "admin" || value === "editor" || value === "user") return value;
+  return "user";
+}
+
+/** Bootstrap admin from env only — never a hardcoded mailbox. */
 export function portfolioAdminEmail(): string {
-  return (process.env.PORTFOLIO_ADMIN_EMAIL ?? "douradosamuel50@gmail.com")
-    .trim()
-    .toLowerCase();
+  return (process.env.PORTFOLIO_ADMIN_EMAIL ?? "").trim().toLowerCase();
 }
 
 export function isBootstrapAdminEmail(email: string | null | undefined): boolean {
-  if (!email) return false;
-  return email.trim().toLowerCase() === portfolioAdminEmail();
+  const expected = portfolioAdminEmail();
+  if (!expected || !email) return false;
+  return email.trim().toLowerCase() === expected;
 }
