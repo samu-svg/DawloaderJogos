@@ -1,3 +1,5 @@
+import { SafeExternalUrlError, safeExternalFetch } from "@/lib/safe-external-url";
+
 export type ProbeResult =
   | { ok: true; sizeBytes: number; fileName: string | null }
   | { ok: false; error: string };
@@ -28,21 +30,22 @@ export async function probeDownloadUrl(url: string): Promise<ProbeResult> {
   let response: Response;
 
   try {
-    response = await fetch(url, {
+    response = await safeExternalFetch(url, {
       method: "HEAD",
-      redirect: "follow",
       signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
     });
 
     // Plenty of file hosts refuse HEAD; a one byte ranged GET settles it.
     if (response.status === 405 || response.status === 501 || response.status === 403) {
-      response = await fetch(url, {
+      response = await safeExternalFetch(url, {
         headers: { Range: "bytes=0-0" },
-        redirect: "follow",
         signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
       });
     }
-  } catch {
+  } catch (error) {
+    if (error instanceof SafeExternalUrlError) {
+      return { ok: false, error: error.message };
+    }
     return {
       ok: false,
       error:

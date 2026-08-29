@@ -11,7 +11,7 @@ export async function ackPasswordRotation(): Promise<{ ok: true } | { ok: false;
     .from("profiles")
     .update({ password_changed_at: new Date().toISOString() })
     .eq("id", user.id);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: "Não foi possível atualizar o registro da senha." };
 
   await recordAudit({
     actorId: user.id,

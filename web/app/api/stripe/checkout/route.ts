@@ -22,6 +22,15 @@ export async function POST(request: Request) {
   if (!user) {
     return NextResponse.json({ error: "Faça login para pagar." }, { status: 401 });
   }
+
+  const userLimited = await enforceRateLimit(
+    request,
+    "stripe-checkout",
+    RATE_LIMITS.tight,
+    user.id,
+  );
+  if (userLimited) return userLimited;
+
   if (passwordIsExpired(user.passwordChangedAt)) {
     return NextResponse.json(
       { error: "Senha expirada. Atualize em /conta.", code: "PASSWORD_EXPIRED" },

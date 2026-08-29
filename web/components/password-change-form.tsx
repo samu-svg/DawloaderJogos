@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { ackPasswordRotation } from "@/lib/actions/password";
 import { authErrorMessage } from "@/lib/auth-messages";
 import { PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
-import { createClient } from "@/lib/supabase/client";
 
 export function PasswordChangeForm({ expired }: { expired: boolean }) {
   const router = useRouter();
@@ -30,11 +29,22 @@ export function PasswordChangeForm({ expired }: { expired: boolean }) {
     }
 
     setLoading(true);
-    const supabase = createClient();
-    const { error: updateError } = await supabase.auth.updateUser({ password });
-    if (updateError) {
+    const response = await fetch("/api/auth/change-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    });
+    const payload = (await response.json()) as { error?: string };
+
+    if (response.status === 429) {
       setLoading(false);
-      setError(authErrorMessage(updateError.message));
+      setError("Muitas tentativas. Aguarde um instante.");
+      return;
+    }
+
+    if (!response.ok) {
+      setLoading(false);
+      setError(authErrorMessage(payload.error ?? ""));
       return;
     }
 
