@@ -40,3 +40,10 @@ agent-tools/
 .vercel
 !.env.example
 !**/.env.example
+
+# Cache local da CLI do Supabase
+supabase/.temp/
+
+# Manifests gerados contêm URLs pré-assinadas do R2 — nunca versionar
+*-manifest.json
+manifest-test.json

@@ -74,6 +74,14 @@ export async function POST(request: Request) {
     }
   }
 
+  const userLimited = await enforceRateLimit(
+    request,
+    "manifest-token",
+    RATE_LIMITS.tight,
+    userId,
+  );
+  if (userLimited) return userLimited;
+
   if (!slug) {
     return NextResponse.json(
       { error: "Informe o slug do catálogo." },

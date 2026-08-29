@@ -8,10 +8,21 @@ import {
 } from "@/lib/subscription";
 import { subscriptionsEnabled } from "@/lib/stripe";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
+import { logWarn } from "@/lib/logger";
 
 export type ManifestAccessResult =
-  | { allowed: true; entryFilter: string[] | null; user?: AppUser | null }
+  | {
+      allowed: true;
+      entryFilter: string[] | null;
+      user?: AppUser | null;
+      userId?: string;
+    }
   | { allowed: false; status: 401 | 403 | 503; error?: string };
+
+/** Opening the whole catalog has to be deliberate, never a side effect of missing env vars. */
+function acervoAberto(): boolean {
+  return process.env.ACERVO_ABERTO?.trim() === "true";
+}
 
 async function subscriptionStatusForUser(userId: string): Promise<string | null> {
   try {
@@ -32,7 +43,19 @@ export async function resolveManifestAccess(
   slug: string,
 ): Promise<ManifestAccessResult> {
   if (!subscriptionsEnabled()) {
-    return { allowed: true, entryFilter: null };
+    if (acervoAberto()) {
+      return { allowed: true, entryFilter: null };
+    }
+    logWarn(
+      "Assinaturas desabilitadas e ACERVO_ABERTO desligado — acesso ao manifest negado",
+      { slug },
+    );
+    return {
+      allowed: false,
+      status: 503,
+      error:
+        "Catálogo indisponível no momento por configuração do servidor. Tente novamente em instantes.",
+    };
   }
 
   const authHeader = request.headers.get("authorization");
@@ -66,6 +89,7 @@ export async function resolveManifestAccess(
       return {
         allowed: true,
         entryFilter: payload.entries?.length ? payload.entries : null,
+        userId: payload.sub,
       };
     }
 
@@ -96,6 +120,7 @@ export async function resolveManifestAccess(
     return {
       allowed: true,
       entryFilter: payload.entries?.length ? payload.entries : null,
+      userId: payload.sub,
     };
   }
 
@@ -105,7 +130,7 @@ export async function resolveManifestAccess(
   }
 
   if (hasSubscriptionBypass(user.role)) {
-    return { allowed: true, entryFilter: null, user };
+    return { allowed: true, entryFilter: null, user, userId: user.id };
   }
 
   const status = await subscriptionStatusForUser(user.id);
@@ -113,5 +138,5 @@ export async function resolveManifestAccess(
     return { allowed: false, status: 403 };
   }
 
-  return { allowed: true, entryFilter: null, user };
+  return { allowed: true, entryFilter: null, user, userId: user.id };
 }

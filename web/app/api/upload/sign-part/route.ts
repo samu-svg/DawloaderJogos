@@ -6,7 +6,7 @@ import { signUploadPart } from "@/lib/storage";
 import { requirePortfolioUploadAccess } from "@/lib/upload-auth";
 
 export async function POST(request: Request) {
-  const limited = await enforceRateLimit(request, "upload-sign", RATE_LIMITS.upload);
+  const limited = await enforceRateLimit(request, "upload-sign", RATE_LIMITS.uploadPart);
   if (limited) return limited;
 
   const body = (await request.json()) as {
@@ -33,6 +33,14 @@ export async function POST(request: Request) {
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
+
+  const userLimited = await enforceRateLimit(
+    request,
+    "upload-sign",
+    RATE_LIMITS.uploadPart,
+    auth.userId,
+  );
+  if (userLimited) return userLimited;
 
   if (!storageKeyBelongsToPortfolio(storageKey, auth.portfolio.id)) {
     return NextResponse.json({ error: "Chave de armazenamento inválida." }, { status: 403 });

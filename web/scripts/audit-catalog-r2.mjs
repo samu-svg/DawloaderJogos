@@ -23,10 +23,11 @@ const s3 = new S3Client({
 });
 const bucket = requireEnv("R2_BUCKET");
 
+// A anon key não serve aqui: entries.storage_key não é legível por anon nem por
+// authenticated (ver supabase/migrations/20260829181000_drop_entries_select_public.sql).
 const supabase = createClient(
   requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
-  process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
-    requireEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+  requireEnv("SUPABASE_SERVICE_ROLE_KEY"),
 );
 
 async function listR2Keys() {

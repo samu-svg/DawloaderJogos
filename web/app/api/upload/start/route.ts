@@ -41,6 +41,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
+  const userLimited = await enforceRateLimit(
+    request,
+    "upload-start",
+    RATE_LIMITS.upload,
+    auth.userId,
+  );
+  if (userLimited) return userLimited;
+
   const storageKey = buildStorageKey(auth.portfolio.id, fileName);
 
   try {

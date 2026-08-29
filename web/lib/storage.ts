@@ -17,6 +17,10 @@ export const PART_SIZE = 64 * 1024 * 1024;
 
 const UPLOAD_URL_TTL = 3600;
 
+/** Signed download links are shareable, so the window stays short even if the env var says otherwise. */
+const DOWNLOAD_URL_TTL_DEFAULT = 1800;
+const DOWNLOAD_URL_TTL_MAX = 21600;
+
 let cachedClient: S3Client | null = null;
 
 function client(): S3Client {
@@ -48,7 +52,9 @@ function bucket(): string {
 
 export function downloadUrlTtl(): number {
   const parsed = Number(process.env.R2_SIGNED_URL_TTL);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 21600;
+  const ttl =
+    Number.isFinite(parsed) && parsed > 0 ? parsed : DOWNLOAD_URL_TTL_DEFAULT;
+  return Math.min(ttl, DOWNLOAD_URL_TTL_MAX);
 }
 
 /**

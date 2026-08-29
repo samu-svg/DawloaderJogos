@@ -21,6 +21,14 @@ export async function POST(request: Request) {
     );
   }
 
+  const userLimited = await enforceRateLimit(
+    request,
+    "install-session",
+    RATE_LIMITS.tight,
+    user.id,
+  );
+  if (userLimited) return userLimited;
+
   if (!(await userHasCatalogAccess(user))) {
     return NextResponse.json(
       { error: "Assinatura ativa necessária." },

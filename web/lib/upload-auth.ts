@@ -6,6 +6,7 @@ import { canEditPortfolio } from "@/lib/rbac";
 export type UploadAuthResult =
   | {
       ok: true;
+      userId: string;
       portfolio: { id: string; slug: string; ownerId: string };
     }
   | { ok: false; status: number; error: string };
@@ -43,5 +44,5 @@ export async function requirePortfolioUploadAccess(
     };
   }
 
-  return { ok: true, portfolio };
+  return { ok: true, userId: user.id, portfolio };
 }

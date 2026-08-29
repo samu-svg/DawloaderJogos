@@ -93,6 +93,16 @@ export async function GET(
       );
     }
 
+    if (access.userId) {
+      const userLimited = await enforceRateLimit(
+        request,
+        "manifest",
+        RATE_LIMITS.medium,
+        access.userId,
+      );
+      if (userLimited) return userLimited;
+    }
+
     if (!isR2Configured()) {
       return NextResponse.json(
         { error: "Armazenamento de downloads não configurado no servidor." },

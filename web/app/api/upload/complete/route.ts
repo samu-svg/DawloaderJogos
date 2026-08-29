@@ -42,6 +42,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
+  const userLimited = await enforceRateLimit(
+    request,
+    "upload-complete",
+    RATE_LIMITS.upload,
+    auth.userId,
+  );
+  if (userLimited) return userLimited;
+
   if (!storageKeyBelongsToPortfolio(storageKey, auth.portfolio.id)) {
     return NextResponse.json({ error: "Chave de armazenamento inválida." }, { status: 403 });
   }

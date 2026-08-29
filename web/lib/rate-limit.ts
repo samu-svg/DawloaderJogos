@@ -3,37 +3,21 @@ import { Redis } from "@upstash/redis";
 import { NextResponse } from "next/server";
 import { logWarn } from "@/lib/logger";
 import { requestIp } from "@/lib/audit";
+import {
+  memoryLimit,
+  type RateWindow,
+  windowToMs,
+} from "@/lib/rate-limit-memory";
 
-type Window = `${number} ms` | `${number} s` | `${number} m` | `${number} h`;
+type Window = RateWindow;
 
 export const RATE_LIMITS = {
   tight: { limit: 10, window: "1 m" as Window },
   medium: { limit: 60, window: "1 m" as Window },
   upload: { limit: 30, window: "1 m" as Window },
+  /** One call per 64 MiB part, so a fast link needs plenty of headroom. */
+  uploadPart: { limit: 300, window: "1 m" as Window },
 } as const;
-
-const memoryHits = new Map<string, number[]>();
-
-function memoryLimit(key: string, limit: number, windowMs: number): boolean {
-  const now = Date.now();
-  const stamps = (memoryHits.get(key) ?? []).filter((time) => now - time < windowMs);
-  if (stamps.length >= limit) {
-    memoryHits.set(key, stamps);
-    return false;
-  }
-  stamps.push(now);
-  memoryHits.set(key, stamps);
-  return true;
-}
-
-function windowToMs(window: Window): number {
-  const [, amount, unit] = window.match(/^(\d+)\s*(ms|s|m|h)$/) ?? [];
-  const n = Number(amount);
-  if (unit === "ms") return n;
-  if (unit === "s") return n * 1000;
-  if (unit === "m") return n * 60_000;
-  return n * 3_600_000;
-}
 
 const redisLimiters = new Map<string, Ratelimit>();
 
@@ -55,6 +39,50 @@ function upstashLimiter(limit: number, window: Window): Ratelimit | null {
   return limiter;
 }
 
+const REDIS_WARN_INTERVAL_MS = 60_000;
+
+let missingUpstashWarned = false;
+let redisErrorWarnedAt = 0;
+
+/** Degraded mode is a per-request condition; warn once so logs stay readable. */
+function warnMissingUpstash(bucket: string): void {
+  if (missingUpstashWarned) return;
+  missingUpstashWarned = true;
+  logWarn("Rate limit sem Upstash — usando limitador em memória (não distribuído)", {
+    bucket,
+  });
+}
+
+function warnRedisError(bucket: string, error: unknown): void {
+  const now = Date.now();
+  if (now - redisErrorWarnedAt < REDIS_WARN_INTERVAL_MS) return;
+  redisErrorWarnedAt = now;
+  logWarn("Rate limit Upstash indisponível — usando limitador em memória", {
+    bucket,
+    error: error instanceof Error ? error.message : String(error),
+  });
+}
+
+function tooManyRequests(headers: Record<string, string>): NextResponse {
+  return NextResponse.json(
+    { error: "Muitas tentativas. Aguarde um instante." },
+    { status: 429, headers },
+  );
+}
+
+function enforceInMemory(
+  identity: string,
+  limit: number,
+  windowMs: number,
+): NextResponse | null {
+  if (memoryLimit(identity, limit, windowMs)) return null;
+  return tooManyRequests({
+    "Retry-After": String(Math.max(1, Math.ceil(windowMs / 1000))),
+    "X-RateLimit-Limit": String(limit),
+    "X-RateLimit-Remaining": "0",
+  });
+}
+
 export async function enforceRateLimit(
   request: Request,
   bucket: string,
@@ -63,41 +91,27 @@ export async function enforceRateLimit(
 ): Promise<NextResponse | null> {
   const ip = requestIp(request) ?? "unknown";
   const identity = userId ? `${bucket}:user:${userId}` : `${bucket}:ip:${ip}`;
+  const windowMs = windowToMs(opts.window);
 
   const limiter = upstashLimiter(opts.limit, opts.window);
   if (limiter) {
     try {
       const result = await limiter.limit(identity);
       if (result.success) return null;
-      return NextResponse.json(
-        { error: "Muitas tentativas. Aguarde um instante." },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": String(Math.max(1, Math.ceil((result.reset - Date.now()) / 1000))),
-            "X-RateLimit-Limit": String(result.limit),
-            "X-RateLimit-Remaining": String(result.remaining),
-          },
-        },
-      );
-    } catch (error) {
-      logWarn("Rate limit Upstash indisponível — permitindo a requisição", {
-        bucket,
-        error: error instanceof Error ? error.message : String(error),
+      return tooManyRequests({
+        "Retry-After": String(Math.max(1, Math.ceil((result.reset - Date.now()) / 1000))),
+        "X-RateLimit-Limit": String(result.limit),
+        "X-RateLimit-Remaining": String(result.remaining),
       });
-      return null;
+    } catch (error) {
+      warnRedisError(bucket, error);
+      return enforceInMemory(identity, opts.limit, windowMs);
     }
   }
 
   if (process.env.NODE_ENV === "production") {
-    logWarn("Rate limit sem Upstash — permitindo a requisição", { bucket });
-    return null;
+    warnMissingUpstash(bucket);
   }
 
-  const allowed = memoryLimit(identity, opts.limit, windowToMs(opts.window));
-  if (allowed) return null;
-  return NextResponse.json(
-    { error: "Muitas tentativas. Aguarde um instante." },
-    { status: 429, headers: { "Retry-After": "60" } },
-  );
+  return enforceInMemory(identity, opts.limit, windowMs);
 }
