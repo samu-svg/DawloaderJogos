@@ -68,7 +68,7 @@
               <span class="welcome-step-num">3</span>
               <div>
                 <strong>Escolha a pasta e confirme</strong>
-                <p class="muted">Download, verificação e extração automáticos.</p>
+                <p class="muted">O app processa no PC, copia para o HD e apaga os arquivos temporários.</p>
               </div>
             </div>
           </div>
@@ -136,10 +136,15 @@
             <p id="root-path" class="path-value muted">Nenhuma pasta selecionada.</p>
           </div>
 
-          <p class="hint">
+          <p class="hint" id="install-hint">
             Confira os jogos selecionados e clique em
-            <strong>Iniciar download</strong>. Arquivos .zip são descompactados
-            automaticamente na pasta correta (Games, Content…).
+            <strong>Iniciar download</strong>. O zip é baixado e descompactado
+            no PC; em seguida o app envia as pastas para o HD (FAT32 do Xbox 360)
+            e apaga os arquivos temporários do computador.
+          </p>
+          <p class="space-notice" id="space-notice" role="status">
+            Deixe no PC pelo menos o espaço do maior jogo livre. O processamento
+            acontece no computador, não no HD.
           </p>
 
           <div class="table-shell">

@@ -36,6 +36,7 @@ function init() {
   const entriesBody = document.getElementById("entries-body");
   const selectAll = document.getElementById("select-all");
   const downloadBtn = document.getElementById("download-btn");
+  const spaceNotice = document.getElementById("space-notice");
   const cancelBtn = document.getElementById("cancel-btn");
   const summary = document.getElementById("summary");
   const step1 = document.getElementById("step-1");
@@ -83,6 +84,7 @@ function init() {
     !entriesBody ||
     !selectAll ||
     !downloadBtn ||
+    !spaceNotice ||
     !cancelBtn ||
     !summary ||
     !step1 ||
@@ -168,7 +170,8 @@ function init() {
     heroTitle.textContent = "Escolha no site, instale aqui";
     heroDesc.innerHTML =
       'Abra o catálogo no navegador, marque os jogos e clique em <strong>Instalar no HD</strong>. ' +
-      "O app abre já com tudo pronto — você só escolhe a pasta do HD.";
+      "O app abre já com tudo pronto — você só escolhe a pasta do HD. " +
+      "O processamento é no PC; o jogo vai para o HD e os temporários são apagados.";
     setSteps("welcome");
   }
 
@@ -296,9 +299,28 @@ function init() {
       });
   }
 
+  function selectedLargestBytes() {
+    const selected = selectedEntriesWithDestinations();
+    return selected.reduce((max, entry) => Math.max(max, entry.sizeBytes || 0), 0);
+  }
+
+  function pcSpaceNoticeText(largestBytes) {
+    const sizeLabel = largestBytes > 0 ? formatBytes(largestBytes) : "o maior jogo";
+    return (
+      "O download e a extração acontecem no PC; depois o jogo é copiado para o HD " +
+      `(Xbox 360 FAT32) e os arquivos temporários são apagados. Deixe pelo menos ${sizeLabel} ` +
+      "livres no disco do computador — o tamanho do maior jogo selecionado."
+    );
+  }
+
+  function updateSpaceNotice() {
+    spaceNotice.textContent = pcSpaceNoticeText(selectedLargestBytes());
+  }
+
   function updateDownloadButton() {
     const hasSelection = checkboxes().some((input) => input.checked);
     downloadBtn.disabled = !selectedRoot || !hasSelection;
+    updateSpaceNotice();
 
     if (!selectedRoot) {
       downloadBtn.title = "Escolha primeiro a pasta de destino.";
@@ -600,7 +622,20 @@ function init() {
         `${message} Volte ao site, clique em Instalar no HD de novo e escolha a pasta do disco.`
       );
     }
+    if (/enospc|espaço insuficiente|no space left/i.test(message)) {
+      return message.includes("Espaço insuficiente") || message.includes("NTFS")
+        ? message
+        : "Espaço insuficiente para gravar os arquivos. Verifique o HD (NTFS/exFAT) e se há espaço para o zip + pasta extraída ao mesmo tempo.";
+    }
     return message;
+  }
+
+  function formatProgressError(text) {
+    if (!text) return "Erro";
+    if (/enospc|no space left/i.test(text)) {
+      return formatInstallError(new Error(text));
+    }
+    return text;
   }
 
   async function applyCatalogLaunch(launch) {
@@ -841,10 +876,26 @@ function init() {
       .join("\n\n");
 
     const confirmed = await showConfirmModal(
-      `Baixar ${entries.length} jogo(s)? Arquivos .zip são descompactados automaticamente na pasta de destino.`,
+      `Baixar ${entries.length} jogo(s)? ` +
+        pcSpaceNoticeText(selectedLargestBytes()),
       preview,
     );
     if (!confirmed) return;
+
+    try {
+      const disk = await window.montahd.getPcDiskSpace();
+      const needed = selectedLargestBytes();
+      if (needed > 0 && disk.freeBytes < needed) {
+        setSummary(
+          `Espaço insuficiente no PC. Livre: ${formatBytes(disk.freeBytes)}. ` +
+            `Necessário pelo menos ${formatBytes(needed)} (maior jogo). Libere espaço no computador e tente de novo.`,
+          "error",
+        );
+        return;
+      }
+    } catch {
+      // segue o download; o processo principal também confere o espaço
+    }
 
     downloadBtn.disabled = true;
     cancelBtn.classList.remove("hidden");
@@ -892,28 +943,43 @@ function init() {
     } else if (event.status === "verifying") {
       setProgress(event.entryId, 92, "Verificando integridade…");
     } else if (event.status === "extracting") {
-      setProgress(event.entryId, 96, "Descompactando…");
-    } else if (event.status === "installing") {
+      setProgress(event.entryId, 96, "Descompactando no PC…");
+    } else if (event.status === "copying" || event.status === "installing") {
       const pct =
         event.totalBytes > 0 ? (event.downloadedBytes / event.totalBytes) * 100 : 0;
       setProgress(
         event.entryId,
         Math.max(pct, 90),
-        `Instalando ${formatBytes(event.downloadedBytes)} / ${formatBytes(event.totalBytes)}`,
+        `Copiando para o HD ${formatBytes(event.downloadedBytes)} / ${formatBytes(event.totalBytes)}`,
       );
     } else if (event.status === "done") {
       setProgress(event.entryId, 100, "Concluído", "done");
     } else if (event.status === "error") {
-      setProgress(event.entryId, 100, event.error ?? "Erro", "error");
+      const errText = formatProgressError(event.error ?? "Erro");
+      setProgress(event.entryId, 100, errText, "error");
+      if (/espaço insuficiente|enospc/i.test(errText)) {
+        setSummary(errText, "error");
+      }
     }
   });
 
   window.montahd.onDownloadComplete(({ results }) => {
     const okCount = results.filter((item) => item.ok).length;
-    setSummary(
-      `Concluído: ${okCount}/${results.length} jogo(s) instalados.`,
-      okCount === results.length ? "ok" : "error",
+    const failed = results.filter((item) => !item.ok && item.error);
+    const diskFull = failed.some((item) =>
+      /espaço insuficiente|enospc|no space left/i.test(item.error ?? ""),
     );
+    if (diskFull && okCount < results.length) {
+      setSummary(
+        "Instalação interrompida: falta espaço no PC para processar o jogo. Libere o tamanho do maior jogo no computador e tente de novo.",
+        "error",
+      );
+    } else {
+      setSummary(
+        `Concluído: ${okCount}/${results.length} jogo(s) instalados.`,
+        okCount === results.length ? "ok" : "error",
+      );
+    }
     cancelBtn.classList.add("hidden");
     downloadBtn.disabled = false;
   });

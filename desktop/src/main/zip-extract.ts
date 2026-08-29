@@ -1,4 +1,4 @@
-import { access, mkdtemp, readdir, rm } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readdir, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import extract from "extract-zip";
@@ -128,16 +128,26 @@ export async function isZipFile(filePath: string): Promise<boolean> {
 export async function extractZipToContentRoot(
   zipPath: string,
   installDir?: string,
+  extractParent?: string,
 ): Promise<{
   contentRoot: string;
   tempDir: string;
 }> {
-  const tempDir = await mkdtemp(path.join(os.tmpdir(), "montahd-"));
+  const tempDir = await createExtractTempDir(extractParent);
   await extract(zipPath, { dir: tempDir });
   const contentRoot = installDir
     ? await resolveExtractRoot(tempDir, installDir)
     : await detectContentRoot(tempDir);
   return { contentRoot, tempDir };
+}
+
+/** Extração no PC (pasta de staging), não no HD FAT32. */
+async function createExtractTempDir(extractParent?: string): Promise<string> {
+  if (extractParent?.trim()) {
+    await mkdir(extractParent, { recursive: true });
+    return mkdtemp(path.join(extractParent, "extract-"));
+  }
+  return mkdtemp(path.join(os.tmpdir(), "montahd-"));
 }
 
 export async function removeTempDir(tempDir: string): Promise<void> {

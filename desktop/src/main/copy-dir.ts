@@ -1,5 +1,6 @@
 import { copyFile, mkdir, readdir, stat } from "node:fs/promises";
 import path from "node:path";
+import { isOverFat32Limit } from "../shared/pc-space";
 
 async function listFiles(dir: string): Promise<{ absPath: string; size: number }[]> {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -41,6 +42,11 @@ export async function copyDirectory(
 
     const relative = path.relative(sourceDir, file.absPath);
     const targetPath = path.join(destDir, relative);
+    if (isOverFat32Limit(file.size)) {
+      throw new Error(
+        `O arquivo "${relative.replace(/\\/g, "/")}" tem mais de 4 GB e não cabe no HD FAT32 do Xbox 360.`,
+      );
+    }
     await mkdir(path.dirname(targetPath), { recursive: true });
     await copyFile(file.absPath, targetPath);
 

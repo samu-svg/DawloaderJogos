@@ -458,6 +458,17 @@ input[type="url"]:focus,
   color: var(--muted);
 }
 
+.space-notice {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #fde68a;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
 .muted {
   color: var(--muted);
 }

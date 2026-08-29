@@ -19,10 +19,17 @@ import {
   recordInstalled,
 } from "./hd-library";
 import { resolveUnderRoot } from "./paths";
+import { formatFsError } from "../shared/fs-errors";
 import { computeHdFingerprint } from "../shared/hd-fingerprint";
 import type { HdLibraryHint } from "../shared/hd-library";
+import { largestEntryBytes, notEnoughPcSpaceMessage } from "../shared/pc-space";
+import { ensureStagingRoot, getFreeBytes } from "./staging";
 
 const PROTOCOL = "montahd";
+
+function stagingRootPath(): string {
+  return path.join(app.getPath("userData"), "staging");
+}
 
 let mainWindow: BrowserWindow | null = null;
 let abortController: AbortController | null = null;
@@ -258,6 +265,12 @@ ipcMain.handle("open-external", async (_event, rawUrl: string) => {
   await shell.openExternal(url);
 });
 
+ipcMain.handle("get-pc-disk-space", async () => {
+  const stagingRoot = stagingRootPath();
+  const freeBytes = await getFreeBytes(stagingRoot);
+  return { freeBytes, path: stagingRoot };
+});
+
 ipcMain.handle("select-folder", async () => {
   const result = await dialog.showOpenDialog(mainWindow!, {
     properties: ["openDirectory"],
@@ -348,6 +361,30 @@ ipcMain.handle(
     const signal = abortController.signal;
 
     const results: { entryId: string; ok: boolean; error?: string }[] = [];
+    const stagingRoot = stagingRootPath();
+    await ensureStagingRoot(stagingRoot);
+
+    const needed = largestEntryBytes(payload.entries.map((entry) => entry.sizeBytes));
+    if (needed > 0) {
+      const freeBytes = await getFreeBytes(stagingRoot);
+      if (freeBytes < needed) {
+        const message = notEnoughPcSpaceMessage(needed, freeBytes);
+        for (const entry of payload.entries) {
+          send("download-progress", {
+            entryId: entry.id,
+            label: entry.label,
+            downloadedBytes: 0,
+            totalBytes: entry.sizeBytes,
+            status: "error",
+            error: message,
+          } satisfies DownloadProgress);
+          results.push({ entryId: entry.id, ok: false, error: message });
+        }
+        abortController = null;
+        send("download-complete", { results });
+        return { results };
+      }
+    }
 
     for (const entry of payload.entries) {
       if (signal.aborted) break;
@@ -373,6 +410,7 @@ ipcMain.handle(
           url: entry.downloadUrl,
           destPath: resolved.fullPath,
           hdRoot: payload.rootDir,
+          stagingRoot,
           expectedSize: entry.sizeBytes,
           expectedSha256: entry.sha256,
           signal,
@@ -396,8 +434,7 @@ ipcMain.handle(
         }
         results.push({ entryId: entry.id, ok: true });
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Erro desconhecido no download.";
+        const message = formatFsError(error);
         send("download-progress", {
           entryId: entry.id,
           label: entry.label,

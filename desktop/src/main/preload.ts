@@ -8,7 +8,7 @@ export interface DownloadProgressEvent {
   label: string;
   downloadedBytes: number;
   totalBytes: number;
-  status: "downloading" | "verifying" | "extracting" | "installing" | "done" | "error";
+  status: "downloading" | "verifying" | "extracting" | "installing" | "copying" | "done" | "error";
   error?: string;
 }
 
@@ -33,6 +33,8 @@ const api = {
     ipcRenderer.invoke("consume-catalog-launch"),
   startDownload: (rootDir: string, entries: ResolvedManifestEntry[]) =>
     ipcRenderer.invoke("start-download", { rootDir, entries }),
+  getPcDiskSpace: (): Promise<{ freeBytes: number; path: string }> =>
+    ipcRenderer.invoke("get-pc-disk-space"),
   cancelDownload: (): Promise<void> => ipcRenderer.invoke("cancel-download"),
   listHdLibrary: (rootDir: string, hints?: HdLibraryHint[]): Promise<HdLibraryItem[]> =>
     ipcRenderer.invoke("list-hd-library", { rootDir, hints }),
