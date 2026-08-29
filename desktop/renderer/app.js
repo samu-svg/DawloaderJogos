@@ -1,5 +1,6 @@
 /** @typedef {import('../src/shared/manifest').Manifest} Manifest */
 /** @typedef {import('../src/shared/manifest').ResolvedManifestEntry} ResolvedManifestEntry */
+/** @typedef {import('../src/shared/install-state').EntryInstallState} EntryInstallState */
 
 const DEFAULT_SITE_URL = "https://montahd.vercel.app";
 const SITE_URL_STORAGE_KEY = "montahd.siteUrl";
@@ -401,6 +402,10 @@ function init() {
         tag.textContent = "opcional";
         labelCell.appendChild(tag);
       }
+      const installTag = document.createElement("span");
+      installTag.className = "install-tag hidden";
+      installTag.dataset.installTag = entry.id;
+      labelCell.appendChild(installTag);
 
       const typeCell = document.createElement("td");
       const badge = document.createElement("span");
@@ -415,6 +420,9 @@ function init() {
       destInput.className = "input-dest";
       destInput.dataset.destinationFor = entry.id;
       destInput.value = entry.destination;
+      destInput.addEventListener("change", () => {
+        void refreshInstallTags();
+      });
       destCell.appendChild(destInput);
 
       const sizeCell = document.createElement("td");
@@ -444,6 +452,49 @@ function init() {
     }
 
     updateDownloadButton();
+    void refreshInstallTags();
+  }
+
+  async function refreshInstallTags() {
+    const tags = [...entriesBody.querySelectorAll("[data-install-tag]")];
+    for (const tag of tags) {
+      tag.classList.add("hidden");
+      tag.textContent = "";
+      tag.classList.remove("install-tag-ok", "install-tag-warn");
+    }
+    if (!selectedRoot || !manifest) return;
+
+    try {
+      const states = await window.montahd.inspectInstallState(
+        selectedRoot,
+        manifest.entries.map((entry) => {
+          const input = getDestinationInput(entry.id);
+          return {
+            id: entry.id,
+            label: entry.label,
+            destination: input?.value.trim() || entry.destination,
+          };
+        }),
+      );
+      const byId = new Map(states.map((state) => [state.entryId, state]));
+      for (const tag of tags) {
+        const state = byId.get(tag.dataset.installTag);
+        if (!state) continue;
+        tag.classList.remove("hidden");
+        if (state.kind === "installed") {
+          tag.textContent = "já no HD";
+          tag.classList.add("install-tag-ok");
+        } else if (state.canResume) {
+          tag.textContent = "download incompleto";
+          tag.classList.add("install-tag-warn");
+        } else {
+          tag.textContent = "instalação incompleta";
+          tag.classList.add("install-tag-warn");
+        }
+      }
+    } catch {
+      // a inspeção é só um aviso visual
+    }
   }
 
   function catalogHints() {
@@ -616,10 +667,12 @@ function init() {
       const previousTitle = confirmTitle.textContent;
       const previousOk = confirmOk.textContent;
       const previousOkClass = confirmOk.className;
+      const previousCancel = confirmCancel.textContent;
 
       confirmTitle.textContent = options.title ?? "Confirmar download";
       confirmOk.textContent = options.okLabel ?? "Baixar agora";
       confirmOk.className = options.danger ? "btn btn-danger" : "btn btn-primary";
+      confirmCancel.textContent = options.cancelLabel ?? "Voltar";
       confirmMessage.textContent = message;
       confirmPreview.textContent = preview;
       confirmModal.classList.remove("hidden");
@@ -629,6 +682,7 @@ function init() {
         confirmTitle.textContent = previousTitle;
         confirmOk.textContent = previousOk;
         confirmOk.className = previousOkClass;
+        confirmCancel.textContent = previousCancel;
         confirmOk.removeEventListener("click", onOk);
         confirmCancel.removeEventListener("click", onCancel);
         confirmModal.querySelectorAll("[data-dismiss]").forEach((el) => {
@@ -874,6 +928,7 @@ function init() {
         : "Pasta selecionada.",
     );
     updateDownloadButton();
+    void refreshInstallTags();
   }
 
   selectFolderBtn.addEventListener("click", () => {
@@ -922,17 +977,123 @@ function init() {
     const entries = selectedEntriesWithDestinations();
     if (entries.length === 0) return;
 
-    const preview = entries
+    /** @type {string[]} */
+    const resetEntryIds = [];
+    let toDownload = entries;
+
+    try {
+      const states = await window.montahd.inspectInstallState(selectedRoot, entries);
+      const installed = states.filter((state) => state.kind === "installed");
+      const resumable = states.filter(
+        (state) => state.kind === "incomplete" && state.canResume,
+      );
+      const leftover = states.filter(
+        (state) => state.kind === "incomplete" && !state.canResume,
+      );
+
+      if (installed.length > 0) {
+        const reinstall = await showConfirmModal(
+          installed.length === 1
+            ? `«${installed[0].label}» já está neste HD. Instalar de novo apaga a cópia atual e baixa outra vez.`
+            : `${installed.length} jogos já estão neste HD. Instalar de novo apaga as cópias atuais e baixa outra vez.`,
+          installed.map((state) => `• ${state.label}`).join("\n"),
+          {
+            title: "Já instalado neste HD",
+            okLabel: "Instalar de novo",
+            cancelLabel: "Manter os atuais",
+            danger: true,
+          },
+        );
+        if (reinstall) {
+          resetEntryIds.push(...installed.map((state) => state.entryId));
+        } else {
+          const skip = new Set(installed.map((state) => state.entryId));
+          toDownload = toDownload.filter((entry) => !skip.has(entry.id));
+        }
+      }
+
+      if (resumable.length > 0) {
+        const still = resumable.filter((state) =>
+          toDownload.some((entry) => entry.id === state.entryId),
+        );
+        if (still.length > 0) {
+          const resume = await showConfirmModal(
+            still.length === 1
+              ? `O download de «${still[0].label}» ficou pela metade. Dá para continuar de onde parou.`
+              : `${still.length} downloads ficaram pela metade. Dá para continuar de onde pararam.`,
+            still.map((state) => `• ${state.label}`).join("\n"),
+            {
+              title: "Download incompleto",
+              okLabel: "Retomar",
+              cancelLabel: "Não retomar",
+            },
+          );
+          if (!resume) {
+            const restart = await showConfirmModal(
+              "Apagar o arquivo pela metade e começar o download do zero?",
+              still.map((state) => `• ${state.label}`).join("\n"),
+              {
+                title: "Começar de novo",
+                okLabel: "Apagar e recomeçar",
+                cancelLabel: "Pular estes",
+                danger: true,
+              },
+            );
+            if (restart) {
+              resetEntryIds.push(...still.map((state) => state.entryId));
+            } else {
+              const skip = new Set(still.map((state) => state.entryId));
+              toDownload = toDownload.filter((entry) => !skip.has(entry.id));
+            }
+          }
+        }
+      }
+
+      if (leftover.length > 0) {
+        const still = leftover.filter((state) =>
+          toDownload.some((entry) => entry.id === state.entryId),
+        );
+        if (still.length > 0) {
+          const restart = await showConfirmModal(
+            still.length === 1
+              ? `A instalação de «${still[0].label}» não terminou. Não dá para retomar com segurança — apagar o que ficou e instalar de novo?`
+              : `${still.length} instalações não terminaram. Não dá para retomar com segurança — apagar o que ficou e instalar de novo?`,
+            still.map((state) => `• ${state.label}`).join("\n"),
+            {
+              title: "Instalação incompleta",
+              okLabel: "Apagar e instalar",
+              cancelLabel: "Pular estes",
+              danger: true,
+            },
+          );
+          if (restart) {
+            resetEntryIds.push(...still.map((state) => state.entryId));
+          } else {
+            const skip = new Set(still.map((state) => state.entryId));
+            toDownload = toDownload.filter((entry) => !skip.has(entry.id));
+          }
+        }
+      }
+    } catch {
+      // se a inspeção falhar, segue o fluxo normal de download
+    }
+
+    if (toDownload.length === 0) {
+      setSummary("Nada a baixar: os jogos selecionados já estão no HD ou foram pulados.");
+      return;
+    }
+
+    const preview = toDownload
       .map(
         (entry) =>
           `• ${entry.label}\n  → ${selectedRoot}\\${entry.destination.replace(/\//g, "\\")}`,
       )
       .join("\n\n");
 
-    const sizes = entries.map((entry) => entry.sizeBytes || 0);
+    const sizes = toDownload.map((entry) => entry.sizeBytes || 0);
     const pcNeeded = largestPcStagingBytes(sizes);
     const confirmed = await showConfirmModal(
-      `Baixar ${entries.length} jogo(s)? ` + installSpaceNotice(sizes),
+      `Baixar ${toDownload.length} jogo(s)? ` + installSpaceNotice(sizes),
       preview,
     );
     if (!confirmed) return;
@@ -959,17 +1120,24 @@ function init() {
     cancelBtn.classList.remove("hidden");
     setSummary("Download em andamento…");
 
-    for (const entry of entries) {
+    for (const entry of toDownload) {
       setProgress(entry.id, 0, "Na fila");
     }
 
+    const idsToReset = [...new Set(resetEntryIds)].filter((id) =>
+      toDownload.some((entry) => entry.id === id),
+    );
+
     try {
-      const result = await window.montahd.startDownload(selectedRoot, entries);
+      const result = await window.montahd.startDownload(selectedRoot, toDownload, {
+        resetEntryIds: idsToReset,
+      });
       const okCount = result.results.filter((item) => item.ok).length;
       setSummary(
         `Concluído: ${okCount}/${result.results.length} jogo(s) instalados.`,
         okCount === result.results.length ? "ok" : "error",
       );
+      void refreshInstallTags();
     } catch (error) {
       setSummary(
         error instanceof Error ? error.message : "Erro durante o download.",
@@ -979,6 +1147,7 @@ function init() {
       downloadBtn.disabled = false;
       cancelBtn.classList.add("hidden");
       updateDownloadButton();
+      void refreshInstallTags();
     }
   });
 
@@ -1051,6 +1220,7 @@ function init() {
     }
     cancelBtn.classList.add("hidden");
     downloadBtn.disabled = false;
+    void refreshInstallTags();
   });
 }
 

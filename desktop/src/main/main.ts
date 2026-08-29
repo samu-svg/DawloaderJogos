@@ -25,6 +25,11 @@ import {
   rememberHdLabels,
   recordInstalled,
 } from "./hd-library";
+import {
+  clearEntryInstallFiles,
+  inspectInstallStates,
+  removeStaleHdExtractDirs,
+} from "./install-state";
 import { resolveUnderRoot } from "./paths";
 import { computeHdFingerprint } from "../shared/hd-fingerprint";
 import type { HdLibraryHint } from "../shared/hd-library";
@@ -348,6 +353,23 @@ ipcMain.handle(
 );
 
 ipcMain.handle(
+  "inspect-install-state",
+  async (
+    _event,
+    payload: {
+      rootDir: string;
+      entries: { id: string; label: string; destination: string }[];
+    },
+  ) => {
+    return inspectInstallStates(
+      payload.rootDir,
+      payload.entries,
+      stagingRootPath(),
+    );
+  },
+);
+
+ipcMain.handle(
   "delete-hd-item",
   async (_event, payload: { rootDir: string; destination: string }) => {
     return deleteHdItem(payload.rootDir, payload.destination);
@@ -361,6 +383,7 @@ ipcMain.handle(
     payload: {
       rootDir: string;
       entries: ResolvedManifestEntry[];
+      resetEntryIds?: string[];
     },
   ) => {
     abortController?.abort();
@@ -369,13 +392,45 @@ ipcMain.handle(
 
     const results: { entryId: string; ok: boolean; error?: string }[] = [];
     const stagingRoot = stagingRootPath();
-    const needed = largestPcStagingBytes(payload.entries.map((entry) => entry.sizeBytes));
+    await removeStaleHdExtractDirs(payload.rootDir).catch(() => undefined);
+
+    const resetIds = new Set(payload.resetEntryIds ?? []);
+    for (const entry of payload.entries) {
+      if (!resetIds.has(entry.id)) continue;
+      try {
+        await clearEntryInstallFiles({
+          rootDir: payload.rootDir,
+          destination: entry.destination,
+          entryId: entry.id,
+          stagingRoot,
+        });
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Não foi possível apagar a instalação anterior.";
+        send("download-progress", {
+          entryId: entry.id,
+          label: entry.label,
+          downloadedBytes: 0,
+          totalBytes: entry.sizeBytes,
+          status: "error",
+          error: message,
+        } satisfies DownloadProgress);
+        results.push({ entryId: entry.id, ok: false, error: message });
+      }
+    }
+    const entriesToDownload = payload.entries.filter(
+      (entry) => !results.some((item) => item.entryId === entry.id),
+    );
+
+    const needed = largestPcStagingBytes(entriesToDownload.map((entry) => entry.sizeBytes));
     if (needed > 0) {
       await ensureStagingRoot(stagingRoot);
       const freeBytes = await getFreeBytes(stagingRoot);
       if (freeBytes < needed) {
         const message = notEnoughPcSpaceMessage(needed, freeBytes);
-        for (const entry of payload.entries) {
+        for (const entry of entriesToDownload) {
           send("download-progress", {
             entryId: entry.id,
             label: entry.label,
@@ -393,7 +448,7 @@ ipcMain.handle(
     }
 
     const pipelineItems: PipelineEntry[] = [];
-    for (const entry of payload.entries) {
+    for (const entry of entriesToDownload) {
       if (signal.aborted) break;
 
       const resolved = resolveUnderRoot(payload.rootDir, entry.destination);
@@ -430,7 +485,7 @@ ipcMain.handle(
         continue;
       }
 
-      const entry = payload.entries.find((item) => item.id === result.entryId);
+      const entry = entriesToDownload.find((item) => item.id === result.entryId);
       if (!entry || !result.installedPath) {
         results.push({ entryId: result.entryId, ok: true });
         continue;

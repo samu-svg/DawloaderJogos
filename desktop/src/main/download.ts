@@ -5,6 +5,7 @@ import path from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { formatFsError } from "../shared/fs-errors";
+import { HD_PARTIAL_SUFFIX, STAGING_PARTIAL_NAME } from "../shared/install-state";
 import {
   isOverFat32Limit,
   resolveDownloadTarget,
@@ -54,8 +55,6 @@ export interface PreparedDownload {
   expectedSha256?: string;
 }
 
-const HD_PARTIAL_SUFFIX = ".montahd.partial";
-const STAGING_PARTIAL_NAME = "download.partial";
 const HD_EXTRACT_DIR = ".montahd";
 
 function assertDownloadableResponse(response: Response): void {

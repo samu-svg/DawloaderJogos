@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from "electron";
 import type { CatalogLaunch } from "../shared/catalog-launch";
 import type { HdLibraryHint, HdLibraryItem } from "../shared/hd-library";
+import type { EntryInstallState } from "../shared/install-state";
 import type { Manifest, ResolvedManifestEntry } from "../shared/manifest";
 
 export interface DownloadProgressEvent {
@@ -32,8 +33,16 @@ const api = {
     ipcRenderer.invoke("fetch-manifest", { baseUrl, slug, manifestToken }),
   consumeCatalogLaunch: (): Promise<CatalogLaunch | null> =>
     ipcRenderer.invoke("consume-catalog-launch"),
-  startDownload: (rootDir: string, entries: ResolvedManifestEntry[]) =>
-    ipcRenderer.invoke("start-download", { rootDir, entries }),
+  startDownload: (
+    rootDir: string,
+    entries: ResolvedManifestEntry[],
+    options?: { resetEntryIds?: string[] },
+  ) => ipcRenderer.invoke("start-download", { rootDir, entries, ...options }),
+  inspectInstallState: (
+    rootDir: string,
+    entries: { id: string; label: string; destination: string }[],
+  ): Promise<EntryInstallState[]> =>
+    ipcRenderer.invoke("inspect-install-state", { rootDir, entries }),
   getPcDiskSpace: (): Promise<{ freeBytes: number; path: string }> =>
     ipcRenderer.invoke("get-pc-disk-space"),
   cancelDownload: (): Promise<void> => ipcRenderer.invoke("cancel-download"),
