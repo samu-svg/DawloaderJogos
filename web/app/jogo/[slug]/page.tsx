@@ -23,8 +23,8 @@ import {
 import { findAcervoGame, relatedAcervoGames } from "@/lib/games";
 import { formatBytes } from "@/lib/manifest";
 import { getSiteUrl } from "@/lib/site-url";
+import { currentAppUser } from "@/lib/auth";
 import { userHasCatalogAccess } from "@/lib/subscription";
-import { currentUser } from "@/lib/supabase/server";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -57,15 +57,15 @@ export default async function GamePage({ params }: PageProps) {
   const game = await findAcervoGame(slug);
   if (!game) notFound();
 
-  const [user, siteUrl, related] = await Promise.all([
-    currentUser(),
+  const [appUser, siteUrl, related] = await Promise.all([
+    currentAppUser(),
     getSiteUrl(),
     relatedAcervoGames(game),
   ]);
 
-  const isAdmin = isPortfolioAdmin(user?.email);
-  const hasAccess = user ? await userHasCatalogAccess(user) : false;
-  const access = !user ? "anon" : hasAccess ? "liberado" : "sem-assinatura";
+  const isAdmin = isPortfolioAdmin(appUser?.email);
+  const hasAccess = appUser ? await userHasCatalogAccess(appUser) : false;
+  const access = !appUser ? "anon" : hasAccess ? "liberado" : "sem-assinatura";
   const meta = gamePageMeta(game.id);
   const title = catalogDisplayTitle(game.id, game.label, game.extraCount);
   const coverUrl = resolveCoverUrl(game.id, game.coverUrl, localCoverUrl);
@@ -83,7 +83,7 @@ export default async function GamePage({ params }: PageProps) {
   return (
     <>
       <SiteHeader
-        email={user?.email}
+        email={appUser?.email}
         showPainelLink={isAdmin}
         hasAccess={hasAccess}
       />

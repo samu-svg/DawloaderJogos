@@ -48,11 +48,15 @@ async function resolveManifestEntries(
       optional: row.is_optional || undefined,
       group: row.group_name ?? undefined,
       downloadUrl,
-    } satisfies ResolvedManifestEntry;
+    } as ResolvedManifestEntry;
   });
 
   const resolved = await Promise.all(tasks);
-  return resolved.filter((entry): entry is ResolvedManifestEntry => entry !== null);
+  const entries: ResolvedManifestEntry[] = [];
+  for (const entry of resolved) {
+    if (entry) entries.push(entry);
+  }
+  return entries;
 }
 
 export async function GET(

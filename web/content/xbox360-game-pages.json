@@ -1335,7 +1335,9 @@
     "audio": "desconhecido",
     "audioNote": "Pasta: Red Dead Redemption - DLC Undead Nightmare + Multiplayer  (Disco 2).",
     "installHint": "games",
-    "technicalNotes": "Instale após o Disco 1. Ambos ficam em Games/.",
+    "technicalNotes": [
+      "Instale após o Disco 1. Ambos ficam em Games/."
+    ],
     "dlcNotes": [
       "Disco 2: Undead Nightmare + multiplayer. Requer Red Dead Redemption — Disco 1 instalado previamente."
     ]
@@ -1346,7 +1348,9 @@
     "audio": "pt-br",
     "audioNote": "Pasta: Red Dead Redemption PT-BR (Disco 1 ).",
     "installHint": "games",
-    "technicalNotes": "Instale o Disco 1 antes do Disco 2. Ambos ficam em Games/.",
+    "technicalNotes": [
+      "Instale o Disco 1 antes do Disco 2. Ambos ficam em Games/."
+    ],
     "dlcNotes": [
       "Este é o Disco 1 (campanha principal). Instale também Red Dead Redemption — Disco 2 para Undead Nightmare e multiplayer."
     ]

@@ -6,8 +6,8 @@ import { StoreFooter } from "@/components/store-footer";
 import { isPortfolioAdmin } from "@/lib/admin";
 import { toCatalogGameItems } from "@/lib/catalog-items";
 import { loadAcervo } from "@/lib/games";
+import { currentAppUser } from "@/lib/auth";
 import { userHasCatalogAccess } from "@/lib/subscription";
-import { currentUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "MontaHD — Downloads de jogos de Xbox 360",
@@ -20,21 +20,21 @@ type PageProps = {
 };
 
 export default async function HomePage({ searchParams }: PageProps) {
-  const [{ colecao }, user, { games, collections }] = await Promise.all([
+  const [{ colecao }, appUser, { games, collections }] = await Promise.all([
     searchParams,
-    currentUser(),
+    currentAppUser(),
     loadAcervo(),
   ]);
 
-  const isAdmin = isPortfolioAdmin(user?.email);
-  const hasAccess = user ? await userHasCatalogAccess(user) : false;
+  const isAdmin = isPortfolioAdmin(appUser?.email);
+  const hasAccess = appUser ? await userHasCatalogAccess(appUser) : false;
 
   const items = toCatalogGameItems(games);
 
   return (
     <>
       <SiteHeader
-        email={user?.email}
+        email={appUser?.email}
         showPainelLink={isAdmin}
         hasAccess={hasAccess}
       />

@@ -94,7 +94,11 @@ const rows = eligible.map((game, index) => {
     installHint,
   };
 
-  if (meta.technicalNotes) pageEntry.technicalNotes = meta.technicalNotes;
+  if (meta.technicalNotes) {
+    pageEntry.technicalNotes = Array.isArray(meta.technicalNotes)
+      ? meta.technicalNotes
+      : [meta.technicalNotes];
+  }
   if (meta.hasDlc) pageEntry.hasDlc = true;
   if (meta.dlcNotes) pageEntry.dlcNotes = meta.dlcNotes;
   else if (game.format === "god" && titleId && groupName === "jogo") {
