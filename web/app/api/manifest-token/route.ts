@@ -4,10 +4,10 @@ import {
   userHasCatalogAccess,
 } from "@/lib/subscription";
 import { subscriptionsEnabled } from "@/lib/stripe";
-import { currentUser } from "@/lib/supabase/server";
+import { currentAppUser } from "@/lib/auth";
 
 export async function POST(request: Request) {
-  const user = await currentUser();
+  const user = await currentAppUser();
   if (!user) {
     return NextResponse.json({ error: "Faça login." }, { status: 401 });
   }
