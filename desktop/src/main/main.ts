@@ -11,7 +11,12 @@ import {
   validateDestination,
 } from "../shared/manifest";
 import { preloadPath, rendererPath } from "./app-paths";
-import { downloadEntry, type DownloadProgress } from "./download";
+import { type DownloadProgress } from "./download";
+import {
+  installedRelativePath,
+  runPipelinedDownloads,
+  type PipelineEntry,
+} from "./download-pipeline";
 import {
   deleteHdItem,
   listHdLibrary,
@@ -19,7 +24,6 @@ import {
   recordInstalled,
 } from "./hd-library";
 import { resolveUnderRoot } from "./paths";
-import { formatFsError } from "../shared/fs-errors";
 import { computeHdFingerprint } from "../shared/hd-fingerprint";
 import type { HdLibraryHint } from "../shared/hd-library";
 import { largestPcStagingBytes, notEnoughPcSpaceMessage } from "../shared/pc-space";
@@ -385,6 +389,7 @@ ipcMain.handle(
       }
     }
 
+    const pipelineItems: PipelineEntry[] = [];
     for (const entry of payload.entries) {
       if (signal.aborted) break;
 
@@ -402,49 +407,43 @@ ipcMain.handle(
         continue;
       }
 
-      try {
-        const downloaded = await downloadEntry({
-          entryId: entry.id,
-          label: entry.label,
-          url: entry.downloadUrl,
-          destPath: resolved.fullPath,
-          hdRoot: payload.rootDir,
-          stagingRoot,
-          expectedSize: entry.sizeBytes,
-          expectedSha256: entry.sha256,
-          signal,
-          onProgress: (progress) => send("download-progress", progress),
+      pipelineItems.push({ entry, destPath: resolved.fullPath });
+    }
+
+    const pipelineResults = await runPipelinedDownloads(pipelineItems, {
+      hdRoot: payload.rootDir,
+      stagingRoot,
+      signal,
+      onProgress: (progress) => send("download-progress", progress),
+    });
+
+    for (const result of pipelineResults) {
+      if (!result.ok) {
+        results.push({
+          entryId: result.entryId,
+          ok: false,
+          error: result.error,
         });
-        const installedRel = path
-          .relative(payload.rootDir, downloaded.installedPath)
-          .replace(/\\/g, "/");
-        if (
-          installedRel &&
-          !installedRel.startsWith("..") &&
-          !path.isAbsolute(installedRel)
-        ) {
-          await recordInstalled(payload.rootDir, {
-            id: entry.id,
-            label: entry.label,
-            destination: installedRel,
-            group: entry.group,
-            sizeBytes: entry.sizeBytes,
-          }).catch(() => undefined);
-        }
-        results.push({ entryId: entry.id, ok: true });
-      } catch (error) {
-        const message = formatFsError(error);
-        send("download-progress", {
-          entryId: entry.id,
-          label: entry.label,
-          downloadedBytes: 0,
-          totalBytes: entry.sizeBytes,
-          status: "error",
-          error: message,
-        } satisfies DownloadProgress);
-        results.push({ entryId: entry.id, ok: false, error: message });
-        if (signal.aborted) break;
+        continue;
       }
+
+      const entry = payload.entries.find((item) => item.id === result.entryId);
+      if (!entry || !result.installedPath) {
+        results.push({ entryId: result.entryId, ok: true });
+        continue;
+      }
+
+      const installedRel = installedRelativePath(payload.rootDir, result.installedPath);
+      if (installedRel) {
+        await recordInstalled(payload.rootDir, {
+          id: entry.id,
+          label: entry.label,
+          destination: installedRel,
+          group: entry.group,
+          sizeBytes: entry.sizeBytes,
+        }).catch(() => undefined);
+      }
+      results.push({ entryId: result.entryId, ok: true });
     }
 
     abortController = null;

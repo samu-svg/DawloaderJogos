@@ -39,6 +39,21 @@ export interface DownloadProgress {
   error?: string;
 }
 
+export interface PreparedDownload {
+  entryId: string;
+  label: string;
+  destPath: string;
+  hdRoot: string;
+  stagingRoot: string;
+  target: DownloadTarget;
+  expectedSize: number;
+  fileSize: number;
+  zipPath: string;
+  isZip: boolean;
+  stagingDir: string | null;
+  expectedSha256?: string;
+}
+
 const HD_PARTIAL_SUFFIX = ".montahd.partial";
 const STAGING_PARTIAL_NAME = "download.partial";
 const HD_EXTRACT_DIR = ".montahd";
@@ -145,6 +160,22 @@ export async function downloadEntry(options: {
   onProgress: (progress: DownloadProgress) => void;
   signal?: AbortSignal;
 }): Promise<{ installedPath: string }> {
+  const prepared = await prepareDownloadEntry(options);
+  return installPreparedEntry(prepared, options.onProgress, options.signal);
+}
+
+export async function prepareDownloadEntry(options: {
+  entryId: string;
+  label: string;
+  url: string;
+  destPath: string;
+  hdRoot: string;
+  stagingRoot: string;
+  expectedSize?: number;
+  expectedSha256?: string;
+  onProgress: (progress: DownloadProgress) => void;
+  signal?: AbortSignal;
+}): Promise<PreparedDownload> {
   const catalogSize = options.expectedSize ?? 0;
   const probedSize = await probeRemoteSize(options.url, options.signal);
   const expectedSize = resolveKnownSize(catalogSize, probedSize);
@@ -154,14 +185,14 @@ export async function downloadEntry(options: {
   const resolved = { ...options, expectedSize, onProgress: report };
   try {
     if (target === "pc") {
-      return await installViaPc(resolved);
+      return await prepareViaPc(resolved);
     }
-    return await installOnHd(resolved);
+    return await prepareOnHd(resolved);
   } catch (error) {
     if (error instanceof NeedsPcStagingError) {
       await unlink(options.destPath + HD_PARTIAL_SUFFIX).catch(() => undefined);
       target = "pc";
-      return await installViaPc({
+      return prepareViaPc({
         ...resolved,
         expectedSize: error.sizeBytes || resolved.expectedSize,
         onProgress: (progress) => options.onProgress({ ...progress, target }),
@@ -169,6 +200,19 @@ export async function downloadEntry(options: {
     }
     throw new Error(formatFsError(error));
   }
+}
+
+export async function installPreparedEntry(
+  prepared: PreparedDownload,
+  onProgress: (progress: DownloadProgress) => void,
+  signal?: AbortSignal,
+): Promise<{ installedPath: string }> {
+  const report = (progress: DownloadProgress) =>
+    onProgress({ ...progress, target: prepared.target });
+  if (prepared.target === "pc") {
+    return installPreparedViaPc(prepared, report, signal);
+  }
+  return installPreparedOnHd(prepared, report, signal);
 }
 
 async function downloadToFile(
@@ -320,24 +364,26 @@ async function extractAndPlace(
   }
 }
 
-/** Zip ≤ 4 GB: baixa e extrai no HD FAT32. */
-async function installOnHd(options: {
+/** Zip ≤ 4 GB: baixa no HD FAT32 (extração vem depois, pode ser em paralelo). */
+async function prepareOnHd(options: {
   entryId: string;
   label: string;
   url: string;
   destPath: string;
   hdRoot: string;
+  stagingRoot: string;
   expectedSize?: number;
   expectedSha256?: string;
   onProgress: (progress: DownloadProgress) => void;
   signal?: AbortSignal;
-}): Promise<{ installedPath: string }> {
+}): Promise<PreparedDownload> {
   const {
     entryId,
     label,
     url,
     destPath,
     hdRoot,
+    stagingRoot,
     expectedSize = 0,
     expectedSha256,
     onProgress,
@@ -374,10 +420,42 @@ async function installOnHd(options: {
     onProgress,
   );
 
-  if (await isZipFile(zipPartial)) {
+  return {
+    entryId,
+    label,
+    destPath,
+    hdRoot,
+    stagingRoot,
+    target: "hd",
+    expectedSize,
+    fileSize,
+    zipPath: zipPartial,
+    isZip: await isZipFile(zipPartial),
+    stagingDir: null,
+    expectedSha256,
+  };
+}
+
+async function installPreparedOnHd(
+  prepared: PreparedDownload,
+  onProgress: (progress: DownloadProgress) => void,
+  signal?: AbortSignal,
+): Promise<{ installedPath: string }> {
+  const {
+    entryId,
+    label,
+    destPath,
+    hdRoot,
+    expectedSize,
+    fileSize,
+    zipPath,
+    isZip,
+  } = prepared;
+
+  if (isZip) {
     const extractParent = path.join(hdRoot, HD_EXTRACT_DIR);
     const installedPath = await extractAndPlace(
-      zipPartial,
+      zipPath,
       destPath,
       hdRoot,
       extractParent,
@@ -395,8 +473,8 @@ async function installOnHd(options: {
 
   await mkdir(path.dirname(destPath), { recursive: true });
   if (existsSync(destPath)) unlinkSync(destPath);
-  await copyFile(zipPartial, destPath);
-  await unlink(zipPartial).catch(() => undefined);
+  await copyFile(zipPath, destPath);
+  await unlink(zipPath).catch(() => undefined);
   onProgress({
     entryId,
     label,
@@ -407,8 +485,8 @@ async function installOnHd(options: {
   return { installedPath: destPath };
 }
 
-/** Zip > 4 GB: processa no PC (NTFS) e copia arquivos extraídos para o HD. */
-async function installViaPc(options: {
+/** Zip > 4 GB: baixa no PC (extração/cópia vem depois). */
+async function prepareViaPc(options: {
   entryId: string;
   label: string;
   url: string;
@@ -419,7 +497,7 @@ async function installViaPc(options: {
   expectedSha256?: string;
   onProgress: (progress: DownloadProgress) => void;
   signal?: AbortSignal;
-}): Promise<{ installedPath: string }> {
+}): Promise<PreparedDownload> {
   const {
     entryId,
     label,
@@ -436,31 +514,68 @@ async function installViaPc(options: {
   const stagingDir = stagingEntryDir(stagingRoot, entryId);
   mkdirSync(stagingDir, { recursive: true });
   const zipPartial = path.join(stagingDir, STAGING_PARTIAL_NAME);
+
+  const fileSize = await downloadToFile(
+    url,
+    zipPartial,
+    entryId,
+    label,
+    expectedSize,
+    onProgress,
+    signal,
+  );
+  await verifyDownload(
+    zipPartial,
+    entryId,
+    label,
+    fileSize,
+    expectedSize,
+    expectedSha256,
+    onProgress,
+  );
+
+  return {
+    entryId,
+    label,
+    destPath,
+    hdRoot,
+    stagingRoot,
+    target: "pc",
+    expectedSize,
+    fileSize,
+    zipPath: zipPartial,
+    isZip: await isZipFile(zipPartial),
+    stagingDir,
+    expectedSha256,
+  };
+}
+
+async function installPreparedViaPc(
+  prepared: PreparedDownload,
+  onProgress: (progress: DownloadProgress) => void,
+  signal?: AbortSignal,
+): Promise<{ installedPath: string }> {
+  const {
+    entryId,
+    label,
+    destPath,
+    hdRoot,
+    expectedSize,
+    fileSize,
+    zipPath,
+    isZip,
+    stagingDir,
+  } = prepared;
+
+  if (!stagingDir) {
+    throw new Error("Instalação via PC sem pasta de staging.");
+  }
+
   let copiedToHd = false;
-
   try {
-    const fileSize = await downloadToFile(
-      url,
-      zipPartial,
-      entryId,
-      label,
-      expectedSize,
-      onProgress,
-      signal,
-    );
-    await verifyDownload(
-      zipPartial,
-      entryId,
-      label,
-      fileSize,
-      expectedSize,
-      expectedSha256,
-      onProgress,
-    );
-
-    if (await isZipFile(zipPartial)) {
+    if (isZip) {
       const installedPath = await extractAndPlace(
-        zipPartial,
+        zipPath,
         destPath,
         hdRoot,
         stagingDir,
@@ -484,7 +599,7 @@ async function installViaPc(options: {
 
     await mkdir(path.dirname(destPath), { recursive: true });
     if (existsSync(destPath)) unlinkSync(destPath);
-    await copyFile(zipPartial, destPath);
+    await copyFile(zipPath, destPath);
     copiedToHd = true;
     onProgress({
       entryId,

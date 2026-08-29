@@ -82,3 +82,12 @@ export function notEnoughPcSpaceMessage(needed: number, free: number): string {
     `Libere espaço no disco do Windows e tente de novo.`
   );
 }
+
+/** Margem mínima no disco quando o tamanho do próximo pacote é desconhecido. */
+export const PREFETCH_UNKNOWN_SIZE_BUFFER = 512 * 1024 * 1024;
+
+/** Verifica se há espaço para iniciar o download do próximo jogo em paralelo. */
+export function hasSpaceForPrefetch(freeBytes: number, sizeBytes: number): boolean {
+  if (sizeBytes <= 0) return freeBytes >= PREFETCH_UNKNOWN_SIZE_BUFFER;
+  return freeBytes >= sizeBytes;
+}

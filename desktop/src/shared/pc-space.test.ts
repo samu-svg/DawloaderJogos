@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   FAT32_MAX_FILE_BYTES,
   FAT32_LIMIT_LABEL,
+  hasSpaceForPrefetch,
   installSpaceNotice,
   isOverFat32Limit,
   largestEntryBytes,
@@ -62,6 +63,14 @@ test("resolveDownloadTarget manda jogos até 4 GB para o HD", () => {
   assert.equal(resolveDownloadTarget(0), "hd");
   assert.equal(resolveDownloadTarget(large, small), "hd");
   assert.equal(resolveDownloadTarget(small, large), "pc");
+});
+
+test("hasSpaceForPrefetch exige tamanho conhecido ou margem mínima", () => {
+  const buffer = 512 * 1024 * 1024;
+  assert.equal(hasSpaceForPrefetch(buffer, 0), true);
+  assert.equal(hasSpaceForPrefetch(buffer - 1, 0), false);
+  assert.equal(hasSpaceForPrefetch(3 * 1024 * 1024 * 1024, 2 * 1024 * 1024 * 1024), true);
+  assert.equal(hasSpaceForPrefetch(1024, 2 * 1024 * 1024 * 1024), false);
 });
 
 test("mensagem de espaço insuficiente inclui livre e necessário", () => {
