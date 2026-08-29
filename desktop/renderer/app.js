@@ -395,12 +395,20 @@ function init() {
       const sizeCell = document.createElement("td");
       sizeCell.textContent = entry.sizeBytes > 0 ? formatBytes(entry.sizeBytes) : "—";
 
+      const targetCell = document.createElement("td");
+      const targetBadge = document.createElement("span");
+      const goesToPc = (entry.sizeBytes || 0) > FAT32_MAX_FILE_BYTES;
+      targetBadge.className = goesToPc ? "badge badge-pc" : "badge badge-hd";
+      targetBadge.textContent = goesToPc ? "PC → HD" : "Direto no HD";
+      targetCell.appendChild(targetBadge);
+
       const statusCell = document.createElement("td");
       const progress = createProgressCell();
+      progress.label.textContent = goesToPc ? "Via PC" : "Direto no HD";
       statusCell.appendChild(progress.wrap);
       progressCells.set(entry.id, { fill: progress.fill, label: progress.label });
 
-      row.append(checkCell, labelCell, typeCell, destCell, sizeCell, statusCell);
+      row.append(checkCell, labelCell, typeCell, destCell, sizeCell, targetCell, statusCell);
       entriesBody.appendChild(row);
     }
 
@@ -960,22 +968,32 @@ function init() {
     if (event.status === "downloading") {
       const pct =
         event.totalBytes > 0 ? (event.downloadedBytes / event.totalBytes) * 100 : 0;
+      const where = event.target === "pc" ? "no PC" : "no HD";
       setProgress(
         event.entryId,
         pct,
-        `${formatBytes(event.downloadedBytes)} / ${formatBytes(event.totalBytes)}`,
+        `${where} ${formatBytes(event.downloadedBytes)} / ${formatBytes(event.totalBytes)}`,
       );
     } else if (event.status === "verifying") {
       setProgress(event.entryId, 92, "Verificando integridade…");
     } else if (event.status === "extracting") {
-      setProgress(event.entryId, 96, "Descompactando…");
-    } else if (event.status === "copying" || event.status === "installing") {
+      const where = event.target === "pc" ? "no PC" : "no HD";
+      setProgress(event.entryId, 96, `Descompactando ${where}…`);
+    } else if (event.status === "copying") {
       const pct =
         event.totalBytes > 0 ? (event.downloadedBytes / event.totalBytes) * 100 : 0;
       setProgress(
         event.entryId,
         Math.max(pct, 90),
-        `Copiando para o HD ${formatBytes(event.downloadedBytes)} / ${formatBytes(event.totalBytes)}`,
+        `PC → HD ${formatBytes(event.downloadedBytes)} / ${formatBytes(event.totalBytes)}`,
+      );
+    } else if (event.status === "installing") {
+      const pct =
+        event.totalBytes > 0 ? (event.downloadedBytes / event.totalBytes) * 100 : 0;
+      setProgress(
+        event.entryId,
+        Math.max(pct, 90),
+        `Instalando no HD ${formatBytes(event.downloadedBytes)} / ${formatBytes(event.totalBytes)}`,
       );
     } else if (event.status === "done") {
       setProgress(event.entryId, 100, "Concluído", "done");

@@ -9,6 +9,7 @@ export interface DownloadProgressEvent {
   downloadedBytes: number;
   totalBytes: number;
   status: "downloading" | "verifying" | "extracting" | "installing" | "copying" | "done" | "error";
+  target?: "hd" | "pc";
   error?: string;
 }
 

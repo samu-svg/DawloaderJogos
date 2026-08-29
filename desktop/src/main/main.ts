@@ -362,10 +362,9 @@ ipcMain.handle(
 
     const results: { entryId: string; ok: boolean; error?: string }[] = [];
     const stagingRoot = stagingRootPath();
-    await ensureStagingRoot(stagingRoot);
-
     const needed = largestPcStagingBytes(payload.entries.map((entry) => entry.sizeBytes));
     if (needed > 0) {
+      await ensureStagingRoot(stagingRoot);
       const freeBytes = await getFreeBytes(stagingRoot);
       if (freeBytes < needed) {
         const message = notEnoughPcSpaceMessage(needed, freeBytes);

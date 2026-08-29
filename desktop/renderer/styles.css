@@ -643,6 +643,16 @@ tbody tr:hover td {
   color: #f9a8d4;
 }
 
+.badge-hd {
+  background: rgba(52, 211, 153, 0.12);
+  color: #6ee7b7;
+}
+
+.badge-pc {
+  background: rgba(251, 191, 36, 0.14);
+  color: #fcd34d;
+}
+
 .optional-tag {
   margin-left: 6px;
   font-size: 11px;

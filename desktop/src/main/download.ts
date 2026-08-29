@@ -5,7 +5,12 @@ import path from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { formatFsError } from "../shared/fs-errors";
-import { isOverFat32Limit } from "../shared/pc-space";
+import {
+  isOverFat32Limit,
+  resolveDownloadTarget,
+  resolveKnownSize,
+  type DownloadTarget,
+} from "../shared/pc-space";
 import { copyDirectory } from "./copy-dir";
 import { removeStagingEntry, stagingEntryDir } from "./staging";
 import {
@@ -30,6 +35,7 @@ export interface DownloadProgress {
     | "copying"
     | "done"
     | "error";
+  target?: DownloadTarget;
   error?: string;
 }
 
@@ -139,22 +145,26 @@ export async function downloadEntry(options: {
   onProgress: (progress: DownloadProgress) => void;
   signal?: AbortSignal;
 }): Promise<{ installedPath: string }> {
-  let expectedSize = options.expectedSize ?? 0;
-  if (!isOverFat32Limit(expectedSize) && expectedSize <= 0) {
-    expectedSize = await probeRemoteSize(options.url, options.signal);
-  }
-  const resolved = { ...options, expectedSize };
+  const catalogSize = options.expectedSize ?? 0;
+  const probedSize = await probeRemoteSize(options.url, options.signal);
+  const expectedSize = resolveKnownSize(catalogSize, probedSize);
+  let target = resolveDownloadTarget(catalogSize, probedSize);
+  const report = (progress: DownloadProgress) =>
+    options.onProgress({ ...progress, target });
+  const resolved = { ...options, expectedSize, onProgress: report };
   try {
-    if (isOverFat32Limit(expectedSize)) {
+    if (target === "pc") {
       return await installViaPc(resolved);
     }
     return await installOnHd(resolved);
   } catch (error) {
     if (error instanceof NeedsPcStagingError) {
       await unlink(options.destPath + HD_PARTIAL_SUFFIX).catch(() => undefined);
+      target = "pc";
       return await installViaPc({
         ...resolved,
         expectedSize: error.sizeBytes || resolved.expectedSize,
+        onProgress: (progress) => options.onProgress({ ...progress, target }),
       });
     }
     throw new Error(formatFsError(error));

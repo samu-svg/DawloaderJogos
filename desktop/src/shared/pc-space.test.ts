@@ -8,6 +8,8 @@ import {
   largestEntryBytes,
   largestPcStagingBytes,
   notEnoughPcSpaceMessage,
+  resolveDownloadTarget,
+  resolveKnownSize,
   sizesNeedingPcStaging,
 } from "./pc-space.ts";
 
@@ -42,6 +44,24 @@ test("aviso: PC só para jogos acima de 4 GB", () => {
   assert.match(text, /processados no PC/);
   assert.match(text, /7(\.0)? GB/);
   assert.match(text, /FAT32/);
+});
+
+test("resolveKnownSize prefere o tamanho remoto ao do catálogo", () => {
+  const catalog = 6 * 1024 * 1024 * 1024;
+  const probed = 3 * 1024 * 1024 * 1024;
+  assert.equal(resolveKnownSize(catalog, probed), probed);
+  assert.equal(resolveKnownSize(catalog, 0), catalog);
+  assert.equal(resolveKnownSize(0, 0), 0);
+});
+
+test("resolveDownloadTarget manda jogos até 4 GB para o HD", () => {
+  const small = 3 * 1024 * 1024 * 1024;
+  const large = 5 * 1024 * 1024 * 1024;
+  assert.equal(resolveDownloadTarget(small), "hd");
+  assert.equal(resolveDownloadTarget(large), "pc");
+  assert.equal(resolveDownloadTarget(0), "hd");
+  assert.equal(resolveDownloadTarget(large, small), "hd");
+  assert.equal(resolveDownloadTarget(small, large), "pc");
 });
 
 test("mensagem de espaço insuficiente inclui livre e necessário", () => {

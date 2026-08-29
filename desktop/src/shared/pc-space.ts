@@ -12,6 +12,22 @@ export function isOverFat32Limit(sizeBytes: number): boolean {
   return sizeBytes > FAT32_MAX_FILE_BYTES;
 }
 
+export type DownloadTarget = "hd" | "pc";
+
+/** Tamanho usado na decisão FAT32: o remoto prevalece sobre o catálogo. */
+export function resolveKnownSize(catalogSize: number, probedSize = 0): number {
+  if (probedSize > 0) return probedSize;
+  return catalogSize > 0 ? catalogSize : 0;
+}
+
+/** Zip ≤ 4 GB vai direto no HD; só acima disso passa pelo PC. */
+export function resolveDownloadTarget(
+  catalogSize: number,
+  probedSize = 0,
+): DownloadTarget {
+  return isOverFat32Limit(resolveKnownSize(catalogSize, probedSize)) ? "pc" : "hd";
+}
+
 /** Jogos cujo zip não cabe num único arquivo FAT32 — processar no PC. */
 export function sizesNeedingPcStaging(sizes: number[]): number[] {
   return sizes.filter((size) => isOverFat32Limit(size));
