@@ -4,39 +4,35 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   web:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: web
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: web/package-lock.json
       - run: npm ci
+        working-directory: web
       - run: npx tsc --noEmit
+        working-directory: web
       - run: npm test
+        working-directory: web
 
   desktop:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: desktop
     env:
-      # CI só faz typecheck e testes — não precisa do binário do Electron (~100 MB).
       ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: desktop/package-lock.json
       - run: npm ci
+        working-directory: desktop
       - run: npm run build
+        working-directory: desktop
       - run: node --experimental-strip-types --test "src/**/*.test.ts"
+        working-directory: desktop
