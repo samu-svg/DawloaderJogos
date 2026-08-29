@@ -11,7 +11,7 @@ import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 export type ManifestAccessResult =
   | { allowed: true; entryFilter: string[] | null; user?: AppUser | null }
-  | { allowed: false; status: 401 | 403 };
+  | { allowed: false; status: 401 | 403 | 503 };
 
 async function subscriptionStatusForUser(userId: string): Promise<string | null> {
   try {
@@ -52,7 +52,10 @@ export async function resolveManifestAccess(
       const { data: authUser } = await supabase.auth.admin.getUserById(payload.sub);
       role = isBootstrapAdminEmail(authUser.user?.email) ? "admin" : "user";
     } catch {
-      return { allowed: false, status: 401 };
+      return {
+        allowed: false,
+        status: 503,
+      };
     }
 
     if (hasSubscriptionBypass(role)) {
