@@ -25,7 +25,8 @@ const bucket = requireEnv("R2_BUCKET");
 
 const supabase = createClient(
   requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
-  requireEnv("SUPABASE_SERVICE_ROLE_KEY"),
+  process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
+    requireEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
 );
 
 async function listR2Keys() {
