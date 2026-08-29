@@ -141,7 +141,7 @@ export async function extractZipToContentRoot(
   return { contentRoot, tempDir };
 }
 
-/** Extração no PC (pasta de staging), não no HD FAT32. */
+/** Pasta temporária da extração (HD `.montahd` se o zip cabe no FAT32; senão staging no PC). */
 async function createExtractTempDir(extractParent?: string): Promise<string> {
   if (extractParent?.trim()) {
     await mkdir(extractParent, { recursive: true });

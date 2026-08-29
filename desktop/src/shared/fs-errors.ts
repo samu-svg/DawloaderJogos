@@ -12,9 +12,9 @@ export function formatFsError(error: unknown): string {
 
   if (code === "ENOSPC" || /enospc|no space left on device/i.test(message)) {
     return (
-      "Espaço insuficiente no PC para processar o jogo. " +
-      "O download e a extração usam o disco do computador; só depois o app copia para o HD FAT32. " +
-      "Libere pelo menos o tamanho do maior jogo no Windows e tente de novo. " +
+      "Espaço insuficiente no disco. Jogos até 4 GB instalam no HD; pacotes maiores usam o PC " +
+      "(FAT32 do Xbox 360 não aceita um arquivo acima de 4 GB). " +
+      "Libere espaço no HD ou no Windows, conforme o caso, e tente de novo. " +
       "O download retoma de onde parou."
     );
   }

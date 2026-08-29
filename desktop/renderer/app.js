@@ -171,7 +171,7 @@ function init() {
     heroDesc.innerHTML =
       'Abra o catálogo no navegador, marque os jogos e clique em <strong>Instalar no HD</strong>. ' +
       "O app abre já com tudo pronto — você só escolhe a pasta do HD. " +
-      "O processamento é no PC; o jogo vai para o HD e os temporários são apagados.";
+      "Jogos até 4 GB instalam no HD; acima disso o FAT32 do Xbox 360 exige processar no PC.";
     setSteps("welcome");
   }
 
@@ -299,22 +299,43 @@ function init() {
       });
   }
 
-  function selectedLargestBytes() {
-    const selected = selectedEntriesWithDestinations();
-    return selected.reduce((max, entry) => Math.max(max, entry.sizeBytes || 0), 0);
+  const FAT32_MAX_FILE_BYTES = 4 * 1024 * 1024 * 1024 - 1;
+  const FAT32_LIMIT_LABEL = "4 GB";
+
+  function selectedSizes() {
+    return selectedEntriesWithDestinations().map((entry) => entry.sizeBytes || 0);
   }
 
-  function pcSpaceNoticeText(largestBytes) {
-    const sizeLabel = largestBytes > 0 ? formatBytes(largestBytes) : "o maior jogo";
+  function largestPcStagingBytes(sizes) {
+    return sizes
+      .filter((size) => size > FAT32_MAX_FILE_BYTES)
+      .reduce((max, size) => Math.max(max, size), 0);
+  }
+
+  function installSpaceNotice(sizes) {
+    const pcNeeded = largestPcStagingBytes(sizes);
+    if (sizes.length === 0 || pcNeeded === 0) {
+      return (
+        `Jogos até ${FAT32_LIMIT_LABEL} são baixados e extraídos direto no HD ` +
+        `(formato FAT32 do Xbox 360). Não usam o armazenamento do PC.`
+      );
+    }
+    const sizeLabel = formatBytes(pcNeeded);
     return (
-      "O download e a extração acontecem no PC; depois o jogo é copiado para o HD " +
-      `(Xbox 360 FAT32) e os arquivos temporários são apagados. Deixe pelo menos ${sizeLabel} ` +
-      "livres no disco do computador — o tamanho do maior jogo selecionado."
+      `Jogos até ${FAT32_LIMIT_LABEL} instalam direto no HD. ` +
+      `Pacotes acima de ${FAT32_LIMIT_LABEL} não cabem num único arquivo FAT32 do Xbox 360: ` +
+      `são processados no PC e depois copiados para o HD. ` +
+      `Deixe pelo menos ${sizeLabel} livres no computador (o maior jogo acima de ${FAT32_LIMIT_LABEL}). ` +
+      `Os arquivos temporários do PC são apagados ao terminar.`
     );
   }
 
   function updateSpaceNotice() {
-    spaceNotice.textContent = pcSpaceNoticeText(selectedLargestBytes());
+    const sizes = selectedSizes();
+    const pcNeeded = largestPcStagingBytes(sizes);
+    spaceNotice.textContent = installSpaceNotice(sizes);
+    spaceNotice.classList.toggle("space-notice-warn", pcNeeded > 0);
+    spaceNotice.classList.toggle("space-notice-info", pcNeeded === 0);
   }
 
   function updateDownloadButton() {
@@ -875,26 +896,30 @@ function init() {
       )
       .join("\n\n");
 
+    const sizes = entries.map((entry) => entry.sizeBytes || 0);
+    const pcNeeded = largestPcStagingBytes(sizes);
     const confirmed = await showConfirmModal(
-      `Baixar ${entries.length} jogo(s)? ` +
-        pcSpaceNoticeText(selectedLargestBytes()),
+      `Baixar ${entries.length} jogo(s)? ` + installSpaceNotice(sizes),
       preview,
     );
     if (!confirmed) return;
 
-    try {
-      const disk = await window.montahd.getPcDiskSpace();
-      const needed = selectedLargestBytes();
-      if (needed > 0 && disk.freeBytes < needed) {
-        setSummary(
-          `Espaço insuficiente no PC. Livre: ${formatBytes(disk.freeBytes)}. ` +
-            `Necessário pelo menos ${formatBytes(needed)} (maior jogo). Libere espaço no computador e tente de novo.`,
-          "error",
-        );
-        return;
+    if (pcNeeded > 0) {
+      try {
+        const disk = await window.montahd.getPcDiskSpace();
+        if (disk.freeBytes < pcNeeded) {
+          setSummary(
+            `Espaço insuficiente no PC para jogos acima de ${FAT32_LIMIT_LABEL}. ` +
+              `Livre: ${formatBytes(disk.freeBytes)}. ` +
+              `Necessário pelo menos ${formatBytes(pcNeeded)} (maior pacote acima de ${FAT32_LIMIT_LABEL}). ` +
+              `Libere espaço no computador e tente de novo.`,
+            "error",
+          );
+          return;
+        }
+      } catch {
+        // segue o download; o processo principal também confere o espaço
       }
-    } catch {
-      // segue o download; o processo principal também confere o espaço
     }
 
     downloadBtn.disabled = true;
@@ -943,7 +968,7 @@ function init() {
     } else if (event.status === "verifying") {
       setProgress(event.entryId, 92, "Verificando integridade…");
     } else if (event.status === "extracting") {
-      setProgress(event.entryId, 96, "Descompactando no PC…");
+      setProgress(event.entryId, 96, "Descompactando…");
     } else if (event.status === "copying" || event.status === "installing") {
       const pct =
         event.totalBytes > 0 ? (event.downloadedBytes / event.totalBytes) * 100 : 0;
@@ -971,7 +996,8 @@ function init() {
     );
     if (diskFull && okCount < results.length) {
       setSummary(
-        "Instalação interrompida: falta espaço no PC para processar o jogo. Libere o tamanho do maior jogo no computador e tente de novo.",
+        "Instalação interrompida: falta espaço no disco. Jogos até 4 GB instalam no HD; " +
+          "pacotes maiores usam o PC por causa do FAT32 do Xbox 360. Libere espaço e tente de novo.",
         "error",
       );
     } else {

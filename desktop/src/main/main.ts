@@ -22,7 +22,7 @@ import { resolveUnderRoot } from "./paths";
 import { formatFsError } from "../shared/fs-errors";
 import { computeHdFingerprint } from "../shared/hd-fingerprint";
 import type { HdLibraryHint } from "../shared/hd-library";
-import { largestEntryBytes, notEnoughPcSpaceMessage } from "../shared/pc-space";
+import { largestPcStagingBytes, notEnoughPcSpaceMessage } from "../shared/pc-space";
 import { ensureStagingRoot, getFreeBytes } from "./staging";
 
 const PROTOCOL = "montahd";
@@ -364,7 +364,7 @@ ipcMain.handle(
     const stagingRoot = stagingRootPath();
     await ensureStagingRoot(stagingRoot);
 
-    const needed = largestEntryBytes(payload.entries.map((entry) => entry.sizeBytes));
+    const needed = largestPcStagingBytes(payload.entries.map((entry) => entry.sizeBytes));
     if (needed > 0) {
       const freeBytes = await getFreeBytes(stagingRoot);
       if (freeBytes < needed) {

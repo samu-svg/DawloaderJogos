@@ -260,7 +260,11 @@ export default async function GamePage({ params }: PageProps) {
                 Como instalar
               </h2>
               <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-sm leading-6 text-zinc-400">
-                <li>Instale o app MontaHD no Windows (versão portable).</li>
+                <li>
+                  Instale o app MontaHD no Windows com o instalador (não o
+                  portable). Depois ele aparece na área de trabalho e no Menu
+                  Iniciar.
+                </li>
                 <li>
                   Assine o software para liberar downloads — você não paga pelos
                   arquivos individualmente.
