@@ -1,6 +1,6 @@
 {
   "name": "montahd-desktop",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "private": true,
   "description": "Baixa arquivos de um manifesto e organiza no HD",
   "main": "dist/main/main.js",
@@ -16,7 +16,7 @@
     "productName": "MontaHD",
     "icon": "build/icon.png",
     "directories": {
-      "output": "release13"
+      "output": "release14"
     },
     "files": [
       "dist/**/*",
@@ -24,6 +24,12 @@
     ],
     "win": {
       "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
         {
           "target": "portable",
           "arch": [
@@ -38,6 +44,13 @@
         }
       ],
       "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "artifactName": "MontaHD-${version}-setup.exe",
+      "shortcutName": "MontaHD"
     },
     "protocols": [
       {

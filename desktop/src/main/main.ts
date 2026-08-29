@@ -70,6 +70,14 @@ function handleDeepLink(rawUrl: string) {
   deliverCatalogLaunch(launch);
 }
 
+function focusMainWindow() {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.center();
+  mainWindow.show();
+  mainWindow.focus();
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 980,
@@ -78,18 +86,9 @@ function createWindow() {
     minHeight: 580,
     title: "MontaHD",
     icon: rendererPath("icon.png"),
-    show: false,
+    show: true,
     backgroundColor: "#08080f",
-    titleBarStyle: "hidden",
-    ...(process.platform === "win32"
-      ? {
-          titleBarOverlay: {
-            color: "#08080f",
-            symbolColor: "#f4f4f5",
-            height: 36,
-          },
-        }
-      : {}),
+    autoHideMenuBar: true,
     webPreferences: {
       preload: preloadPath(),
       contextIsolation: true,
@@ -111,8 +110,11 @@ function createWindow() {
   );
 
   mainWindow.once("ready-to-show", () => {
-    mainWindow?.show();
+    focusMainWindow();
   });
+
+  // Alguns builds do Windows não disparam ready-to-show em apps empacotados.
+  setTimeout(() => focusMainWindow(), 3000);
 
   void mainWindow.loadFile(indexHtml).catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error);
@@ -223,6 +225,7 @@ if (gotSingleInstanceLock) {
   app.on("second-instance", (_event, argv) => {
     const deepLink = findDeepLinkInArgv(argv);
     if (deepLink) handleDeepLink(deepLink);
+    else focusMainWindow();
   });
 
   app.on("open-url", (event, url) => {

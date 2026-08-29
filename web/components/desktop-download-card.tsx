@@ -17,8 +17,9 @@ export function DesktopDownloadCard({
           <p className="text-sm leading-6 text-zinc-400">{description}</p>
           <p className="text-xs text-zinc-600">
             {download.platform} · versão {download.version} ·{" "}
-            {download.sizeLabel} · o Windows pode pedir &quot;Executar mesmo
-            assim&quot; por não ser assinado.
+            {download.sizeLabel} · instalador que grava o app na pasta do
+            usuário · o Windows pode pedir &quot;Executar mesmo assim&quot; por
+            não ser assinado.
           </p>
         </div>
         <a
