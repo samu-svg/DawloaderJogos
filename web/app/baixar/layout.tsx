@@ -9,10 +9,12 @@ export default async function BaixarLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await requireAppUser();
+  const user = await requireAppUser({ loginNext: "/baixar" });
 
-  const isAdmin = canAccessPainel(user.role);
-  const hasAccess = await userHasCatalogAccess(user);
+  const [isAdmin, hasAccess] = await Promise.all([
+    Promise.resolve(canAccessPainel(user.role)),
+    userHasCatalogAccess(user),
+  ]);
   if (!hasAccess) redirect("/assinar?next=/baixar");
 
   return (

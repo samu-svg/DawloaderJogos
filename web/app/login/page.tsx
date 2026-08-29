@@ -3,11 +3,15 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { LoginForm } from "@/components/login-form";
 import { SiteHeader } from "@/components/site-header";
-import { currentUser } from "@/lib/supabase/server";
+import { currentAppUser } from "@/lib/auth";
+import { userHasCatalogAccess } from "@/lib/subscription";
 
 export default async function LoginPage() {
-  const user = await currentUser();
-  if (user) redirect("/baixar");
+  const user = await currentAppUser();
+  if (user) {
+    const hasAccess = await userHasCatalogAccess(user);
+    redirect(hasAccess ? "/baixar" : "/assinar?next=/baixar");
+  }
 
   return (
     <>

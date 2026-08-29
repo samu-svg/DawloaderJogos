@@ -2,11 +2,16 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CadastroForm } from "@/components/cadastro-form";
 import { SiteHeader } from "@/components/site-header";
-import { currentUser } from "@/lib/supabase/server";
+import { currentAppUser } from "@/lib/auth";
+import { PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
+import { userHasCatalogAccess } from "@/lib/subscription";
 
 export default async function CadastroPage() {
-  const user = await currentUser();
-  if (user) redirect("/baixar");
+  const user = await currentAppUser();
+  if (user) {
+    const hasAccess = await userHasCatalogAccess(user);
+    redirect(hasAccess ? "/baixar" : "/assinar?next=/baixar");
+  }
 
   return (
     <>
@@ -17,7 +22,8 @@ export default async function CadastroPage() {
             Criar conta
           </h1>
           <p className="text-sm text-zinc-500">
-            Crie sua conta para liberar o app MontaHD e o acervo completo.
+            Crie sua conta para liberar o app MontaHD e o acervo completo. Senha
+            com no mínimo {PASSWORD_MIN_LENGTH} caracteres.
           </p>
         </div>
         <div className="mt-8 rounded-2xl border border-border bg-surface p-6">
