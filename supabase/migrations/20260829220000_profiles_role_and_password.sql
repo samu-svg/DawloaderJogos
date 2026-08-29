@@ -5,6 +5,10 @@
 -- cria portfólio. Promova o primeiro admin com:
 --   update public.profiles set role = 'admin' where id = '<uuid>';
 -- ou defina PORTFOLIO_ADMIN_EMAIL no app (bootstrap no login).
+--
+-- IMPORTANTE: aplique o UPDATE de admin antes ou logo após esta migration.
+-- A policy antiga (e-mail hardcoded) deixa de existir; sem role = 'admin'
+-- ninguém cria portfólio pelo painel.
 
 alter table public.profiles
   add column if not exists role text not null default 'user',
@@ -49,16 +53,46 @@ begin
 end;
 $$;
 
+-- is_admin() fica em schema NÃO exposto (private). SECURITY DEFINER em public
+-- seria invocável por RPC (POST /rest/v1/rpc/is_admin) por qualquer
+-- authenticated — ver Supabase docs sobre funções definer em schemas expostos.
+--
+-- A policy de portfolios avalia a expressão com o papel do usuário que faz o
+-- INSERT; authenticated precisa de USAGE no schema e EXECUTE na função, mas
+-- isso NÃO expõe a RPC: PostgREST só lista schemas em Settings → API →
+-- Exposed schemas (default: public, graphql_public). Não adicione private ali.
+create schema if not exists private;
+
+revoke all on schema private from public;
+grant usage on schema private to authenticated;
+
+create or replace function private.is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.profiles
+    where id = (select auth.uid())
+      and role = 'admin'
+  );
+$$;
+
+revoke all on function private.is_admin() from public;
+revoke execute on function private.is_admin() from anon;
+grant execute on function private.is_admin() to authenticated;
+
+-- Versão anterior (se reaplicar em staging): remover de public.
+drop function if exists public.is_admin();
+
 drop policy if exists portfolios_insert_admin on public.portfolios;
 
 create policy portfolios_insert_admin on public.portfolios
   for insert to authenticated
   with check (
     (select auth.uid()) = owner_id
-    and exists (
-      select 1
-      from public.profiles p
-      where p.id = (select auth.uid())
-        and p.role = 'admin'
-    )
+    and (select private.is_admin())
   );
