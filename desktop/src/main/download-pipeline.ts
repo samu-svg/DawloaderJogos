@@ -2,6 +2,7 @@ import path from "node:path";
 import type { ResolvedManifestEntry } from "../shared/manifest";
 import {
   hasSpaceForPrefetch,
+  orderDownloadQueue,
   resolveDownloadTarget,
 } from "../shared/pc-space";
 import {
@@ -22,6 +23,11 @@ export interface PipelineResult {
   ok: boolean;
   installedPath?: string;
   error?: string;
+}
+
+/** Jogos direto no HD primeiro; depois os que passam pelo PC (evita conflito USB). */
+export function sortPipelineEntries(items: PipelineEntry[]): PipelineEntry[] {
+  return orderDownloadQueue(items, (item) => item.entry.sizeBytes ?? 0);
 }
 
 export async function canPrefetchDownload(

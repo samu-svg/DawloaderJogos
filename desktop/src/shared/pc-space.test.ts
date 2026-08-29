@@ -9,6 +9,7 @@ import {
   largestEntryBytes,
   largestPcStagingBytes,
   notEnoughPcSpaceMessage,
+  orderDownloadQueue,
   resolveDownloadTarget,
   resolveKnownSize,
   sizesNeedingPcStaging,
@@ -78,4 +79,21 @@ test("mensagem de espaço insuficiente inclui livre e necessário", () => {
   assert.match(message, /PC/);
   assert.match(message, /1(\.0)? GB/);
   assert.match(message, /5(\.0)? GB/);
+});
+
+test("orderDownloadQueue coloca jogos HD antes dos que passam pelo PC", () => {
+  const small = 2 * 1024 * 1024 * 1024;
+  const large = FAT32_MAX_FILE_BYTES + 1;
+  const items = [
+    { id: "pc-big", sizeBytes: large },
+    { id: "hd-small", sizeBytes: small },
+    { id: "pc-huge", sizeBytes: large + 1 },
+    { id: "hd-tiny", sizeBytes: 100 },
+  ];
+
+  const sorted = orderDownloadQueue(items, (item) => item.sizeBytes);
+  assert.deepEqual(
+    sorted.map((item) => item.id),
+    ["hd-tiny", "hd-small", "pc-big", "pc-huge"],
+  );
 });

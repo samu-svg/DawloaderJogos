@@ -16,6 +16,7 @@ import { type DownloadProgress } from "./download";
 import {
   installedRelativePath,
   runPipelinedDownloads,
+  sortPipelineEntries,
   type PipelineEntry,
 } from "./download-pipeline";
 import {
@@ -412,7 +413,7 @@ ipcMain.handle(
       pipelineItems.push({ entry, destPath: resolved.fullPath });
     }
 
-    const pipelineResults = await runPipelinedDownloads(pipelineItems, {
+    const pipelineResults = await runPipelinedDownloads(sortPipelineEntries(pipelineItems), {
       hdRoot: payload.rootDir,
       stagingRoot,
       signal,

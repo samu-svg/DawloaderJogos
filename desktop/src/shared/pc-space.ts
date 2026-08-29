@@ -91,3 +91,23 @@ export function hasSpaceForPrefetch(freeBytes: number, sizeBytes: number): boole
   if (sizeBytes <= 0) return freeBytes >= PREFETCH_UNKNOWN_SIZE_BUFFER;
   return freeBytes >= sizeBytes;
 }
+
+/** Jogos direto no HD primeiro; depois os que passam pelo PC (evita conflito USB). */
+export function orderDownloadQueue<T>(
+  items: T[],
+  sizeOf: (item: T) => number,
+): T[] {
+  const hd: T[] = [];
+  const pc: T[] = [];
+
+  for (const item of items) {
+    const target = resolveDownloadTarget(sizeOf(item));
+    if (target === "hd") hd.push(item);
+    else pc.push(item);
+  }
+
+  const bySize = (a: T, b: T) => sizeOf(a) - sizeOf(b);
+  hd.sort(bySize);
+  pc.sort(bySize);
+  return [...hd, ...pc];
+}
