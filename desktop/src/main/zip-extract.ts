@@ -203,8 +203,17 @@ export async function extractZipToContentRoot(
     return { contentRoot, tempDir };
   } catch (error) {
     await removeTempDir(tempDir);
-    throw error;
+    throw translateExtractError(error);
   }
+}
+
+function translateExtractError(error: unknown): Error {
+  const message = error instanceof Error ? error.message : String(error);
+  if (/invalid relative path|Unable to extract archive outside|absolute path/i.test(message)) {
+    return new Error("O zip tenta gravar fora da pasta de extração.");
+  }
+  if (error instanceof Error) return error;
+  return new Error(message);
 }
 
 /** Pasta temporária da extração (HD `.montahd` se o zip cabe no FAT32; senão staging no PC). */

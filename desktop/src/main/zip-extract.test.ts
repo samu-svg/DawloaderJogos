@@ -186,7 +186,7 @@ test("extractZipToContentRoot recusa zip-slip", async () => {
   try {
     const zipPath = path.join(temp, "evil.zip");
     await writeFile(zipPath, makeStoredZip([{ name: "../evil.txt", data: "pwned" }]));
-    await assert.rejects(() => extractZipToContentRoot(zipPath), /fora da pasta|Unable to extract/i);
+    await assert.rejects(() => extractZipToContentRoot(zipPath), /fora da pasta/);
   } finally {
     await rm(temp, { recursive: true, force: true });
   }
