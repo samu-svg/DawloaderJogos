@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PortfolioEditor } from "@/components/portfolio-editor";
-import { createClient, currentUser } from "@/lib/supabase/server";
+import { requireRole } from "@/lib/auth";
+import { isR2Configured } from "@/lib/r2-configured";
+import { canDeletePortfolio } from "@/lib/rbac";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function PortfolioPage({
   params,
@@ -9,17 +12,16 @@ export default async function PortfolioPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const user = await currentUser();
-  if (!user) redirect("/login");
-
+  const user = await requireRole("admin", "editor");
   const supabase = await createClient();
+
   const { data: portfolio } = await supabase
     .from("portfolios")
     .select("*")
     .eq("slug", slug)
     .maybeSingle();
 
-  if (!portfolio || portfolio.owner_id !== user.id) {
+  if (!portfolio) {
     redirect("/painel");
   }
 
@@ -45,7 +47,12 @@ export default async function PortfolioPage({
           slug: {portfolio.slug}
         </p>
       </div>
-      <PortfolioEditor portfolio={portfolio} entries={entries ?? []} />
+      <PortfolioEditor
+        portfolio={portfolio}
+        entries={entries ?? []}
+        r2Enabled={isR2Configured()}
+        canDelete={canDeletePortfolio(user.role)}
+      />
     </div>
   );
 }

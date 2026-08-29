@@ -1,25 +1,20 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { PortfolioListCard } from "@/components/portfolio-list-card";
-import { isPortfolioAdmin } from "@/lib/admin";
-import { createClient, currentUser } from "@/lib/supabase/server";
+import { requireRole } from "@/lib/auth";
+import { canCreatePortfolio } from "@/lib/rbac";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function PainelPage() {
-  const user = await currentUser();
-  if (!user) return null;
-
-  if (!isPortfolioAdmin(user.email)) {
-    redirect("/baixar");
-  }
-
-  const canCreatePortfolio = true;
-
+  const user = await requireRole("admin", "editor");
+  const allowCreate = canCreatePortfolio(user.role);
   const supabase = await createClient();
-  const { data: portfolios } = await supabase
+
+  const { data: portfolios, error } = await supabase
     .from("portfolios")
-    .select("id, slug, title, description, is_public, updated_at")
-    .eq("owner_id", user.id)
+    .select("id, slug, title, description, is_public")
     .order("updated_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
 
   return (
     <div className="space-y-8">
@@ -31,7 +26,7 @@ export default async function PainelPage() {
             colocar.
           </p>
         </div>
-        {canCreatePortfolio && (
+        {allowCreate && (
           <Link
             href="/painel/novo"
             className="inline-flex items-center justify-center rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200"
@@ -44,11 +39,11 @@ export default async function PainelPage() {
       {!portfolios?.length ? (
         <div className="rounded-2xl border border-dashed border-zinc-300 p-10 text-center dark:border-zinc-700">
           <p className="text-zinc-600 dark:text-zinc-400">
-            {canCreatePortfolio
+            {allowCreate
               ? "Você ainda não criou nenhum portfólio."
               : "Nenhum portfólio disponível para esta conta."}
           </p>
-          {canCreatePortfolio && (
+          {allowCreate && (
             <Link
               href="/painel/novo"
               className="mt-4 inline-block text-sm font-medium underline"

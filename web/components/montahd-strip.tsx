@@ -19,7 +19,8 @@ export function MontaHDStrip({ hasAccess }: { hasAccess: boolean }) {
           <p className="mt-2.5 text-sm leading-6 text-zinc-300">
             Escolha os jogos aqui e o app baixa, verifica, descompacta e coloca
             cada arquivo na pasta certa do HD — sem anúncios e sem trabalho
-            manual. O acesso ao app libera o acervo inteiro.
+            manual. Você paga pelo software, não pelos arquivos; o pagamento
+            único do app libera o acervo inteiro.
           </p>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-3">

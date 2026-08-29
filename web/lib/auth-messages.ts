@@ -30,8 +30,11 @@ export function authErrorMessage(raw: string): string {
     return "Este e-mail já está cadastrado.";
   }
 
-  if (lower.includes("password") && lower.includes("6")) {
-    return "A senha precisa ter pelo menos 6 caracteres.";
+  if (
+    lower.includes("password") &&
+    (lower.includes("12") || lower.includes("6"))
+  ) {
+    return "A senha precisa ter pelo menos 12 caracteres.";
   }
 
   if (

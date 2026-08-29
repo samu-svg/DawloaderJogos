@@ -1,13 +1,9 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { NovoPortfolioForm } from "@/components/novo-portfolio-form";
-import { isPortfolioAdmin } from "@/lib/admin";
-import { currentUser } from "@/lib/supabase/server";
+import { requireRole } from "@/lib/auth";
 
 export default async function NovoPortfolioPage() {
-  const user = await currentUser();
-  if (!user) redirect("/login");
-  if (!isPortfolioAdmin(user.email)) redirect("/painel");
+  await requireRole("admin");
 
   return (
     <div className="mx-auto max-w-xl space-y-6">

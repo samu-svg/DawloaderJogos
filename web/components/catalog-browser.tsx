@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { OpenMontaHDButton } from "@/components/open-montahd-button";
 import { GameStoreCard } from "@/components/game-store-card";
 import {
   entryIdsForSelectedGames,
+  gameSlug,
   groupCatalogGames,
   type CatalogPortfolioDetail,
 } from "@/lib/catalog-shared";
@@ -163,7 +165,7 @@ export function CatalogBrowser({
 
           <ul className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {games.map((game) => (
-              <li key={game.id}>
+              <li key={game.id} className="space-y-2">
                 <GameStoreCard
                   title={game.label}
                   coverUrl={game.coverUrl}
@@ -172,6 +174,12 @@ export function CatalogBrowser({
                   onClick={() => toggleGame(game.id)}
                   compact
                 />
+                <Link
+                  href={`/jogo/${gameSlug(game.label, game.id)}`}
+                  className="block text-center text-xs font-medium text-accent hover:text-accent-hover"
+                >
+                  Ver página
+                </Link>
               </li>
             ))}
           </ul>

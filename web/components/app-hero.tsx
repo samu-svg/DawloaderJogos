@@ -45,10 +45,10 @@ export function AppHero({
         </h1>
 
         <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-zinc-300">
-          Você assina o <strong className="text-white">MontaHD</strong>, o app
-          baixa e organiza cada jogo na pasta certa — sozinho, sem anúncios, sem
-          arquivo solto. Com o app liberado, o acervo inteiro fica disponível
-          para instalar.
+          Você paga pelo <strong className="text-white">software MontaHD</strong>{" "}
+          — não pelos jogos nem pelos arquivos. O app baixa e organiza cada
+          título na pasta certa do HD, sozinho, sem anúncios. Com o pagamento
+          único do app, o acervo inteiro fica liberado para instalar.
         </p>
 
         <div className="mt-9 flex flex-wrap items-center justify-center gap-3">

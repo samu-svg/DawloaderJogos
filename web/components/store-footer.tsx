@@ -18,8 +18,9 @@ export function StoreFooter() {
               Monta<span className="text-gradient">HD</span>
             </p>
             <p className="mx-auto mt-1 max-w-md text-sm text-zinc-500">
-              O app que baixa, descompacta e monta o seu HD. Acervo incluído na
-              assinatura, sem anúncios.
+              Software que baixa, descompacta e monta o seu HD. Você paga pelo
+              app, não pelos arquivos — acervo incluído no pagamento único, sem
+              anúncios.
             </p>
           </div>
         </div>
@@ -31,7 +32,7 @@ export function StoreFooter() {
             O app
           </Link>
           <Link href="/assinar" className="hover:text-zinc-300">
-            Assinatura
+            Liberar
           </Link>
         </div>
       </div>

@@ -49,9 +49,13 @@ function deleteGameMessage(label: string, extraCount: number): string {
 export function PortfolioEditor({
   portfolio,
   entries,
+  r2Enabled = false,
+  canDelete = false,
 }: {
   portfolio: PortfolioRow;
   entries: EntryRow[];
+  r2Enabled?: boolean;
+  canDelete?: boolean;
 }) {
   const gameGroups = groupPortfolioEntries(entries);
 
@@ -113,6 +117,7 @@ export function PortfolioEditor({
             </a>
           </div>
         </form>
+        {canDelete ? (
         <form
           action={deletePortfolioForm.bind(null, portfolio.slug)}
           className="mt-6 border-t border-zinc-200 pt-6 dark:border-zinc-800"
@@ -133,6 +138,7 @@ export function PortfolioEditor({
             Excluir portfólio
           </button>
         </form>
+        ) : null}
       </section>
 
       <section className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
@@ -168,7 +174,9 @@ export function PortfolioEditor({
                         {group.main.destination}
                       </p>
                       <p className="truncate text-xs text-zinc-500">
-                        {group.main.external_url}
+                        {group.main.kind === "hosted"
+                          ? `R2 · ${group.main.storage_key ?? "—"}`
+                          : group.main.external_url}
                       </p>
                       <p className="text-xs text-zinc-500">
                         {formatBytes(group.main.size_bytes)}
@@ -231,7 +239,7 @@ export function PortfolioEditor({
 
       <section className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
         <h2 className="text-lg font-semibold">Adicionar jogo</h2>
-        <AddGamePackageForm slug={portfolio.slug} />
+        <AddGamePackageForm slug={portfolio.slug} r2Enabled={r2Enabled} />
       </section>
     </div>
   );

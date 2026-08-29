@@ -15,10 +15,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "MontaHD — O app que monta o seu HD",
   description:
-    "Assine o app MontaHD e tenha o acervo completo liberado: download e extração automáticos, cada jogo na pasta certa do HD, sem anúncios.",
+    "Assine o software MontaHD — você paga pelo app, não pelos arquivos. Download e extração automáticos, acervo incluído, cada jogo na pasta certa do HD, sem anúncios.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
       lang="pt-BR"

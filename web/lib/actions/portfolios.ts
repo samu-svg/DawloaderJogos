@@ -2,16 +2,25 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { validateDestination } from "@/lib/manifest";
-import { buildDestination, type FolderPreset } from "@/lib/install-presets";
+import { requireAppUser } from "@/lib/auth";
+import { recordAudit } from "@/lib/audit";
+import { requireEditablePortfolio } from "@/lib/catalog";
+import { entryIdsInGroup } from "@/lib/entry-groups";
 import { probeDownloadUrl } from "@/lib/download-probe";
 import { normalizeDirectUrl, shareOnlyHostName } from "@/lib/direct-url";
-import { isPortfolioAdmin } from "@/lib/admin";
-import { requireOwnedPortfolio } from "@/lib/catalog";
-import { entryIdsInGroup } from "@/lib/entry-groups";
+import { buildDestination, type FolderPreset } from "@/lib/install-presets";
+import { logError } from "@/lib/logger";
+import { validateDestination } from "@/lib/manifest";
+import { canCreatePortfolio, canDeletePortfolio } from "@/lib/rbac";
 import { slugify, validateSlug } from "@/lib/slug";
-import { createClient, currentUser } from "@/lib/supabase/server";
-import type { PostgrestError } from "@supabase/supabase-js";
+import { deleteObject, headObjectSize } from "@/lib/storage";
+import {
+  hostedStorageKeyAllowed,
+  isValidImportStorageKey,
+  normalizeImportStorageKey,
+  storageKeyBelongsToPortfolio,
+} from "@/lib/storage-keys";
+import { createClient } from "@/lib/supabase/server";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -24,21 +33,23 @@ function revalidatePortfolioPaths(slug: string) {
   revalidatePath("/");
 }
 
-function mapEntryInsertError(error: PostgrestError): string {
-  if (
-    error.code === "23505" ||
-    error.message.includes("entries_destination_key") ||
-    error.details?.includes("entries_destination_key")
-  ) {
+function isUniqueViolation(error: { code?: string; message?: string } | null): boolean {
+  return error?.code === "23505" || (error?.message ?? "").includes("entries_destination_key");
+}
+
+function mapEntryInsertError(error: unknown): string {
+  const code =
+    typeof error === "object" && error && "code" in error
+      ? String((error as { code?: string }).code)
+      : "";
+  const message = error instanceof Error ? error.message : "";
+  if (code === "23505" || message.includes("entries_destination_key")) {
     return "Já existe um jogo nesta pasta do HD. Remova o item antigo ou escolha outro nome de pasta.";
   }
-  if (error.code === "42501") {
-    return "Sem permissão para editar este portfólio. Faça login com a conta correta.";
-  }
-  if (error.code === "23514") {
+  if (code === "23514" || message.includes("23514")) {
     return "O caminho de destino no HD é inválido. Revise o nome da pasta.";
   }
-  console.error("insertEntry failed:", error);
+  logError("insertEntry failed", error);
   return "Não foi possível salvar o arquivo. Tente outro nome de pasta ou remova o item existente.";
 }
 
@@ -47,29 +58,23 @@ async function findExistingDestination(
   destination: string,
 ): Promise<{ label: string; destination: string } | null> {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("entries")
     .select("label, destination")
     .eq("portfolio_id", portfolioId);
-
+  if (error) throw new Error(error.message);
   const target = destination.toLowerCase();
-  const hit = data?.find((entry) => entry.destination.toLowerCase() === target);
+  const hit = (data ?? []).find((entry) => entry.destination.toLowerCase() === target);
   return hit ?? null;
 }
 
-async function requireUser() {
-  const user = await currentUser();
-  if (!user) redirect("/login");
-  return user;
-}
-
 export async function createPortfolio(formData: FormData): Promise<ActionResult> {
-  const user = await requireUser();
+  const user = await requireAppUser();
 
-  if (!isPortfolioAdmin(user.email)) {
+  if (!canCreatePortfolio(user.role)) {
     return {
       ok: false,
-      error: "Apenas o administrador pode criar portfólios no momento.",
+      error: "Apenas o administrador pode criar portfólios.",
     };
   }
 
@@ -94,19 +99,20 @@ export async function createPortfolio(formData: FormData): Promise<ActionResult>
     slug,
     is_public: isPublic,
   });
-
   if (error) {
-    if (error.code === "23505") {
+    if (isUniqueViolation(error)) {
       return { ok: false, error: "Este endereço já está em uso. Escolha outro." };
-    }
-    if (error.code === "42501") {
-      return {
-        ok: false,
-        error: "Apenas o administrador pode criar portfólios no momento.",
-      };
     }
     return { ok: false, error: "Não foi possível criar o portfólio." };
   }
+
+  await recordAudit({
+    actorId: user.id,
+    action: "portfolio.create",
+    entity: "portfolio",
+    entityId: slug,
+    metadata: { title },
+  });
 
   revalidatePath("/painel");
   redirect(`/painel/${slug}`);
@@ -116,8 +122,8 @@ export async function updatePortfolio(
   slug: string,
   formData: FormData,
 ): Promise<ActionResult> {
-  const user = await requireUser();
-  const portfolio = await requireOwnedPortfolio(slug, user.id);
+  const user = await requireAppUser();
+  const portfolio = await requireEditablePortfolio(slug, user);
   if (!portfolio) {
     return { ok: false, error: "Portfólio não encontrado ou sem permissão." };
   }
@@ -138,34 +144,48 @@ export async function updatePortfolio(
       description: description || null,
       is_public: isPublic,
     })
-    .eq("slug", slug)
-    .eq("owner_id", user.id);
+    .eq("slug", slug);
+  if (error) return { ok: false, error: "Não foi possível atualizar o portfólio." };
 
-  if (error) {
-    return { ok: false, error: "Não foi possível salvar as alterações." };
-  }
+  await recordAudit({
+    actorId: user.id,
+    action: "portfolio.update",
+    entity: "portfolio",
+    entityId: slug,
+  });
 
   revalidatePortfolioPaths(slug);
   return { ok: true };
 }
 
 export async function deletePortfolio(slug: string): Promise<ActionResult> {
-  const user = await requireUser();
-  const portfolio = await requireOwnedPortfolio(slug, user.id);
+  const user = await requireAppUser();
+  if (!canDeletePortfolio(user.role)) {
+    return { ok: false, error: "Apenas o administrador pode excluir portfólios." };
+  }
+
+  const portfolio = await requireEditablePortfolio(slug, user);
   if (!portfolio) {
     return { ok: false, error: "Portfólio não encontrado ou sem permissão." };
   }
 
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("portfolios")
-    .delete()
-    .eq("slug", slug)
-    .eq("owner_id", user.id);
+  const { data: hostedEntries } = await supabase
+    .from("entries")
+    .select("kind, storage_key")
+    .eq("portfolio_id", portfolio.id);
 
-  if (error) {
-    return { ok: false, error: "Não foi possível excluir o portfólio." };
-  }
+  await deleteHostedObjects(hostedEntries ?? []);
+
+  const { error } = await supabase.from("portfolios").delete().eq("slug", slug);
+  if (error) return { ok: false, error: "Não foi possível excluir o portfólio." };
+
+  await recordAudit({
+    actorId: user.id,
+    action: "portfolio.delete",
+    entity: "portfolio",
+    entityId: slug,
+  });
 
   revalidatePortfolioPaths(slug);
   redirect("/painel");
@@ -188,12 +208,29 @@ function parseCoverUrl(
   }
 }
 
+type EntryInsertSource =
+  | { kind: "external"; externalUrl: string }
+  | { kind: "hosted"; storageKey: string };
+
+async function deleteHostedObjects(
+  entries: { kind: string; storage_key: string | null }[],
+): Promise<void> {
+  for (const entry of entries) {
+    if (entry.kind !== "hosted" || !entry.storage_key) continue;
+    try {
+      await deleteObject(entry.storage_key);
+    } catch (error) {
+      logError("Failed to delete R2 object", error, { storageKey: entry.storage_key });
+    }
+  }
+}
+
 async function insertEntry(
   portfolioId: string,
   data: {
     label: string;
     destination: string;
-    externalUrl: string;
+    source: EntryInsertSource;
     groupName: string | null;
     isOptional: boolean;
     sizeBytes: number;
@@ -210,13 +247,21 @@ async function insertEntry(
     };
   }
 
+  if (
+    data.source.kind === "hosted" &&
+    !hostedStorageKeyAllowed(data.source.storageKey, portfolioId)
+  ) {
+    return { ok: false, error: "Chave R2 inválida." };
+  }
+
   const supabase = await createClient();
   const { error } = await supabase.from("entries").insert({
     portfolio_id: portfolioId,
     label: data.label,
     destination: data.destination,
-    external_url: data.externalUrl,
-    kind: "external",
+    external_url: data.source.kind === "external" ? data.source.externalUrl : null,
+    storage_key: data.source.kind === "hosted" ? data.source.storageKey : null,
+    kind: data.source.kind,
     size_bytes: data.sizeBytes,
     sha256: data.sha256,
     group_name: data.groupName,
@@ -224,10 +269,7 @@ async function insertEntry(
     sort_order: data.sortOrder,
     cover_url: data.coverUrl ?? null,
   });
-
-  if (error) {
-    return { ok: false, error: mapEntryInsertError(error) };
-  }
+  if (error) return { ok: false, error: mapEntryInsertError(error) };
 
   return { ok: true };
 }
@@ -254,22 +296,72 @@ function parseUrl(
   return { ok: true, url: normalizeDirectUrl(raw) };
 }
 
+function parseHostedFile(
+  portfolioId: string,
+  storageKeyRaw: string,
+  sizeRaw: string,
+): { ok: true; storageKey: string; sizeBytes: number } | { ok: false; error: string } {
+  const storageKey = storageKeyRaw.trim();
+  const sizeBytes = Number(sizeRaw);
+
+  if (!storageKey) {
+    return { ok: false, error: "Envie o arquivo para o R2 antes de salvar." };
+  }
+
+  if (!storageKeyBelongsToPortfolio(storageKey, portfolioId)) {
+    return { ok: false, error: "Arquivo R2 inválido para este portfólio." };
+  }
+
+  if (!Number.isFinite(sizeBytes) || sizeBytes <= 0) {
+    return { ok: false, error: "Tamanho do arquivo inválido." };
+  }
+
+  return { ok: true, storageKey, sizeBytes };
+}
+
+async function parseR2Import(
+  storageKeyRaw: string,
+): Promise<
+  { ok: true; storageKey: string; sizeBytes: number } | { ok: false; error: string }
+> {
+  const storageKey = normalizeImportStorageKey(storageKeyRaw);
+  if (!storageKey) {
+    return { ok: false, error: "Informe o caminho do arquivo no bucket R2." };
+  }
+  if (!isValidImportStorageKey(storageKey)) {
+    return { ok: false, error: "Caminho R2 inválido. Use algo como jogos/Halo3.zip" };
+  }
+
+  try {
+    const sizeBytes = await headObjectSize(storageKey);
+    return { ok: true, storageKey, sizeBytes };
+  } catch {
+    return {
+      ok: false,
+      error: `Arquivo não encontrado no R2: ${storageKey}`,
+    };
+  }
+}
+
 function parseFolderPreset(raw: string): FolderPreset {
   if (raw === "content" || raw === "custom") return raw;
   return "games";
 }
 
-/** Cadastra um jogo com 1 ou 2 arquivos (jogo + DLC/conteúdo em pastas diferentes). */
 export async function addGamePackage(
   slug: string,
   formData: FormData,
 ): Promise<ActionResult> {
-  const user = await requireUser();
+  const user = await requireAppUser();
 
   const gameTitle = String(formData.get("game_title") ?? "").trim();
   const gameCoverRaw = String(formData.get("game_cover_url") ?? "").trim();
   const gameFile = String(formData.get("game_file") ?? "").trim();
+  const gameSource = String(formData.get("game_source") ?? "external").trim();
   const gameUrlRaw = String(formData.get("game_url") ?? "").trim();
+  const gameStorageKeyRaw = String(formData.get("game_storage_key") ?? "").trim();
+  const gameImportKeyRaw = String(formData.get("game_import_key") ?? "").trim();
+  const gameSizeRaw = String(formData.get("game_size_bytes") ?? "").trim();
   const gameFolder = parseFolderPreset(String(formData.get("game_folder") ?? "games"));
   const gameCustomPath = String(formData.get("game_custom_path") ?? "").trim();
   const gameContentId = String(formData.get("game_content_id") ?? "").trim();
@@ -277,7 +369,11 @@ export async function addGamePackage(
   const includeExtra = formData.get("include_extra") === "on";
   const extraTitle = String(formData.get("extra_title") ?? "").trim();
   const extraFile = String(formData.get("extra_file") ?? "").trim();
+  const extraSource = String(formData.get("extra_source") ?? "external").trim();
   const extraUrlRaw = String(formData.get("extra_url") ?? "").trim();
+  const extraStorageKeyRaw = String(formData.get("extra_storage_key") ?? "").trim();
+  const extraImportKeyRaw = String(formData.get("extra_import_key") ?? "").trim();
+  const extraSizeRaw = String(formData.get("extra_size_bytes") ?? "").trim();
   const extraFolder = parseFolderPreset(String(formData.get("extra_folder") ?? "content"));
   const extraCustomPath = String(formData.get("extra_custom_path") ?? "").trim();
   const extraContentId = String(formData.get("extra_content_id") ?? "").trim();
@@ -290,8 +386,32 @@ export async function addGamePackage(
   const gameCover = parseCoverUrl(gameCoverRaw);
   if (!gameCover.ok) return gameCover;
 
-  const gameUrl = parseUrl(gameUrlRaw);
-  if (!gameUrl.ok) return gameUrl;
+  const portfolio = await requireEditablePortfolio(slug, user);
+  if (!portfolio) return { ok: false, error: "Portfólio não encontrado." };
+
+  let gameSourceData: EntryInsertSource;
+  let gameSizeBytes: number;
+
+  if (gameSource === "r2") {
+    const hosted = parseHostedFile(portfolio.id, gameStorageKeyRaw, gameSizeRaw);
+    if (!hosted.ok) return hosted;
+    gameSourceData = { kind: "hosted", storageKey: hosted.storageKey };
+    gameSizeBytes = hosted.sizeBytes;
+  } else if (gameSource === "r2-import") {
+    const imported = await parseR2Import(
+      gameStorageKeyRaw || gameImportKeyRaw,
+    );
+    if (!imported.ok) return imported;
+    gameSourceData = { kind: "hosted", storageKey: imported.storageKey };
+    gameSizeBytes = imported.sizeBytes;
+  } else {
+    const gameUrl = parseUrl(gameUrlRaw);
+    if (!gameUrl.ok) return gameUrl;
+    const gameProbe = await probeDownloadUrl(gameUrl.url);
+    if (!gameProbe.ok) return { ok: false, error: `${gameTitle}: ${gameProbe.error}` };
+    gameSourceData = { kind: "external", externalUrl: gameUrl.url };
+    gameSizeBytes = gameProbe.sizeBytes;
+  }
 
   const gameDestination = buildDestination(
     gameFolder,
@@ -301,13 +421,9 @@ export async function addGamePackage(
   );
   if (!gameDestination.ok) return gameDestination;
 
-  // The link is checked now so a broken one never reaches the desktop app.
-  const gameProbe = await probeDownloadUrl(gameUrl.url);
-  if (!gameProbe.ok) return { ok: false, error: `${gameTitle}: ${gameProbe.error}` };
-
   let extra: {
     title: string;
-    url: string;
+    source: EntryInsertSource;
     destination: string;
     sizeBytes: number;
   } | null = null;
@@ -315,9 +431,6 @@ export async function addGamePackage(
   if (includeExtra) {
     if (!extraTitle) return { ok: false, error: "Informe o nome do arquivo extra." };
     if (!extraFile) return { ok: false, error: "Informe o nome do arquivo extra." };
-
-    const extraUrl = parseUrl(extraUrlRaw);
-    if (!extraUrl.ok) return extraUrl;
 
     const extraDestination = buildDestination(
       extraFolder,
@@ -327,27 +440,41 @@ export async function addGamePackage(
     );
     if (!extraDestination.ok) return extraDestination;
 
-    const extraProbe = await probeDownloadUrl(extraUrl.url);
-    if (!extraProbe.ok) return { ok: false, error: `${extraTitle}: ${extraProbe.error}` };
-
-    extra = {
-      title: extraTitle,
-      url: extraUrl.url,
-      destination: extraDestination.destination,
-      sizeBytes: extraProbe.sizeBytes,
-    };
+    if (extraSource === "r2") {
+      const hosted = parseHostedFile(portfolio.id, extraStorageKeyRaw, extraSizeRaw);
+      if (!hosted.ok) return hosted;
+      extra = {
+        title: extraTitle,
+        source: { kind: "hosted", storageKey: hosted.storageKey },
+        destination: extraDestination.destination,
+        sizeBytes: hosted.sizeBytes,
+      };
+    } else if (extraSource === "r2-import") {
+      const imported = await parseR2Import(
+        extraStorageKeyRaw || extraImportKeyRaw,
+      );
+      if (!imported.ok) return imported;
+      extra = {
+        title: extraTitle,
+        source: { kind: "hosted", storageKey: imported.storageKey },
+        destination: extraDestination.destination,
+        sizeBytes: imported.sizeBytes,
+      };
+    } else {
+      const extraUrl = parseUrl(extraUrlRaw);
+      if (!extraUrl.ok) return extraUrl;
+      const extraProbe = await probeDownloadUrl(extraUrl.url);
+      if (!extraProbe.ok) return { ok: false, error: `${extraTitle}: ${extraProbe.error}` };
+      extra = {
+        title: extraTitle,
+        source: { kind: "external", externalUrl: extraUrl.url },
+        destination: extraDestination.destination,
+        sizeBytes: extraProbe.sizeBytes,
+      };
+    }
   }
 
   const supabase = await createClient();
-  const { data: portfolio } = await supabase
-    .from("portfolios")
-    .select("id")
-    .eq("slug", slug)
-    .eq("owner_id", user.id)
-    .maybeSingle();
-
-  if (!portfolio) return { ok: false, error: "Portfólio não encontrado." };
-
   const { data: lastEntry } = await supabase
     .from("entries")
     .select("sort_order")
@@ -361,10 +488,10 @@ export async function addGamePackage(
   const mainInsert = await insertEntry(portfolio.id, {
     label: gameTitle,
     destination: gameDestination.destination,
-    externalUrl: gameUrl.url,
+    source: gameSourceData,
     groupName: "jogo",
     isOptional: false,
-    sizeBytes: gameProbe.sizeBytes,
+    sizeBytes: gameSizeBytes,
     sha256: null,
     sortOrder: sortOrder++,
     coverUrl: gameCover.url,
@@ -375,7 +502,7 @@ export async function addGamePackage(
     const extraInsert = await insertEntry(portfolio.id, {
       label: extra.title,
       destination: extra.destination,
-      externalUrl: extra.url,
+      source: extra.source,
       groupName: "conteudo",
       isOptional: true,
       sizeBytes: extra.sizeBytes,
@@ -385,6 +512,14 @@ export async function addGamePackage(
     if (!extraInsert.ok) return extraInsert;
   }
 
+  await recordAudit({
+    actorId: user.id,
+    action: "entry.create",
+    entity: "portfolio",
+    entityId: slug,
+    metadata: { label: gameTitle },
+  });
+
   revalidatePortfolioPaths(slug);
   return { ok: true };
 }
@@ -393,7 +528,7 @@ export async function addEntry(
   slug: string,
   formData: FormData,
 ): Promise<ActionResult> {
-  const user = await requireUser();
+  const user = await requireAppUser();
   const label = String(formData.get("label") ?? "").trim();
   const destinationRaw = String(formData.get("destination") ?? "").trim();
   const externalUrl = String(formData.get("external_url") ?? "").trim();
@@ -423,13 +558,12 @@ export async function addEntry(
     return { ok: false, error: "O tamanho informado não é válido." };
   }
 
-  const supabase = await createClient();
-  const portfolio = await requireOwnedPortfolio(slug, user.id);
-
+  const portfolio = await requireEditablePortfolio(slug, user);
   if (!portfolio) {
     return { ok: false, error: "Portfólio não encontrado ou sem permissão." };
   }
 
+  const supabase = await createClient();
   const { data: lastEntry } = await supabase
     .from("entries")
     .select("sort_order")
@@ -450,9 +584,8 @@ export async function addEntry(
     is_optional: isOptional,
     sort_order: (lastEntry?.sort_order ?? -1) + 1,
   });
-
   if (error) {
-    if (error.code === "23505") {
+    if (isUniqueViolation(error)) {
       return {
         ok: false,
         error: "Já existe um arquivo com este destino neste portfólio.",
@@ -460,6 +593,14 @@ export async function addEntry(
     }
     return { ok: false, error: "Não foi possível adicionar o arquivo." };
   }
+
+  await recordAudit({
+    actorId: user.id,
+    action: "entry.create",
+    entity: "portfolio",
+    entityId: slug,
+    metadata: { label },
+  });
 
   revalidatePortfolioPaths(slug);
   return { ok: true };
@@ -469,8 +610,8 @@ export async function deleteGameGroup(
   slug: string,
   mainEntryId: string,
 ): Promise<ActionResult> {
-  const user = await requireUser();
-  const portfolio = await requireOwnedPortfolio(slug, user.id);
+  const user = await requireAppUser();
+  const portfolio = await requireEditablePortfolio(slug, user);
   if (!portfolio) {
     return { ok: false, error: "Portfólio não encontrado ou sem permissão." };
   }
@@ -478,23 +619,37 @@ export async function deleteGameGroup(
   const supabase = await createClient();
   const { data: entries } = await supabase
     .from("entries")
-    .select("id, group_name, sort_order")
+    .select("id, kind, storage_key, group_name, sort_order")
     .eq("portfolio_id", portfolio.id);
 
-  const idsToDelete = entryIdsInGroup(entries ?? [], mainEntryId);
+  const idsToDelete = entryIdsInGroup(
+    (entries ?? []).map((entry) => ({
+      id: entry.id,
+      group_name: entry.group_name,
+      sort_order: entry.sort_order,
+    })),
+    mainEntryId,
+  );
   if (!idsToDelete.length) {
     return { ok: false, error: "Jogo não encontrado." };
   }
 
-  const { error } = await supabase
+  const toRemove = (entries ?? []).filter((entry) => idsToDelete.includes(entry.id));
+  await deleteHostedObjects(toRemove);
+
+  await supabase
     .from("entries")
     .delete()
     .in("id", idsToDelete)
     .eq("portfolio_id", portfolio.id);
 
-  if (error) {
-    return { ok: false, error: "Não foi possível apagar o jogo." };
-  }
+  await recordAudit({
+    actorId: user.id,
+    action: "entry.delete_group",
+    entity: "portfolio",
+    entityId: slug,
+    metadata: { mainEntryId },
+  });
 
   revalidatePortfolioPaths(slug);
   return { ok: true };
@@ -504,22 +659,36 @@ export async function deleteEntry(
   slug: string,
   entryId: string,
 ): Promise<ActionResult> {
-  const user = await requireUser();
-  const portfolio = await requireOwnedPortfolio(slug, user.id);
+  const user = await requireAppUser();
+  const portfolio = await requireEditablePortfolio(slug, user);
   if (!portfolio) {
     return { ok: false, error: "Portfólio não encontrado ou sem permissão." };
   }
 
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data: entry } = await supabase
+    .from("entries")
+    .select("kind, storage_key")
+    .eq("id", entryId)
+    .eq("portfolio_id", portfolio.id)
+    .maybeSingle();
+
+  if (entry) {
+    await deleteHostedObjects([entry]);
+  }
+
+  await supabase
     .from("entries")
     .delete()
     .eq("id", entryId)
     .eq("portfolio_id", portfolio.id);
 
-  if (error) {
-    return { ok: false, error: "Não foi possível remover o arquivo." };
-  }
+  await recordAudit({
+    actorId: user.id,
+    action: "entry.delete",
+    entity: "entry",
+    entityId: entryId,
+  });
 
   revalidatePortfolioPaths(slug);
   return { ok: true };

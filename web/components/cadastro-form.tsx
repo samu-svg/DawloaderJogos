@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { authErrorMessage, SIGNUP_CONFIRM_MESSAGE } from "@/lib/auth-messages";
+import { PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
+import { createClient } from "@/lib/supabase/client";
 
 export function CadastroForm() {
   const router = useRouter();
@@ -19,6 +20,12 @@ export function CadastroForm() {
     event.preventDefault();
     setError(null);
     setMessage(null);
+
+    if (password.length < PASSWORD_MIN_LENGTH) {
+      setError(`A senha precisa ter pelo menos ${PASSWORD_MIN_LENGTH} caracteres.`);
+      return;
+    }
+
     setLoading(true);
 
     const supabase = createClient();
@@ -27,6 +34,7 @@ export function CadastroForm() {
       password,
       options: {
         data: { display_name: displayName },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
 
@@ -85,12 +93,15 @@ export function CadastroForm() {
         <input
           type="password"
           required
-          minLength={6}
+          minLength={PASSWORD_MIN_LENGTH}
           autoComplete="new-password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           className="w-full rounded-lg border border-border bg-background px-3 py-2 text-white outline-none focus:border-accent focus:ring-1 focus:ring-accent"
         />
+        <span className="text-xs text-zinc-500">
+          Mínimo de {PASSWORD_MIN_LENGTH} caracteres. Troque a cada 90 dias em Conta.
+        </span>
       </label>
       <button
         type="submit"
