@@ -56,7 +56,6 @@ export async function POST() {
     subscription_data: {
       metadata: { supabase_user_id: user.id },
     },
-    payment_method_types: ["card", "pix"],
   });
 
   if (!session.url) {
