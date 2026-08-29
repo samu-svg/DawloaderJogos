@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { recordAudit } from "@/lib/audit";
 import { logError } from "@/lib/logger";
+import { enforceRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { getStripe, subscriptionsEnabled } from "@/lib/stripe";
 import {
   checkoutSessionGrantsLifetimeAccess,
@@ -64,6 +65,9 @@ async function syncSubscription(subscription: Stripe.Subscription) {
 }
 
 export async function POST(request: Request) {
+  const limited = await enforceRateLimit(request, "stripe-webhook", RATE_LIMITS.medium);
+  if (limited) return limited;
+
   if (!subscriptionsEnabled()) {
     return NextResponse.json({ error: "Pagamentos desativados." }, { status: 503 });
   }
@@ -84,8 +88,8 @@ export async function POST(request: Request) {
     const body = await request.text();
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Webhook inválido";
-    return NextResponse.json({ error: message }, { status: 400 });
+    logError("Stripe webhook signature invalid", error);
+    return NextResponse.json({ error: "Assinatura do webhook inválida." }, { status: 400 });
   }
 
   try {
