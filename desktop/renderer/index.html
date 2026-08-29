@@ -41,6 +41,11 @@
             <span class="step-num">2</span>
             <span class="step-label">Instalar</span>
           </div>
+          <div class="step-connector" aria-hidden="true"></div>
+          <button type="button" class="step" id="step-library">
+            <span class="step-num">3</span>
+            <span class="step-label">Meu HD</span>
+          </button>
         </nav>
 
         <section class="panel welcome-panel" id="welcome-panel">
@@ -69,8 +74,14 @@
           </div>
 
           <div class="panel-actions welcome-actions">
+            <button id="pick-hd-site-btn" class="btn btn-primary hidden" type="button">
+              Escolher pasta do HD
+            </button>
             <button id="open-catalog-btn" class="btn btn-primary" type="button">
               Abrir catálogo no site
+            </button>
+            <button id="open-library-btn" class="btn btn-secondary" type="button">
+              Ver jogos neste HD
             </button>
             <button id="toggle-advanced-btn" class="btn btn-ghost" type="button">
               Carregamento manual
@@ -108,6 +119,9 @@
               <p id="portfolio-meta" class="muted"></p>
             </div>
             <div class="head-actions">
+              <button id="open-library-from-install-btn" class="btn btn-secondary" type="button">
+                Ver jogos neste HD
+              </button>
               <button id="open-catalog-again-btn" class="btn btn-secondary" type="button">
                 Escolher outros jogos
               </button>
@@ -156,6 +170,56 @@
             <button id="cancel-btn" class="btn btn-danger hidden" type="button">
               Cancelar
             </button>
+          </div>
+        </section>
+
+        <section id="library-section" class="panel hidden">
+          <div class="panel-head split">
+            <div>
+              <h2 id="library-title">Neste HD</h2>
+              <p id="library-meta" class="muted">Jogos e DLC com o nome do catálogo, não só o código.</p>
+            </div>
+            <div class="head-actions">
+              <button id="library-back-btn" class="btn btn-ghost" type="button">
+                Voltar
+              </button>
+              <button id="library-refresh-btn" class="btn btn-secondary" type="button">
+                Atualizar
+              </button>
+              <button id="library-folder-btn" class="btn btn-secondary" type="button">
+                Escolher pasta do HD
+              </button>
+            </div>
+          </div>
+
+          <div class="path-card" id="library-path-card">
+            <span class="path-label">Pasta raiz do HD</span>
+            <p id="library-path" class="path-value muted">Nenhuma pasta selecionada.</p>
+          </div>
+
+          <p class="hint">
+            Em <strong>Content</strong> o Xbox guarda Title IDs. Aqui cada pasta
+            aparece com o nome do jogo ou DLC quando o MontaHD já instalou ou
+            quando o catálogo conhece o destino.
+          </p>
+
+          <div id="library-empty" class="library-empty hidden">
+            Nenhum jogo encontrado em Games ou Content nesta pasta.
+          </div>
+
+          <div class="table-shell" id="library-table-shell">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Tipo</th>
+                  <th>Pasta no HD</th>
+                  <th>Tamanho</th>
+                  <th class="col-action">Ação</th>
+                </tr>
+              </thead>
+              <tbody id="library-body"></tbody>
+            </table>
           </div>
         </section>
       </main>

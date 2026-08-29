@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from "electron";
 import type { CatalogLaunch } from "../shared/catalog-launch";
+import type { HdLibraryHint, HdLibraryItem } from "../shared/hd-library";
 import type { Manifest, ResolvedManifestEntry } from "../shared/manifest";
 
 export interface DownloadProgressEvent {
@@ -14,6 +15,18 @@ export interface DownloadProgressEvent {
 const api = {
   openExternal: (url: string): Promise<void> => ipcRenderer.invoke("open-external", url),
   selectFolder: (): Promise<string | null> => ipcRenderer.invoke("select-folder"),
+  computeHdFingerprint: (rootDir: string): Promise<string> =>
+    ipcRenderer.invoke("compute-hd-fingerprint", rootDir),
+  requestManifestToken: (
+    baseUrl: string,
+    payload: {
+      session?: string;
+      slug?: string;
+      entryIds?: string[];
+      hdFingerprint: string;
+    },
+  ): Promise<string | null> =>
+    ipcRenderer.invoke("request-manifest-token", { baseUrl, ...payload }),
   fetchManifest: (baseUrl: string, slug: string, manifestToken?: string): Promise<Manifest> =>
     ipcRenderer.invoke("fetch-manifest", { baseUrl, slug, manifestToken }),
   consumeCatalogLaunch: (): Promise<CatalogLaunch | null> =>
@@ -21,6 +34,15 @@ const api = {
   startDownload: (rootDir: string, entries: ResolvedManifestEntry[]) =>
     ipcRenderer.invoke("start-download", { rootDir, entries }),
   cancelDownload: (): Promise<void> => ipcRenderer.invoke("cancel-download"),
+  listHdLibrary: (rootDir: string, hints?: HdLibraryHint[]): Promise<HdLibraryItem[]> =>
+    ipcRenderer.invoke("list-hd-library", { rootDir, hints }),
+  rememberHdLabels: (rootDir: string, hints: HdLibraryHint[]): Promise<void> =>
+    ipcRenderer.invoke("remember-hd-labels", { rootDir, hints }),
+  deleteHdItem: (
+    rootDir: string,
+    destination: string,
+  ): Promise<{ ok: true; alreadyGone?: boolean }> =>
+    ipcRenderer.invoke("delete-hd-item", { rootDir, destination }),
   onDownloadProgress: (callback: (event: DownloadProgressEvent) => void) => {
     const listener = (_: Electron.IpcRendererEvent, payload: DownloadProgressEvent) =>
       callback(payload);

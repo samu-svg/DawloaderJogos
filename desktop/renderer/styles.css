@@ -159,7 +159,19 @@ body::before {
   border-radius: 999px;
   border: 1px solid transparent;
   color: var(--muted);
+  background: transparent;
+  font: inherit;
   transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+button.step {
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+
+button.step:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .step.active {
@@ -344,6 +356,11 @@ input[type="url"]:focus,
   background: rgba(248, 113, 113, 0.18);
 }
 
+.btn-small {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
 .panel-actions {
   display: flex;
   flex-wrap: wrap;
@@ -519,6 +536,41 @@ tbody tr:hover td {
 
 .col-check {
   width: 44px;
+}
+
+.col-action {
+  width: 92px;
+}
+
+.library-empty {
+  margin-top: 16px;
+  padding: 18px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border);
+  color: var(--muted);
+  text-align: center;
+}
+
+.item-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.code-tag {
+  margin-left: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fbbf24;
+}
+
+.dest-sub {
+  font-family: Consolas, "Cascadia Mono", monospace;
+  font-size: 11px;
+  color: var(--muted);
+  word-break: break-all;
 }
 
 .checkbox-wrap {

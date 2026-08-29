@@ -1,9 +1,9 @@
-export const DESKTOP_APP_VERSION = "0.4.0";
+export const DESKTOP_APP_VERSION = "0.5.0";
 
 export const DESKTOP_PORTABLE_FILENAME = `MontaHD-${DESKTOP_APP_VERSION}-portable.exe`;
 
 /** Tamanho aproximado do instalador portable (para exibir na UI). */
-export const DESKTOP_PORTABLE_SIZE_LABEL = "≈ 74 MB";
+export const DESKTOP_PORTABLE_SIZE_LABEL = "≈ 75 MB";
 
 export function getDesktopDownloadUrl(): string {
   const override = process.env.NEXT_PUBLIC_DESKTOP_DOWNLOAD_URL?.trim();

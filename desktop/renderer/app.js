@@ -21,6 +21,7 @@ function init() {
   const welcomePanel = document.getElementById("welcome-panel");
   const advancedPanel = document.getElementById("advanced-panel");
   const openCatalogBtn = document.getElementById("open-catalog-btn");
+  const pickHdSiteBtn = document.getElementById("pick-hd-site-btn");
   const openCatalogAgainBtn = document.getElementById("open-catalog-again-btn");
   const toggleAdvancedBtn = document.getElementById("toggle-advanced-btn");
   const heroPanel = document.getElementById("hero-panel");
@@ -40,10 +41,24 @@ function init() {
   const step1 = document.getElementById("step-1");
   const step2 = document.getElementById("step-2");
   const confirmModal = document.getElementById("confirm-modal");
+  const confirmTitle = document.getElementById("confirm-title");
   const confirmMessage = document.getElementById("confirm-message");
   const confirmPreview = document.getElementById("confirm-preview");
   const confirmOk = document.getElementById("confirm-ok");
   const confirmCancel = document.getElementById("confirm-cancel");
+  const openLibraryBtn = document.getElementById("open-library-btn");
+  const openLibraryFromInstallBtn = document.getElementById("open-library-from-install-btn");
+  const stepLibrary = document.getElementById("step-library");
+  const librarySection = document.getElementById("library-section");
+  const libraryMeta = document.getElementById("library-meta");
+  const libraryBackBtn = document.getElementById("library-back-btn");
+  const libraryRefreshBtn = document.getElementById("library-refresh-btn");
+  const libraryFolderBtn = document.getElementById("library-folder-btn");
+  const libraryPathCard = document.getElementById("library-path-card");
+  const libraryPath = document.getElementById("library-path");
+  const libraryEmpty = document.getElementById("library-empty");
+  const libraryTableShell = document.getElementById("library-table-shell");
+  const libraryBody = document.getElementById("library-body");
 
   if (
     !baseUrlInput ||
@@ -53,6 +68,7 @@ function init() {
     !welcomePanel ||
     !advancedPanel ||
     !openCatalogBtn ||
+    !pickHdSiteBtn ||
     !openCatalogAgainBtn ||
     !toggleAdvancedBtn ||
     !heroPanel ||
@@ -72,10 +88,24 @@ function init() {
     !step1 ||
     !step2 ||
     !confirmModal ||
+    !confirmTitle ||
     !confirmMessage ||
     !confirmPreview ||
     !confirmOk ||
-    !confirmCancel
+    !confirmCancel ||
+    !openLibraryBtn ||
+    !openLibraryFromInstallBtn ||
+    !stepLibrary ||
+    !librarySection ||
+    !libraryMeta ||
+    !libraryBackBtn ||
+    !libraryRefreshBtn ||
+    !libraryFolderBtn ||
+    !libraryPathCard ||
+    !libraryPath ||
+    !libraryEmpty ||
+    !libraryTableShell ||
+    !libraryBody
   ) {
     document.body.innerHTML =
       '<div style="padding:24px;font-family:Segoe UI,sans-serif;color:#f4f4f5;background:#08080f">' +
@@ -89,6 +119,10 @@ function init() {
   let pendingEntryFilter = null;
   /** @type {string | null} */
   let pendingManifestToken = null;
+  /** @type {string | null} */
+  let pendingInstallSession = null;
+  /** @type {boolean} */
+  let pendingCatalogFromSite = false;
   /** @type {string | null} */
   let selectedRoot = null;
   /** @type {boolean} */
@@ -114,28 +148,47 @@ function init() {
     summary.className = `status-text ${tone === "ok" ? "done" : tone === "error" ? "error" : "muted"}`;
   }
 
-  function setSteps(manifestLoaded) {
-    step1.classList.toggle("active", !manifestLoaded);
-    step1.classList.toggle("done", manifestLoaded);
-    step2.classList.toggle("active", manifestLoaded);
+  function setSteps(mode) {
+    const catalog = mode === "welcome";
+    const install = mode === "install";
+    const library = mode === "library";
+    step1.classList.toggle("active", catalog);
+    step1.classList.toggle("done", install || library);
+    step2.classList.toggle("active", install);
+    step2.classList.toggle("done", library && Boolean(manifest));
+    stepLibrary.classList.toggle("active", library);
+    stepLibrary.classList.toggle("done", false);
   }
 
   function showWelcomeView() {
     welcomePanel.classList.remove("hidden");
     manifestSection.classList.add("hidden");
+    librarySection.classList.add("hidden");
     heroPanel.classList.remove("hidden");
     heroTitle.textContent = "Escolha no site, instale aqui";
     heroDesc.innerHTML =
       'Abra o catálogo no navegador, marque os jogos e clique em <strong>Instalar no HD</strong>. ' +
       "O app abre já com tudo pronto — você só escolhe a pasta do HD.";
-    setSteps(false);
+    setSteps("welcome");
   }
 
   function showInstallView() {
     welcomePanel.classList.add("hidden");
     manifestSection.classList.remove("hidden");
+    librarySection.classList.add("hidden");
     heroPanel.classList.add("hidden");
-    setSteps(true);
+    setSteps("install");
+  }
+
+  function showLibraryView() {
+    welcomePanel.classList.add("hidden");
+    manifestSection.classList.add("hidden");
+    librarySection.classList.remove("hidden");
+    heroPanel.classList.remove("hidden");
+    heroTitle.textContent = "O que tem neste HD";
+    heroDesc.textContent =
+      "Jogos e DLC com nome. Em Content o Xbox usa códigos — o app traduz pelo catálogo e pelo que já instalou.";
+    setSteps("library");
   }
 
   async function openCatalogInBrowser() {
@@ -317,14 +370,189 @@ function init() {
     updateDownloadButton();
   }
 
-  function showConfirmModal(message, preview) {
+  function catalogHints() {
+    if (!manifest) return [];
+    return manifest.entries.map((entry) => ({
+      id: entry.id,
+      label: entry.label,
+      destination: entry.destination,
+      group: entry.group,
+      sizeBytes: entry.sizeBytes,
+    }));
+  }
+
+  async function persistCatalogHints() {
+    if (!selectedRoot || !manifest) return;
+    try {
+      await window.montahd.rememberHdLabels(selectedRoot, catalogHints());
+    } catch {
+      // índice local é auxiliar — a lista ainda funciona
+    }
+  }
+
+  function syncLibraryPath() {
+    if (selectedRoot) {
+      libraryPath.textContent = selectedRoot;
+      libraryPath.classList.remove("muted");
+      libraryPathCard.classList.add("ready");
+    } else {
+      libraryPath.textContent = "Nenhuma pasta selecionada.";
+      libraryPath.classList.add("muted");
+      libraryPathCard.classList.remove("ready");
+    }
+  }
+
+  function renderLibrary(items) {
+    libraryBody.innerHTML = "";
+    const empty = items.length === 0;
+    libraryEmpty.classList.toggle("hidden", !empty);
+    libraryTableShell.classList.toggle("hidden", empty);
+    libraryMeta.textContent = empty
+      ? "Nenhum jogo encontrado em Games ou Content."
+      : `${items.length} item(ns) neste HD. DLC em Content aparece com o nome, não só o código.`;
+
+    for (const item of items) {
+      const row = document.createElement("tr");
+
+      const nameCell = document.createElement("td");
+      const nameWrap = document.createElement("div");
+      nameWrap.className = "item-name";
+      const name = document.createElement("strong");
+      name.textContent = item.label;
+      if (!item.knownName) {
+        const tag = document.createElement("span");
+        tag.className = "code-tag";
+        tag.textContent = "código";
+        name.appendChild(tag);
+      }
+      nameWrap.appendChild(name);
+      nameCell.appendChild(nameWrap);
+
+      const typeCell = document.createElement("td");
+      const badge = document.createElement("span");
+      badge.className =
+        item.group === "conteudo" ? "badge badge-content" : "badge badge-game";
+      badge.textContent = groupLabel(item.group);
+      typeCell.appendChild(badge);
+
+      const destCell = document.createElement("td");
+      destCell.className = "dest-sub";
+      destCell.textContent = item.destination.replace(/\//g, "\\");
+
+      const sizeCell = document.createElement("td");
+      sizeCell.textContent = item.sizeBytes > 0 ? formatBytes(item.sizeBytes) : "—";
+
+      const actionCell = document.createElement("td");
+      const deleteBtn = document.createElement("button");
+      deleteBtn.type = "button";
+      deleteBtn.className = "btn btn-danger btn-small";
+      deleteBtn.textContent = "Excluir";
+      deleteBtn.addEventListener("click", () => {
+        void deleteLibraryItem(item);
+      });
+      actionCell.appendChild(deleteBtn);
+
+      row.append(nameCell, typeCell, destCell, sizeCell, actionCell);
+      libraryBody.appendChild(row);
+    }
+  }
+
+  async function refreshLibrary() {
+    if (!selectedRoot) {
+      renderLibrary([]);
+      syncLibraryPath();
+      return;
+    }
+
+    syncLibraryPath();
+    libraryMeta.textContent = "Lendo o HD…";
+    await persistCatalogHints();
+
+    try {
+      const items = await window.montahd.listHdLibrary(selectedRoot, catalogHints());
+      renderLibrary(items);
+      setSummary(
+        items.length
+          ? `${items.length} item(ns) encontrados neste HD.`
+          : "Nenhum jogo em Games ou Content nesta pasta.",
+      );
+    } catch (error) {
+      renderLibrary([]);
+      setSummary(
+        error instanceof Error ? error.message : "Não foi possível ler o HD.",
+        "error",
+      );
+    }
+  }
+
+  async function openLibrary(options = {}) {
+    const pickIfNeeded = options.pickIfNeeded !== false;
+    if (!selectedRoot && pickIfNeeded) {
+      await handleFolderSelection({ forLibrary: true });
+      if (!selectedRoot) return;
+    }
+    if (!selectedRoot) {
+      setSummary("Escolha a pasta raiz do HD para ver os jogos.", "error");
+      return;
+    }
+    showLibraryView();
+    await refreshLibrary();
+  }
+
+  function isDownloading() {
+    return !cancelBtn.classList.contains("hidden");
+  }
+
+  async function deleteLibraryItem(item) {
+    if (!selectedRoot) return;
+    if (isDownloading()) {
+      setSummary("Espere o download terminar antes de excluir.", "error");
+      return;
+    }
+
+    const preview =
+      `${item.label}\n→ ${selectedRoot}\\${item.destination.replace(/\//g, "\\")}`;
+    const confirmed = await showConfirmModal(
+      `Excluir «${item.label}» do HD? Esta ação não pode ser desfeita.`,
+      preview,
+      {
+        title: "Excluir do HD",
+        okLabel: "Excluir",
+        danger: true,
+      },
+    );
+    if (!confirmed) return;
+
+    try {
+      await window.montahd.deleteHdItem(selectedRoot, item.destination);
+      setSummary(`«${item.label}» removido do HD.`, "ok");
+      await refreshLibrary();
+    } catch (error) {
+      setSummary(
+        error instanceof Error ? error.message : "Não foi possível excluir.",
+        "error",
+      );
+    }
+  }
+
+  function showConfirmModal(message, preview, options = {}) {
     return new Promise((resolve) => {
+      const previousTitle = confirmTitle.textContent;
+      const previousOk = confirmOk.textContent;
+      const previousOkClass = confirmOk.className;
+
+      confirmTitle.textContent = options.title ?? "Confirmar download";
+      confirmOk.textContent = options.okLabel ?? "Baixar agora";
+      confirmOk.className = options.danger ? "btn btn-danger" : "btn btn-primary";
       confirmMessage.textContent = message;
       confirmPreview.textContent = preview;
       confirmModal.classList.remove("hidden");
 
       const cleanup = (result) => {
         confirmModal.classList.add("hidden");
+        confirmTitle.textContent = previousTitle;
+        confirmOk.textContent = previousOk;
+        confirmOk.className = previousOkClass;
         confirmOk.removeEventListener("click", onOk);
         confirmCancel.removeEventListener("click", onCancel);
         confirmModal.querySelectorAll("[data-dismiss]").forEach((el) => {
@@ -371,7 +599,24 @@ function init() {
       /** @type {HTMLInputElement} */ (baseUrlInput).value = launch.baseUrl;
       /** @type {HTMLInputElement} */ (slugInput).value = launch.slug;
       pendingEntryFilter = launch.entryIds?.length ? launch.entryIds : null;
+      pendingInstallSession = launch.installSession ?? null;
       pendingManifestToken = launch.manifestToken ?? null;
+      pendingCatalogFromSite = false;
+      pickHdSiteBtn.classList.add("hidden");
+      pickHdSiteBtn.disabled = false;
+      loadError.classList.add("hidden");
+
+      if (pendingInstallSession) {
+        pendingCatalogFromSite = true;
+        showWelcomeView();
+        pickHdSiteBtn.classList.remove("hidden");
+        heroTitle.textContent = "Escolha a pasta do HD";
+        heroDesc.textContent =
+          "Jogos selecionados no site. Escolha a pasta raiz do HD vinculado à sua assinatura para carregar a lista.";
+        setSummary("Clique em Escolher pasta do HD para continuar.");
+        return;
+      }
+
       await loadManifest({ fromSite: true });
     } finally {
       catalogLaunchInFlight = false;
@@ -442,6 +687,7 @@ function init() {
       portfolioMeta.textContent = `${manifest.entries.length} jogo(s)${totalLabel}`;
       renderEntries(manifest.entries, { allChecked: fromSite });
       showInstallView();
+      await persistCatalogHints();
       setSummary(
         selectedRoot
           ? `${manifest.entries.length} jogo(s) recebidos do site. Pronto para baixar.`
@@ -459,19 +705,91 @@ function init() {
     }
   }
 
-  selectFolderBtn.addEventListener("click", async () => {
+  async function handleFolderSelection(options = {}) {
+    const forLibrary = options.forLibrary === true;
     const folder = await window.montahd.selectFolder();
     if (!folder) return;
+
     selectedRoot = folder;
     rootPath.textContent = folder;
     rootPath.classList.remove("muted");
     rootPathCard.classList.add("ready");
+    syncLibraryPath();
+
+    if (!forLibrary && pendingCatalogFromSite && pendingInstallSession) {
+      loadError.classList.add("hidden");
+      pickHdSiteBtn.disabled = true;
+      setSummary("Autorizando HD e carregando jogos…");
+
+      try {
+        const baseUrl = /** @type {HTMLInputElement} */ (baseUrlInput).value.trim();
+        const hdFingerprint = await window.montahd.computeHdFingerprint(folder);
+        pendingManifestToken = await window.montahd.requestManifestToken(baseUrl, {
+          session: pendingInstallSession,
+          hdFingerprint,
+        });
+        pendingInstallSession = null;
+        pendingCatalogFromSite = false;
+        pickHdSiteBtn.classList.add("hidden");
+        pickHdSiteBtn.disabled = false;
+        await loadManifest({ fromSite: true });
+      } catch (error) {
+        pickHdSiteBtn.disabled = false;
+        loadError.textContent =
+          error instanceof Error ? error.message : "Erro ao autorizar HD.";
+        loadError.classList.remove("hidden");
+        setSummary("Não foi possível autorizar este HD.", "error");
+      }
+      return;
+    }
+
+    await persistCatalogHints();
+
+    if (forLibrary || !librarySection.classList.contains("hidden")) {
+      showLibraryView();
+      await refreshLibrary();
+      return;
+    }
+
     setSummary(
       manifest
         ? "Pasta selecionada. Pronto para iniciar o download."
         : "Pasta selecionada.",
     );
     updateDownloadButton();
+  }
+
+  selectFolderBtn.addEventListener("click", () => {
+    void handleFolderSelection();
+  });
+
+  pickHdSiteBtn.addEventListener("click", () => {
+    void handleFolderSelection();
+  });
+
+  openLibraryBtn.addEventListener("click", () => {
+    void openLibrary({ pickIfNeeded: true });
+  });
+
+  openLibraryFromInstallBtn.addEventListener("click", () => {
+    void openLibrary({ pickIfNeeded: true });
+  });
+
+  stepLibrary.addEventListener("click", () => {
+    void openLibrary({ pickIfNeeded: true });
+  });
+
+  libraryBackBtn.addEventListener("click", () => {
+    if (manifest) showInstallView();
+    else showWelcomeView();
+  });
+
+  libraryRefreshBtn.addEventListener("click", () => {
+    void refreshLibrary();
+  });
+
+  libraryFolderBtn.addEventListener("click", () => {
+    void handleFolderSelection({ forLibrary: true });
   });
 
   selectAll.addEventListener("change", () => {

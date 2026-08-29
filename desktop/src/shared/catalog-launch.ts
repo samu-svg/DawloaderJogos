@@ -2,6 +2,7 @@ export type CatalogLaunch = {
   baseUrl: string;
   slug: string;
   entryIds: string[];
+  installSession: string | null;
   manifestToken: string | null;
 };
 
@@ -34,6 +35,7 @@ export function parseMontaHDDeepLink(rawUrl: string): CatalogLaunch | null {
       baseUrl: baseUrl.replace(/\/+$/, ""),
       slug,
       entryIds: parseEntryIds(url.searchParams.get("entries")),
+      installSession: url.searchParams.get("session")?.trim() || null,
       manifestToken: url.searchParams.get("token")?.trim() || null,
     };
   } catch {

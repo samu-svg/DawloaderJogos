@@ -1,6 +1,6 @@
 {
   "name": "montahd-desktop",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "description": "Baixa arquivos de um manifesto e organiza no HD",
   "main": "dist/main/main.js",
@@ -16,7 +16,7 @@
     "productName": "MontaHD",
     "icon": "build/icon.png",
     "directories": {
-      "output": "release11"
+      "output": "release12"
     },
     "files": [
       "dist/**/*",

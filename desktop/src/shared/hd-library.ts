@@ -1,0 +1,305 @@
+export const HD_INDEX_VERSION = 1 as const;
+
+export type DeletePathCheck =
+  | { ok: true; destination: string }
+  | { ok: false; error: string };
+
+export interface HdLibraryHint {
+  id?: string;
+  label: string;
+  destination: string;
+  group?: string;
+  sizeBytes?: number;
+}
+
+export interface HdInstalledRecord {
+  id: string;
+  label: string;
+  destination: string;
+  group?: string;
+  sizeBytes?: number;
+  installedAt: string;
+}
+
+export interface HdLibraryIndex {
+  version: typeof HD_INDEX_VERSION;
+  updatedAt: string;
+  labels: HdLibraryHint[];
+  items: HdInstalledRecord[];
+}
+
+export interface HdScannedItem {
+  destination: string;
+  sizeBytes: number;
+}
+
+export interface HdLibraryItem {
+  id: string;
+  label: string;
+  destination: string;
+  group: string;
+  sizeBytes: number;
+  source: "index" | "scan";
+  knownName: boolean;
+}
+
+const HEX_ID = /^[0-9a-fA-F]{8,16}$/;
+
+export function emptyHdIndex(): HdLibraryIndex {
+  return {
+    version: HD_INDEX_VERSION,
+    updatedAt: new Date(0).toISOString(),
+    labels: [],
+    items: [],
+  };
+}
+
+export function normalizeRel(input: string): string {
+  return input.replace(/\\/g, "/").replace(/\/+$/, "").replace(/^\/+/, "");
+}
+
+export function stripArchiveSuffix(destination: string): string {
+  return normalizeRel(destination).replace(/\.(zip|7z|rar)$/i, "");
+}
+
+/** Pasta/arquivo que fica no HD depois da instalação (zip vira pasta sem a extensão). */
+export function installedDestinationFromManifest(destination: string): string {
+  return stripArchiveSuffix(destination);
+}
+
+export function destinationKey(destination: string): string {
+  return stripArchiveSuffix(destination).toLowerCase();
+}
+
+export function destinationsRelated(a: string, b: string): boolean {
+  const left = destinationKey(a);
+  const right = destinationKey(b);
+  return left === right || left.startsWith(`${right}/`) || right.startsWith(`${left}/`);
+}
+
+export function inferGroup(destination: string): string {
+  const root = normalizeRel(destination).split("/")[0]?.toLowerCase();
+  if (root === "content") return "conteudo";
+  if (root === "games") return "jogo";
+  return "desconhecido";
+}
+
+export function displayNameFromPath(destination: string): string {
+  const segments = normalizeRel(destination).split("/").filter(Boolean);
+  const rest = segments.slice(1);
+  for (let index = rest.length - 1; index >= 0; index -= 1) {
+    if (!HEX_ID.test(rest[index])) return rest[index];
+  }
+  return rest[rest.length - 1] ?? segments[0] ?? destination;
+}
+
+export function matchHint(
+  destination: string,
+  hints: HdLibraryHint[],
+): HdLibraryHint | null {
+  for (const hint of hints) {
+    if (destinationsRelated(destination, hint.destination)) return hint;
+  }
+  return null;
+}
+
+export function shouldTreatAsInstallUnit(
+  relativePath: string,
+  children: { isDirectory: boolean }[],
+  depth: number,
+  maxDepth = 3,
+): boolean {
+  const rel = normalizeRel(relativePath);
+  if (!rel || rel.toLowerCase() === "content" || rel.toLowerCase() === "games") {
+    return false;
+  }
+  if (depth >= maxDepth) return true;
+  if (children.length === 0) return true;
+  return children.some((child) => !child.isDirectory);
+}
+
+export function validateDeleteDestination(input: string): DeletePathCheck {
+  const destination = normalizeRel(input);
+  const segments = destination.split("/").filter(Boolean);
+
+  if (segments.length === 0) {
+    return { ok: false, error: "Informe a pasta a excluir." };
+  }
+  if (segments.some((segment) => segment === "." || segment === "..")) {
+    return { ok: false, error: 'O caminho não pode conter "." nem "..".' };
+  }
+
+  const root = segments[0]?.toLowerCase();
+
+  if (root !== "games" && root !== "content") {
+    return {
+      ok: false,
+      error: "Só é possível excluir itens nas pastas Games ou Content.",
+    };
+  }
+  if (segments.length < 2) {
+    return {
+      ok: false,
+      error: "Não é possível excluir a pasta Games ou Content inteira.",
+    };
+  }
+
+  return { ok: true, destination: segments.join("/") };
+}
+
+/** Pais que podem ser removidos se ficarem vazios — nunca Games, Content ou a raiz. */
+export function emptyParentsToRemove(destination: string): string[] {
+  const segments = normalizeRel(destination).split("/").filter(Boolean);
+  const parents: string[] = [];
+  for (let length = segments.length - 1; length >= 2; length -= 1) {
+    parents.push(segments.slice(0, length).join("/"));
+  }
+  return parents;
+}
+
+export function upsertLabel(
+  index: HdLibraryIndex,
+  hint: HdLibraryHint,
+): HdLibraryIndex {
+  const key = destinationKey(hint.destination);
+  const next: HdLibraryHint = {
+    id: hint.id,
+    label: hint.label,
+    destination: installedDestinationFromManifest(hint.destination),
+    group: hint.group,
+    sizeBytes: hint.sizeBytes,
+  };
+  const existing = index.labels.findIndex(
+    (item) => destinationKey(item.destination) === key,
+  );
+  if (existing >= 0) index.labels[existing] = { ...index.labels[existing], ...next };
+  else index.labels.push(next);
+  return index;
+}
+
+export function upsertInstalled(
+  index: HdLibraryIndex,
+  record: Omit<HdInstalledRecord, "installedAt"> & { installedAt?: string },
+): HdLibraryIndex {
+  const destination = installedDestinationFromManifest(record.destination);
+  const key = destinationKey(destination);
+  const item: HdInstalledRecord = {
+    id: record.id,
+    label: record.label,
+    destination,
+    group: record.group,
+    sizeBytes: record.sizeBytes,
+    installedAt: record.installedAt ?? new Date().toISOString(),
+  };
+  const existing = index.items.findIndex(
+    (entry) => destinationKey(entry.destination) === key,
+  );
+  if (existing >= 0) index.items[existing] = { ...index.items[existing], ...item };
+  else index.items.push(item);
+  upsertLabel(index, item);
+  index.updatedAt = item.installedAt;
+  return index;
+}
+
+export function removeInstalled(
+  index: HdLibraryIndex,
+  destination: string,
+): HdLibraryIndex {
+  const key = destinationKey(destination);
+  index.items = index.items.filter(
+    (item) =>
+      destinationKey(item.destination) !== key &&
+      !destinationsRelated(item.destination, destination),
+  );
+  index.updatedAt = new Date().toISOString();
+  return index;
+}
+
+export function parseHdIndex(raw: unknown): HdLibraryIndex {
+  if (!raw || typeof raw !== "object") return emptyHdIndex();
+  const data = raw as Partial<HdLibraryIndex>;
+  const items = Array.isArray(data.items)
+    ? data.items.filter(
+        (item): item is HdInstalledRecord =>
+          Boolean(
+            item &&
+              typeof item === "object" &&
+              typeof item.id === "string" &&
+              typeof item.label === "string" &&
+              typeof item.destination === "string",
+          ),
+      )
+    : [];
+  const labels = Array.isArray(data.labels)
+    ? data.labels.filter(
+        (item): item is HdLibraryHint =>
+          Boolean(
+            item &&
+              typeof item === "object" &&
+              typeof item.label === "string" &&
+              typeof item.destination === "string",
+          ),
+      )
+    : [];
+  return {
+    version: HD_INDEX_VERSION,
+    updatedAt:
+      typeof data.updatedAt === "string" ? data.updatedAt : new Date(0).toISOString(),
+    labels,
+    items,
+  };
+}
+
+export function mergeHdLibrary(input: {
+  scanned: HdScannedItem[];
+  index: HdInstalledRecord[];
+  hints: HdLibraryHint[];
+}): HdLibraryItem[] {
+  const usedScans = new Set<number>();
+  const items: HdLibraryItem[] = [];
+
+  for (const record of input.index) {
+    const scanIndex = input.scanned.findIndex((item) =>
+      destinationsRelated(item.destination, record.destination),
+    );
+    if (scanIndex === -1) continue;
+    usedScans.add(scanIndex);
+    const scanned = input.scanned[scanIndex];
+    items.push({
+      id: record.id,
+      label: record.label,
+      destination: pickListedDestination(record.destination, scanned.destination),
+      group: record.group || inferGroup(record.destination),
+      sizeBytes: scanned.sizeBytes || record.sizeBytes || 0,
+      source: "index",
+      knownName: true,
+    });
+  }
+
+  for (let index = 0; index < input.scanned.length; index += 1) {
+    if (usedScans.has(index)) continue;
+    const scanned = input.scanned[index];
+    const hint = matchHint(scanned.destination, input.hints);
+    items.push({
+      id: hint?.id ?? `scan:${destinationKey(scanned.destination)}`,
+      label: hint?.label ?? displayNameFromPath(scanned.destination),
+      destination: scanned.destination,
+      group: hint?.group || inferGroup(scanned.destination),
+      sizeBytes: scanned.sizeBytes,
+      source: "scan",
+      knownName: Boolean(hint),
+    });
+  }
+
+  return items.sort((a, b) =>
+    a.label.localeCompare(b.label, "pt-BR", { sensitivity: "base" }),
+  );
+}
+
+function pickListedDestination(recordDest: string, scanDest: string): string {
+  const record = installedDestinationFromManifest(recordDest);
+  const scan = normalizeRel(scanDest);
+  if (destinationKey(record) === destinationKey(scan)) return record;
+  if (destinationKey(scan).startsWith(`${destinationKey(record)}/`)) return record;
+  return scan;
+}

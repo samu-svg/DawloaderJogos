@@ -5,6 +5,9 @@ node_modules/
 .env
 .env.local
 .env.*.local
+.env*
+!.env.example
+!**/.env.example
 
 # Next.js
 web/.next/
@@ -12,10 +15,7 @@ web/out/
 
 # Electron build output
 desktop/release/
-desktop/release2/
-desktop/release3/
-desktop/release4/
-desktop/release5/
+desktop/release*/
 desktop/dist/
 
 # Logs
@@ -38,4 +38,5 @@ Thumbs.db
 agent-tools/
 
 .vercel
-.env*
+!.env.example
+!**/.env.example
