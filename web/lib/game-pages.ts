@@ -1,5 +1,7 @@
 import pages from "@/content/xbox360-game-pages.json";
 
+import localCovers from "@/content/local-covers.json";
+
 export type GameAudio = "dublado" | "pt-br" | "ingles" | "desconhecido";
 
 export type GamePageMeta = {
@@ -42,8 +44,9 @@ export function hasPackageDetails(
 
 const PAGE_MAP = pages as Record<string, GamePageMeta>;
 
-/** Homebrew / ports without an official Xbox 360 marketplace boxart. */
+/** Capas locais (SSD / import manual) têm prioridade sobre URLs externas imprecisas. */
 const LOCAL_COVERS: Record<string, string> = {
+  ...(localCovers as Record<string, string>),
   "764c602c-1b14-4244-a613-19fbdc176e84": "/covers/mario-64.png",
 };
 

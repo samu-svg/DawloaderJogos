@@ -99,16 +99,13 @@ export function catalogDisplayTitle(
   }, title);
 }
 
-function isXbox360Boxart(url: string | null): boolean {
-  return Boolean(url?.includes("download-ssl.xbox.com"));
-}
-
-/** Prefers official Xbox 360 marketplace boxart over local/Wikipedia/PC covers. */
+/** Prefere capa local importada; senão usa a URL do catálogo (Xbox Marketplace, etc.). */
 export function resolveCoverUrl(
   entryId: string,
   coverUrl: string | null,
   localCoverUrl: (id: string) => string | null,
 ): string | null {
-  if (isXbox360Boxart(coverUrl)) return coverUrl;
-  return localCoverUrl(entryId) ?? coverUrl;
+  const local = localCoverUrl(entryId);
+  if (local) return local;
+  return coverUrl;
 }
