@@ -1,15 +1,31 @@
-import { isPortfolioAdmin } from "@/lib/admin";
+import type { AppUser } from "@/lib/auth";
+import { getApiUser } from "@/lib/auth";
+import { userOwnsHdFingerprint } from "@/lib/hd-access";
+import { hasSubscriptionBypass, isBootstrapAdminEmail } from "@/lib/rbac";
 import {
   subscriptionIsActive,
   verifyManifestAccessToken,
 } from "@/lib/subscription";
 import { subscriptionsEnabled } from "@/lib/stripe";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
-import { currentUser } from "@/lib/supabase/server";
 
 export type ManifestAccessResult =
-  | { allowed: true; entryFilter: string[] | null }
+  | { allowed: true; entryFilter: string[] | null; user?: AppUser | null }
   | { allowed: false; status: 401 | 403 };
+
+async function subscriptionStatusForUser(userId: string): Promise<string | null> {
+  try {
+    const supabase = createServiceRoleClient();
+    const { data } = await supabase
+      .from("subscriptions")
+      .select("status")
+      .eq("user_id", userId)
+      .maybeSingle();
+    return data?.status ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export async function resolveManifestAccess(
   request: Request,
@@ -30,22 +46,33 @@ export async function resolveManifestAccess(
       return { allowed: false, status: 401 };
     }
 
-    const supabase = createServiceRoleClient();
-    const { data: subscription } = await supabase
-      .from("subscriptions")
-      .select("status")
-      .eq("user_id", payload.sub)
-      .maybeSingle();
+    let role: "admin" | "user" = "user";
+    try {
+      const supabase = createServiceRoleClient();
+      const { data: authUser } = await supabase.auth.admin.getUserById(payload.sub);
+      role = isBootstrapAdminEmail(authUser.user?.email) ? "admin" : "user";
+    } catch {
+      return { allowed: false, status: 401 };
+    }
 
-    const { data: authUser } = await supabase.auth.admin.getUserById(payload.sub);
-    if (isPortfolioAdmin(authUser.user?.email)) {
+    if (hasSubscriptionBypass(role)) {
       return {
         allowed: true,
         entryFilter: payload.entries?.length ? payload.entries : null,
       };
     }
 
-    if (!subscriptionIsActive(subscription)) {
+    const status = await subscriptionStatusForUser(payload.sub);
+    if (!subscriptionIsActive(status ? { status } : null)) {
+      return { allowed: false, status: 403 };
+    }
+
+    if (!payload.hd) {
+      return { allowed: false, status: 403 };
+    }
+
+    const ownsHd = await userOwnsHdFingerprint(payload.sub, payload.hd);
+    if (!ownsHd) {
       return { allowed: false, status: 403 };
     }
 
@@ -55,25 +82,19 @@ export async function resolveManifestAccess(
     };
   }
 
-  const user = await currentUser();
+  const user = await getApiUser();
   if (!user) {
     return { allowed: false, status: 401 };
   }
 
-  if (isPortfolioAdmin(user.email)) {
-    return { allowed: true, entryFilter: null };
+  if (hasSubscriptionBypass(user.role)) {
+    return { allowed: true, entryFilter: null, user };
   }
 
-  const supabase = createServiceRoleClient();
-  const { data: subscription } = await supabase
-    .from("subscriptions")
-    .select("status")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (!subscriptionIsActive(subscription)) {
+  const status = await subscriptionStatusForUser(user.id);
+  if (!subscriptionIsActive(status ? { status } : null)) {
     return { allowed: false, status: 403 };
   }
 
-  return { allowed: true, entryFilter: null };
+  return { allowed: true, entryFilter: null, user };
 }

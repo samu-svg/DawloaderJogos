@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { recordAudit, requestIp } from "@/lib/audit";
+import { logError } from "@/lib/logger";
 import {
   MANIFEST_VERSION,
   type Manifest,
@@ -6,8 +8,9 @@ import {
   validateDestination,
 } from "@/lib/manifest";
 import { resolveManifestAccess } from "@/lib/manifest-access";
-import { downloadUrlTtl, signDownloadUrl } from "@/lib/storage";
+import { enforceRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { createPublicReaderClient } from "@/lib/supabase/server";
+import { downloadUrlTtl, signDownloadUrl } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 
@@ -15,37 +18,40 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ slug: string }> },
 ) {
-  const { slug } = await params;
-  const access = await resolveManifestAccess(request, slug);
+  try {
+    const limited = await enforceRateLimit(request, "manifest", RATE_LIMITS.medium);
+    if (limited) return limited;
 
-  if (!access.allowed) {
-    return NextResponse.json(
-      {
-        error:
-          access.status === 403
-            ? "Assinatura ativa necessária para baixar este catálogo."
-            : "Faça login ou abra o catálogo pelo site com sua conta.",
-      },
-      { status: access.status },
-    );
-  }
+    const { slug } = await params;
+    const access = await resolveManifestAccess(request, slug);
+    const ip = requestIp(request);
 
-  const supabase = await createPublicReaderClient();
+    if (!access.allowed) {
+      await recordAudit({
+        action: "manifest.denied",
+        entity: "portfolio",
+        entityId: slug,
+        ip,
+        metadata: { status: access.status },
+      });
+      return NextResponse.json(
+        {
+          error:
+            access.status === 403
+              ? "Assinatura ativa necessária para baixar este catálogo."
+              : "Faça login ou abra o catálogo pelo site com sua conta.",
+        },
+        { status: access.status },
+      );
+    }
 
-  const { data: portfolio, error: portfolioError } = await supabase
+    const supabase = await createPublicReaderClient();
+  const { data: portfolio } = await supabase
     .from("portfolios")
     .select("id, slug, title, description, updated_at")
     .eq("slug", slug)
     .eq("is_public", true)
     .maybeSingle();
-
-  if (portfolioError) {
-    console.error("Falha ao consultar o portfólio:", portfolioError);
-    return NextResponse.json(
-      { error: "Não foi possível consultar o catálogo." },
-      { status: 502 },
-    );
-  }
 
   if (!portfolio) {
     return NextResponse.json(
@@ -54,49 +60,48 @@ export async function GET(
     );
   }
 
-  const { data: rows, error } = await supabase
+  const { data: rows } = await supabase
     .from("entries")
-    .select(
-      "id, label, destination, size_bytes, sha256, kind, storage_key, external_url, is_optional, group_name",
-    )
+    .select("*")
     .eq("portfolio_id", portfolio.id)
     .order("sort_order", { ascending: true });
-
-  if (error) {
-    return NextResponse.json(
-      { error: "Não foi possível carregar os arquivos." },
-      { status: 500 },
-    );
-  }
 
   const allowedIds = access.entryFilter ? new Set(access.entryFilter) : null;
   const entries: ResolvedManifestEntry[] = [];
 
-  for (const row of rows ?? []) {
-    if (allowedIds && !allowedIds.has(row.id)) continue;
+  try {
+    for (const row of rows ?? []) {
+      if (allowedIds && !allowedIds.has(row.id)) continue;
 
-    const path = validateDestination(row.destination);
-    if (!path.ok) continue;
+      const path = validateDestination(row.destination);
+      if (!path.ok) continue;
 
-    const downloadUrl =
-      row.kind === "hosted"
-        ? row.storage_key
-          ? await signDownloadUrl(row.storage_key, row.label)
-          : null
-        : row.external_url;
+      const downloadUrl =
+        row.kind === "hosted"
+          ? row.storage_key
+            ? await signDownloadUrl(row.storage_key, row.label)
+            : null
+          : row.external_url;
 
-    if (!downloadUrl) continue;
+      if (!downloadUrl) continue;
 
-    entries.push({
-      id: row.id,
-      label: row.label,
-      destination: path.destination,
-      sizeBytes: row.size_bytes,
-      sha256: row.sha256 ?? undefined,
-      optional: row.is_optional || undefined,
-      group: row.group_name ?? undefined,
-      downloadUrl,
-    });
+      entries.push({
+        id: row.id,
+        label: row.label,
+        destination: path.destination,
+        sizeBytes: Number(row.size_bytes),
+        sha256: row.sha256 ?? undefined,
+        optional: row.is_optional || undefined,
+        group: row.group_name ?? undefined,
+        downloadUrl,
+      });
+    }
+  } catch (error) {
+    logError("Falha ao montar o manifesto", error, { slug });
+    return NextResponse.json(
+      { error: "Não foi possível carregar os arquivos." },
+      { status: 500 },
+    );
   }
 
   if (entries.length === 0) {
@@ -122,4 +127,11 @@ export async function GET(
   return NextResponse.json(manifest, {
     headers: { "cache-control": "no-store" },
   });
+  } catch (error) {
+    logError("Falha inesperada no manifesto", error);
+    return NextResponse.json(
+      { error: "Não foi possível carregar o catálogo." },
+      { status: 500 },
+    );
+  }
 }
