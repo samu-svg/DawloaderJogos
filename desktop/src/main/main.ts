@@ -3,8 +3,8 @@ import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import type { CatalogLaunch } from "../shared/catalog-launch";
 import {
   findDeepLinkInArgv,
-  normalizeSiteUrl,
   parseMontaHDDeepLink,
+  requireAllowedCatalogOrigin,
 } from "../shared/catalog-launch";
 import type { Manifest, ResolvedManifestEntry } from "../shared/manifest";
 import {
@@ -83,8 +83,12 @@ function deliverCatalogLaunch(launch: CatalogLaunch) {
   mainWindow.focus();
 }
 
+function catalogOriginOptions() {
+  return { allowLocalhost: !app.isPackaged };
+}
+
 function handleDeepLink(rawUrl: string) {
-  const launch = parseMontaHDDeepLink(rawUrl);
+  const launch = parseMontaHDDeepLink(rawUrl, catalogOriginOptions());
   if (!launch) return;
   deliverCatalogLaunch(launch);
 }
@@ -153,7 +157,7 @@ function send(channel: string, payload: unknown) {
 }
 
 function normalizeBaseUrl(input: string): string {
-  return normalizeSiteUrl(input);
+  return requireAllowedCatalogOrigin(input, catalogOriginOptions());
 }
 
 async function fetchManifest(

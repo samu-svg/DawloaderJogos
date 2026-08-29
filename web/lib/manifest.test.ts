@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { findDuplicateDestinations, validateDestination } from "./manifest.ts";
+import { findDuplicateDestinations, normalizeManifestSha256, validateDestination } from "./manifest.ts";
 
 test("aceita caminhos relativos comuns", () => {
   for (const input of [
@@ -70,4 +70,11 @@ test("aponta destinos duplicados sem diferenciar maiúsculas", () => {
     { id: "3", label: "c", destination: "Games/c.iso", sizeBytes: 1 },
   ]);
   assert.deepEqual(duplicates, ["games/A.ISO"]);
+});
+
+test("normalizeManifestSha256 só aceita SHA-256 hex de 64 chars", () => {
+  const hash = "b".repeat(64);
+  assert.equal(normalizeManifestSha256(` ${hash.toUpperCase()} `), hash);
+  assert.equal(normalizeManifestSha256(null), undefined);
+  assert.equal(normalizeManifestSha256("not-a-hash"), undefined);
 });

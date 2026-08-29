@@ -113,9 +113,11 @@ export async function requireEditablePortfolio(slug: string, user: AppUser) {
     .from("portfolios")
     .select("id, slug, owner_id")
     .eq("slug", slug)
+    .eq("owner_id", user.id)
     .maybeSingle();
 
   if (error || !data) return null;
+  if (data.owner_id !== user.id) return null;
   return { id: data.id, slug: data.slug, ownerId: data.owner_id };
 }
 

@@ -4,6 +4,11 @@ import { logError } from "@/lib/logger";
 import { enforceRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { buildStorageKey } from "@/lib/storage-keys";
 import { PART_SIZE, startUpload } from "@/lib/storage";
+import {
+  isAllowedUploadContentType,
+  isAllowedUploadSize,
+  resolveUploadContentType,
+} from "@/lib/upload-limits";
 import { requirePortfolioUploadAccess } from "@/lib/upload-auth";
 
 export async function POST(request: Request) {
@@ -19,7 +24,7 @@ export async function POST(request: Request) {
 
   const portfolioSlug = body.portfolioSlug?.trim();
   const fileName = body.fileName?.trim();
-  const contentType = body.contentType?.trim() || "application/octet-stream";
+  const contentType = resolveUploadContentType(body.contentType);
   const sizeBytes = Number(body.sizeBytes);
 
   if (!portfolioSlug || !fileName) {
@@ -29,9 +34,16 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!Number.isFinite(sizeBytes) || sizeBytes <= 0) {
+  if (!isAllowedUploadSize(sizeBytes)) {
     return NextResponse.json(
-      { error: "Tamanho do arquivo inválido." },
+      { error: "Tamanho do arquivo inválido ou acima do limite de 128 GB." },
+      { status: 400 },
+    );
+  }
+
+  if (!isAllowedUploadContentType(contentType)) {
+    return NextResponse.json(
+      { error: "Tipo de arquivo não permitido. Envie um zip." },
       { status: 400 },
     );
   }

@@ -5,6 +5,7 @@ import {
   MANIFEST_VERSION,
   type Manifest,
   type ResolvedManifestEntry,
+  normalizeManifestSha256,
   validateDestination,
 } from "@/lib/manifest";
 import { resolveManifestAccess } from "@/lib/manifest-access";
@@ -44,7 +45,8 @@ async function resolveManifestEntries(
       label: row.label,
       destination: path.destination,
       sizeBytes: Number(row.size_bytes),
-      sha256: row.sha256 ?? undefined,
+      kind: row.kind,
+      sha256: normalizeManifestSha256(row.sha256),
       optional: row.is_optional || undefined,
       group: row.group_name ?? undefined,
       downloadUrl,
