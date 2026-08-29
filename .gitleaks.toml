@@ -1,0 +1,13 @@
+title = "DawloaderJogos gitleaks"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Catálogos operacionais com chaves R2 (objeto, não URL assinada nem credencial)"
+paths = [
+  '''web/scripts/dgames-packs-catalog\.json''',
+  '''web/scripts/telegram-games-catalog\.json''',
+  '''web/scripts/telegram-god-games-catalog\.json''',
+  '''web/scripts/telegram-dlc-catalog\.json''',
+]

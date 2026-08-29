@@ -17,6 +17,8 @@ web/out/
 desktop/release/
 desktop/release*/
 desktop/dist/
+desktop/**/*.exe
+desktop/**/*.blockmap
 
 # Logs
 *.log
