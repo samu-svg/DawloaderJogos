@@ -105,7 +105,7 @@ export async function getPublicPortfolio(
   return mapCatalogDetail(data as PortfolioRow & { entries: EntryRow[] | null });
 }
 
-/** Portfólio editável por admin/editor (as policies RLS ainda exigem dono). */
+/** Portfólio editável apenas pelo dono com papel admin/editor. */
 export async function requireEditablePortfolio(slug: string, user: AppUser) {
   if (!canEditPortfolio(user.role)) return null;
   const supabase = await createClient();
@@ -113,9 +113,11 @@ export async function requireEditablePortfolio(slug: string, user: AppUser) {
     .from("portfolios")
     .select("id, slug, owner_id")
     .eq("slug", slug)
+    .eq("owner_id", user.id)
     .maybeSingle();
 
   if (error || !data) return null;
+  if (data.owner_id !== user.id) return null;
   return { id: data.id, slug: data.slug, ownerId: data.owner_id };
 }
 

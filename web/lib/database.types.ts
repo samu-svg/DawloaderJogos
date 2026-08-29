@@ -102,9 +102,25 @@ export type Database = {
         ];
       };
       profiles: {
-        Row: { created_at: string; display_name: string; id: string };
-        Insert: { created_at?: string; display_name: string; id: string };
-        Update: { display_name?: string };
+        Row: {
+          created_at: string;
+          display_name: string;
+          id: string;
+          password_changed_at: string;
+          role: "admin" | "editor" | "user";
+        };
+        Insert: {
+          created_at?: string;
+          display_name: string;
+          id: string;
+          password_changed_at?: string;
+          role?: "admin" | "editor" | "user";
+        };
+        Update: {
+          display_name?: string;
+          password_changed_at?: string;
+          role?: "admin" | "editor" | "user";
+        };
         Relationships: [];
       };
       user_hds: {

@@ -6,7 +6,7 @@ import { GameCoverFrame } from "@/components/game-cover";
 import { GameInstallPanel } from "@/components/game-install-panel";
 import { SiteHeader } from "@/components/site-header";
 import { StoreFooter } from "@/components/store-footer";
-import { isPortfolioAdmin } from "@/lib/admin";
+import { canAccessPainel } from "@/lib/rbac";
 import {
   catalogBadgesForGame,
   catalogDisplayTitle,
@@ -63,7 +63,7 @@ export default async function GamePage({ params }: PageProps) {
     relatedAcervoGames(game),
   ]);
 
-  const isAdmin = isPortfolioAdmin(appUser?.email);
+  const isAdmin = appUser ? canAccessPainel(appUser.role) : false;
   const hasAccess = appUser ? await userHasCatalogAccess(appUser) : false;
   const access = !appUser ? "anon" : hasAccess ? "liberado" : "sem-assinatura";
   const meta = gamePageMeta(game.id);

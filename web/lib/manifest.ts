@@ -24,6 +24,15 @@ export type EntrySource =
   | { kind: "hosted"; storageKey: string }
   | { kind: "external"; url: string };
 
+export type ManifestEntryKind = "hosted" | "external";
+
+export function normalizeManifestSha256(
+  value: string | null | undefined,
+): string | undefined {
+  const hash = value?.trim().toLowerCase() ?? "";
+  return /^[0-9a-f]{64}$/.test(hash) ? hash : undefined;
+}
+
 export interface ManifestEntry {
   id: string;
   /** Human readable name shown in the client before confirming. */
@@ -31,6 +40,7 @@ export interface ManifestEntry {
   /** Path relative to the root folder the user picks. Always uses "/". */
   destination: string;
   sizeBytes: number;
+  kind?: ManifestEntryKind;
   /** Lowercase hex SHA-256. Absent means the client cannot verify the file. */
   sha256?: string;
   /** Entries the user may skip, e.g. optional extras. */

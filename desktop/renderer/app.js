@@ -5,20 +5,29 @@
 const DEFAULT_SITE_URL = "https://montahd.vercel.app";
 const SITE_URL_STORAGE_KEY = "montahd.siteUrl";
 
+function isAllowedCatalogOrigin(input, allowLocalhost) {
+  try {
+    const parsed = new URL(input);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
+    if (parsed.origin === DEFAULT_SITE_URL) return true;
+    if (
+      allowLocalhost &&
+      (parsed.hostname === "localhost" ||
+        parsed.hostname === "127.0.0.1" ||
+        parsed.hostname === "[::1]")
+    ) {
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 function normalizeSiteUrl(input) {
   const raw = (input?.trim() || DEFAULT_SITE_URL).replace(/\/+$/, "");
-  try {
-    const parsed = new URL(raw);
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      return DEFAULT_SITE_URL;
-    }
-    if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
-      return DEFAULT_SITE_URL;
-    }
-    return raw;
-  } catch {
-    return DEFAULT_SITE_URL;
-  }
+  if (isAllowedCatalogOrigin(raw, true)) return raw;
+  return DEFAULT_SITE_URL;
 }
 
 function init() {

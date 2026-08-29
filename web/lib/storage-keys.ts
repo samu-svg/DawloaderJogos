@@ -16,11 +16,16 @@ export function storageKeyBelongsToPortfolio(
   return storageKey.startsWith(prefix) && storageKey.length > prefix.length;
 }
 
-/** Object key uploaded manually (rclone, Cyberduck) anywhere in the bucket. */
+/** Prefixo obrigatório para importação manual (rclone/Cyberduck). */
+export const IMPORT_STORAGE_PREFIX = "jogos/";
+
+/** Object key uploaded manually — only under `jogos/` in the bucket. */
 export function isValidImportStorageKey(storageKey: string): boolean {
   const key = storageKey.trim().replace(/^\/+/, "");
   if (!key || key.length > 1024 || key.includes("..")) return false;
   if (key.startsWith("/") || /[\u0000-\u001f]/.test(key)) return false;
+  if (!key.startsWith(IMPORT_STORAGE_PREFIX)) return false;
+  if (key.length <= IMPORT_STORAGE_PREFIX.length) return false;
   return /^[\w./ -]+$/.test(key);
 }
 

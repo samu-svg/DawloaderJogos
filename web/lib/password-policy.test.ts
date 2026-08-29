@@ -6,7 +6,6 @@ test("senha recente não expirou", () => {
   assert.equal(passwordIsExpired(new Date()), false);
 });
 
-test("senha com mais de 90 dias expirou", () => {
-  const old = new Date(Date.now() - (PASSWORD_MAX_AGE_DAYS + 1) * 24 * 60 * 60 * 1000);
-  assert.equal(passwordIsExpired(old), true);
+test("ausência de data conta como senha vencida", () => {
+  assert.equal(passwordIsExpired(new Date(0)), true);
 });

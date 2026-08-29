@@ -57,6 +57,7 @@ function buildPrepareOptions(
     stagingRoot,
     expectedSize: item.entry.sizeBytes,
     expectedSha256: item.entry.sha256,
+    kind: item.entry.kind,
     onProgress,
     signal,
   };

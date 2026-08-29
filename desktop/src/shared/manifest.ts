@@ -14,11 +14,33 @@ const RESERVED_WINDOWS_NAMES = new Set([
 
 const ILLEGAL_CHARACTERS = /[<>:"|?*\u0000-\u001f]/;
 
+export type ManifestEntryKind = "hosted" | "external";
+
+export function normalizeManifestSha256(
+  value: string | null | undefined,
+): string | undefined {
+  const hash = value?.trim().toLowerCase() ?? "";
+  return /^[0-9a-f]{64}$/.test(hash) ? hash : undefined;
+}
+
+export function assertHostedSha256(
+  kind: ManifestEntryKind | undefined,
+  sha256: string | undefined,
+): void {
+  if (kind !== "hosted") return;
+  if (!normalizeManifestSha256(sha256)) {
+    throw new Error(
+      "Este arquivo hospedado não tem SHA-256. Recusado por segurança.",
+    );
+  }
+}
+
 export interface ResolvedManifestEntry {
   id: string;
   label: string;
   destination: string;
   sizeBytes: number;
+  kind?: ManifestEntryKind;
   sha256?: string;
   optional?: boolean;
   group?: string;

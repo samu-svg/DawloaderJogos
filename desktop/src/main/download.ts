@@ -6,6 +6,7 @@ import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { formatFsError } from "../shared/fs-errors";
 import { HD_PARTIAL_SUFFIX, STAGING_PARTIAL_NAME } from "../shared/install-state";
+import { assertHostedSha256, type ManifestEntryKind } from "../shared/manifest";
 import {
   isOverFat32Limit,
   resolveDownloadTarget,
@@ -156,6 +157,7 @@ export async function downloadEntry(options: {
   stagingRoot: string;
   expectedSize?: number;
   expectedSha256?: string;
+  kind?: ManifestEntryKind;
   onProgress: (progress: DownloadProgress) => void;
   signal?: AbortSignal;
 }): Promise<{ installedPath: string }> {
@@ -172,9 +174,11 @@ export async function prepareDownloadEntry(options: {
   stagingRoot: string;
   expectedSize?: number;
   expectedSha256?: string;
+  kind?: ManifestEntryKind;
   onProgress: (progress: DownloadProgress) => void;
   signal?: AbortSignal;
 }): Promise<PreparedDownload> {
+  assertHostedSha256(options.kind, options.expectedSha256);
   const catalogSize = options.expectedSize ?? 0;
   const probedSize = await probeRemoteSize(options.url, options.signal);
   const expectedSize = resolveKnownSize(catalogSize, probedSize);

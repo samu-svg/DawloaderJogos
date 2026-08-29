@@ -7,22 +7,59 @@ export type CatalogLaunch = {
 };
 
 export const DEFAULT_SITE_URL = "https://montahd.vercel.app";
+export const PRODUCTION_SITE_ORIGIN = "https://montahd.vercel.app";
 
-/** URL do site usada pelo app; descarta localhost e valores inválidos. */
-export function normalizeSiteUrl(input: string | null | undefined): string {
-  const raw = (input?.trim() || DEFAULT_SITE_URL).replace(/\/+$/, "");
+export type CatalogOriginOptions = {
+  allowLocalhost?: boolean;
+};
+
+function isLocalhostHost(hostname: string): boolean {
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "[::1]" ||
+    hostname === "::1"
+  );
+}
+
+export function isAllowedCatalogOrigin(
+  input: string,
+  options: CatalogOriginOptions = {},
+): boolean {
   try {
-    const parsed = new URL(raw);
+    const parsed = new URL(input);
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      return DEFAULT_SITE_URL;
+      return false;
     }
-    if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
-      return DEFAULT_SITE_URL;
+    if (parsed.origin === PRODUCTION_SITE_ORIGIN) return true;
+    if (options.allowLocalhost && isLocalhostHost(parsed.hostname)) {
+      return true;
     }
-    return raw;
+    return false;
   } catch {
-    return DEFAULT_SITE_URL;
+    return false;
   }
+}
+
+/** URL do site usada pelo app; só produção, e localhost se `allowLocalhost`. */
+export function normalizeSiteUrl(
+  input: string | null | undefined,
+  options: CatalogOriginOptions = {},
+): string {
+  const raw = (input?.trim() || DEFAULT_SITE_URL).replace(/\/+$/, "");
+  if (isAllowedCatalogOrigin(raw, options)) return raw;
+  return DEFAULT_SITE_URL;
+}
+
+export function requireAllowedCatalogOrigin(
+  input: string,
+  options: CatalogOriginOptions = {},
+): string {
+  const raw = input.trim().replace(/\/+$/, "");
+  if (!isAllowedCatalogOrigin(raw, options)) {
+    throw new Error("Origem do catálogo não permitida.");
+  }
+  return raw;
 }
 
 function parseEntryIds(raw: string | null): string[] {
@@ -33,7 +70,10 @@ function parseEntryIds(raw: string | null): string[] {
     .filter(Boolean);
 }
 
-export function parseMontaHDDeepLink(rawUrl: string): CatalogLaunch | null {
+export function parseMontaHDDeepLink(
+  rawUrl: string,
+  options: CatalogOriginOptions = {},
+): CatalogLaunch | null {
   try {
     const url = new URL(rawUrl);
     if (url.protocol !== "montahd:") return null;
@@ -49,6 +89,7 @@ export function parseMontaHDDeepLink(rawUrl: string): CatalogLaunch | null {
 
     const slug = slugFromQuery || slugFromPath;
     if (!baseUrl || !slug) return null;
+    if (!isAllowedCatalogOrigin(baseUrl, options)) return null;
 
     return {
       baseUrl: baseUrl.replace(/\/+$/, ""),

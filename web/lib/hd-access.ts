@@ -3,7 +3,13 @@ import { planMaxHds } from "@/lib/plan-limits";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 function storeFingerprint(value: string): string {
-  if (!process.env.ENCRYPTION_KEY?.trim()) return value;
+  const key = process.env.ENCRYPTION_KEY?.trim();
+  if (!key) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("ENCRYPTION_KEY não está definida.");
+    }
+    return value;
+  }
   return encryptSensitive(value);
 }
 

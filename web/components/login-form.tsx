@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { authErrorMessage } from "@/lib/auth-messages";
 import { safeInternalPath } from "@/lib/safe-redirect";
-import { createClient } from "@/lib/supabase/client";
 
 export function LoginForm() {
   const router = useRouter();
@@ -21,21 +20,31 @@ export function LoginForm() {
     setError(null);
     setLoading(true);
 
-    const supabase = createClient();
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const payload = (await response.json()) as { error?: string };
 
-    setLoading(false);
+      if (response.status === 429) {
+        setError("Muitas tentativas. Aguarde um instante.");
+        return;
+      }
 
-    if (authError) {
-      setError(authErrorMessage(authError.message));
-      return;
+      if (!response.ok) {
+        setError(authErrorMessage(payload.error ?? ""));
+        return;
+      }
+
+      router.push(nextPath);
+      router.refresh();
+    } catch {
+      setError("Não foi possível concluir. Tente novamente em instantes.");
+    } finally {
+      setLoading(false);
     }
-
-    router.push(nextPath);
-    router.refresh();
   }
 
   return (

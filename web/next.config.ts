@@ -6,7 +6,7 @@ const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
 
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com`,
+  `script-src 'self' 'unsafe-inline' https://js.stripe.com`,
   `connect-src 'self' ${supabaseHost} https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://*.r2.cloudflarestorage.com https://*.cloudflarestorage.com`,
   "img-src 'self' data: blob: https:",
   "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
@@ -39,6 +39,8 @@ const nextConfig: NextConfig = {
             value: "camera=(), microphone=(), geolocation=()",
           },
           { key: "Content-Security-Policy", value: csp },
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
+          { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
         ],
       },
     ];

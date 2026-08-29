@@ -17,6 +17,10 @@ export const RATE_LIMITS = {
   upload: { limit: 30, window: "1 m" as Window },
   /** One call per 64 MiB part, so a fast link needs plenty of headroom. */
   uploadPart: { limit: 300, window: "1 m" as Window },
+  /** Login/cadastro: curto por IP. */
+  auth: { limit: 8, window: "1 m" as Window },
+  /** Login/cadastro: janela mais longa por e-mail. */
+  authSlow: { limit: 20, window: "15 m" as Window },
 } as const;
 
 const redisLimiters = new Map<string, Ratelimit>();

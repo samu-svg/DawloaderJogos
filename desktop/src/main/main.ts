@@ -1,10 +1,12 @@
 import path from "node:path";
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
+import type { IpcMainInvokeEvent } from "electron";
 import type { CatalogLaunch } from "../shared/catalog-launch";
 import {
   findDeepLinkInArgv,
-  normalizeSiteUrl,
+  isAllowedCatalogOrigin,
   parseMontaHDDeepLink,
+  requireAllowedCatalogOrigin,
 } from "../shared/catalog-launch";
 import type { Manifest, ResolvedManifestEntry } from "../shared/manifest";
 import {
@@ -36,6 +38,7 @@ import type { HdLibraryHint } from "../shared/hd-library";
 import { largestPcStagingBytes, notEnoughPcSpaceMessage } from "../shared/pc-space";
 import { ensureStagingRoot, getFreeBytes } from "./staging";
 import { openExternalUrl } from "./open-external";
+import { startAutoUpdate } from "./auto-update";
 
 const PROTOCOL = "montahd";
 
@@ -83,8 +86,18 @@ function deliverCatalogLaunch(launch: CatalogLaunch) {
   mainWindow.focus();
 }
 
+function catalogOriginOptions() {
+  return { allowLocalhost: !app.isPackaged };
+}
+
+function assertTrustedSender(event: IpcMainInvokeEvent) {
+  if (!mainWindow || event.sender !== mainWindow.webContents) {
+    throw new Error("Origem IPC inválida.");
+  }
+}
+
 function handleDeepLink(rawUrl: string) {
-  const launch = parseMontaHDDeepLink(rawUrl);
+  const launch = parseMontaHDDeepLink(rawUrl, catalogOriginOptions());
   if (!launch) return;
   deliverCatalogLaunch(launch);
 }
@@ -112,8 +125,13 @@ function createWindow() {
       preload: preloadPath(),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false,
+      sandbox: true,
     },
+  });
+
+  mainWindow.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+  mainWindow.webContents.on("will-navigate", (event) => {
+    event.preventDefault();
   });
 
   const indexHtml = rendererPath("index.html");
@@ -153,7 +171,7 @@ function send(channel: string, payload: unknown) {
 }
 
 function normalizeBaseUrl(input: string): string {
-  return normalizeSiteUrl(input);
+  return requireAllowedCatalogOrigin(input, catalogOriginOptions());
 }
 
 async function fetchManifest(
@@ -255,6 +273,7 @@ if (gotSingleInstanceLock) {
   app.whenReady().then(() => {
     registerProtocolClient();
     createWindow();
+    startAutoUpdate();
 
     const deepLink = findDeepLinkInArgv(process.argv);
     if (deepLink) handleDeepLink(deepLink);
@@ -269,21 +288,24 @@ app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
 });
 
-ipcMain.handle("open-external", async (_event, rawUrl: string) => {
+ipcMain.handle("open-external", async (event, rawUrl: string) => {
+  assertTrustedSender(event);
   const url = rawUrl.trim();
-  if (!url.startsWith("https://") && !url.startsWith("http://")) {
+  if (!isAllowedCatalogOrigin(url, catalogOriginOptions())) {
     throw new Error("URL inválida.");
   }
   await openExternalUrl(url);
 });
 
-ipcMain.handle("get-pc-disk-space", async () => {
+ipcMain.handle("get-pc-disk-space", async (event) => {
+  assertTrustedSender(event);
   const stagingRoot = stagingRootPath();
   const freeBytes = await getFreeBytes(stagingRoot);
   return { freeBytes, path: stagingRoot };
 });
 
-ipcMain.handle("select-folder", async () => {
+ipcMain.handle("select-folder", async (event) => {
+  assertTrustedSender(event);
   const result = await dialog.showOpenDialog(mainWindow!, {
     properties: ["openDirectory"],
     title: "Escolha a pasta raiz do HD",
@@ -292,14 +314,15 @@ ipcMain.handle("select-folder", async () => {
   return result.filePaths[0];
 });
 
-ipcMain.handle("compute-hd-fingerprint", (_event, rootDir: string) => {
+ipcMain.handle("compute-hd-fingerprint", (event, rootDir: string) => {
+  assertTrustedSender(event);
   return computeHdFingerprint(rootDir);
 });
 
 ipcMain.handle(
   "request-manifest-token",
   async (
-    _event,
+    event,
     payload: {
       baseUrl: string;
       session?: string;
@@ -308,6 +331,7 @@ ipcMain.handle(
       hdFingerprint: string;
     },
   ) => {
+    assertTrustedSender(event);
     return requestManifestToken(payload.baseUrl, {
       session: payload.session,
       slug: payload.slug,
@@ -320,34 +344,39 @@ ipcMain.handle(
 ipcMain.handle(
   "fetch-manifest",
   async (
-    _event,
+    event,
     payload: { baseUrl: string; slug: string; manifestToken?: string },
   ) => {
+    assertTrustedSender(event);
     return fetchManifest(payload.baseUrl, payload.slug, payload.manifestToken);
   },
 );
 
-ipcMain.handle("consume-catalog-launch", () => {
+ipcMain.handle("consume-catalog-launch", (event) => {
+  assertTrustedSender(event);
   const launch = pendingCatalogLaunch;
   pendingCatalogLaunch = null;
   return launch;
 });
 
-ipcMain.handle("cancel-download", () => {
+ipcMain.handle("cancel-download", (event) => {
+  assertTrustedSender(event);
   abortController?.abort();
   abortController = null;
 });
 
 ipcMain.handle(
   "list-hd-library",
-  async (_event, payload: { rootDir: string; hints?: HdLibraryHint[] }) => {
+  async (event, payload: { rootDir: string; hints?: HdLibraryHint[] }) => {
+    assertTrustedSender(event);
     return listHdLibrary(payload.rootDir, payload.hints ?? []);
   },
 );
 
 ipcMain.handle(
   "remember-hd-labels",
-  async (_event, payload: { rootDir: string; hints: HdLibraryHint[] }) => {
+  async (event, payload: { rootDir: string; hints: HdLibraryHint[] }) => {
+    assertTrustedSender(event);
     await rememberHdLabels(payload.rootDir, payload.hints ?? []);
   },
 );
@@ -355,12 +384,13 @@ ipcMain.handle(
 ipcMain.handle(
   "inspect-install-state",
   async (
-    _event,
+    event,
     payload: {
       rootDir: string;
       entries: { id: string; label: string; destination: string }[];
     },
   ) => {
+    assertTrustedSender(event);
     return inspectInstallStates(
       payload.rootDir,
       payload.entries,
@@ -371,7 +401,8 @@ ipcMain.handle(
 
 ipcMain.handle(
   "delete-hd-item",
-  async (_event, payload: { rootDir: string; destination: string }) => {
+  async (event, payload: { rootDir: string; destination: string }) => {
+    assertTrustedSender(event);
     return deleteHdItem(payload.rootDir, payload.destination);
   },
 );
@@ -379,13 +410,14 @@ ipcMain.handle(
 ipcMain.handle(
   "start-download",
   async (
-    _event,
+    event,
     payload: {
       rootDir: string;
       entries: ResolvedManifestEntry[];
       resetEntryIds?: string[];
     },
   ) => {
+    assertTrustedSender(event);
     abortController?.abort();
     abortController = new AbortController();
     const signal = abortController.signal;

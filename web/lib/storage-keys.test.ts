@@ -17,8 +17,11 @@ test("accepts keys owned by the portfolio", () => {
   assert.equal(storageKeyBelongsToPortfolio("other/id/file.zip", portfolioId), false);
 });
 
-test("accepts manual import keys in the bucket", () => {
+test("aceita import só sob jogos/", () => {
   assert.equal(isValidImportStorageKey("jogos/Halo 3.zip"), true);
   assert.equal(isValidImportStorageKey("/jogos/a.zip"), true);
+  assert.equal(isValidImportStorageKey("jogos/"), false);
   assert.equal(isValidImportStorageKey("../secret"), false);
+  assert.equal(isValidImportStorageKey("secrets/key.zip"), false);
+  assert.equal(isValidImportStorageKey("jogos/../etc/passwd"), false);
 });
