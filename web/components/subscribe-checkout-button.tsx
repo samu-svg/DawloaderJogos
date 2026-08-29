@@ -64,7 +64,7 @@ export function ManageSubscriptionButton() {
       disabled={loading}
       className="rounded-xl border border-border px-5 py-3 text-sm text-zinc-300 transition hover:border-zinc-600 hover:text-white disabled:opacity-60"
     >
-      {loading ? "Abrindo..." : "Gerenciar assinatura"}
+      {loading ? "Abrindo..." : "Ver recibos"}
     </button>
   );
 }

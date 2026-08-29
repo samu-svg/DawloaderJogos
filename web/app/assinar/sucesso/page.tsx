@@ -1,16 +1,16 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
-import { isPortfolioAdmin } from "@/lib/admin";
-import { currentUser } from "@/lib/supabase/server";
+import { currentAppUser } from "@/lib/auth";
+import { canAccessPainel } from "@/lib/rbac";
 
 export default async function AssinarSucessoPage() {
-  const user = await currentUser();
+  const user = await currentAppUser();
 
   return (
     <>
       <SiteHeader
         email={user?.email}
-        showPainelLink={isPortfolioAdmin(user?.email)}
+        showPainelLink={user ? canAccessPainel(user.role) : false}
         hasAccess
       />
       <main className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-6 py-16 text-center">
@@ -18,8 +18,9 @@ export default async function AssinarSucessoPage() {
           Pagamento recebido
         </h1>
         <p className="mt-3 text-sm leading-6 text-zinc-400">
-          Estamos confirmando sua assinatura. Em alguns segundos o app e o acervo
-          serão liberados — atualize a página se necessário.
+          Estamos confirmando o pagamento único do software. Em alguns segundos
+          o app e o acervo serão liberados — atualize a página se necessário.
+          Pagamentos PIX podem levar um instante a mais.
         </p>
         <Link
           href="/baixar"

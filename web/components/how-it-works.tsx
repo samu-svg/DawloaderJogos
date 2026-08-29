@@ -1,8 +1,8 @@
 const STEPS = [
   {
     step: "01",
-    title: "Assine o app",
-    text: "Um plano mensal libera o MontaHD e o acervo inteiro. Cartão ou PIX.",
+    title: "Pague o software",
+    text: "O pagamento é pelo app MontaHD — não pelos jogos. Um pagamento único libera o software, 1 HD e o acervo inteiro. No checkout da Stripe aparecem cartão e, quando disponível, PIX.",
   },
   {
     step: "02",

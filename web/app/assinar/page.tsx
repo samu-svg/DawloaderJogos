@@ -50,15 +50,15 @@ export default async function AssinarPage({ searchParams }: PageProps) {
       <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-16">
         <div className="space-y-3 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-2">
-            Assinatura do software
+            Pagamento único
           </p>
           <h1 className="text-3xl font-bold tracking-tight text-white">
             Libere o MontaHD
           </h1>
           <p className="mx-auto max-w-lg text-sm leading-6 text-zinc-400">
             Você paga pelo <strong className="text-zinc-200">software MontaHD</strong>,
-            não pelos arquivos dos portfólios. A assinatura libera o app que monta
-            o seu HD — e o acervo inteiro vem incluído no acesso.
+            não pelos arquivos dos portfólios. Um pagamento único libera o app que
+            monta o seu HD — e o acervo inteiro vem incluído no acesso.
           </p>
         </div>
 
@@ -76,11 +76,12 @@ export default async function AssinarPage({ searchParams }: PageProps) {
           ) : active ? (
             <div className="space-y-5">
               <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
-                Assinatura ativa — app e acervo liberados.
+                Acesso liberado — pagamento único confirmado. App e acervo
+                estão disponíveis.
               </p>
               {subscription?.current_period_end && (
                 <p className="text-sm text-zinc-400">
-                  Renova em{" "}
+                  Válido até{" "}
                   {new Date(subscription.current_period_end).toLocaleDateString(
                     "pt-BR",
                   )}
@@ -108,12 +109,14 @@ export default async function AssinarPage({ searchParams }: PageProps) {
                 <p className="text-3xl font-bold text-white">
                   {stripePlanLabel()}
                 </p>
+                <p className="mt-1 text-sm text-zinc-500">pagamento único</p>
                 <p className="mt-2 text-sm leading-6 text-zinc-400">
                   Pague com <strong className="text-zinc-200">cartão</strong> ou{" "}
                   <strong className="text-zinc-200">PIX</strong> no checkout
-                  seguro da Stripe. O valor é pela licença do software — não
+                  seguro da Stripe (os métodos disponíveis aparecem
+                  automaticamente). O valor é pela licença do software — não
                   pelos jogos. O acesso é liberado assim que o pagamento for
-                  confirmado.
+                  confirmado, sem mensalidade.
                 </p>
               </div>
               <ul className="space-y-2.5">
@@ -129,17 +132,14 @@ export default async function AssinarPage({ searchParams }: PageProps) {
                   </li>
                 ))}
               </ul>
-              <SubscribeCheckoutButton label="Assinar e liberar o app" />
-              <p className="text-xs text-zinc-600">
-                Cancele quando quiser pelo portal do cliente.
-              </p>
+              <SubscribeCheckoutButton label="Pagar e liberar o app" />
             </div>
           )}
         </div>
 
         <p className="mt-8 text-center text-xs text-zinc-600">
           <Link href="/#acervo" className="hover:text-zinc-400">
-            ← Ver o acervo antes de assinar
+            ← Ver o acervo antes de pagar
           </Link>
         </p>
       </main>

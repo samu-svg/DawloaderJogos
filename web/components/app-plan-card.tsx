@@ -2,11 +2,12 @@ import Link from "next/link";
 import { getDesktopDownloadInfo } from "@/lib/desktop-download";
 
 const INCLUDED = [
-  "App MontaHD para Windows, sempre atualizado",
-  "Acervo completo liberado — sem comprar jogo por jogo",
+  "Licença do software MontaHD para Windows, sempre atualizado",
+  "1 HD vinculado à conta — downloads ilimitados nele",
+  "Acesso ao acervo completo incluído — você não paga por jogo nem por arquivo",
   "Instalação automática com extração e verificação",
   "Nenhum anúncio, nenhum encurtador, nenhuma espera",
-  "Cancele quando quiser",
+  "Pagamento único — sem mensalidade",
 ];
 
 export function AppPlanCard({
@@ -25,8 +26,8 @@ export function AppPlanCard({
   const label = hasAccess
     ? "Abrir meu acervo"
     : loggedIn
-      ? "Assinar o app"
-      : "Criar conta e assinar";
+      ? "Liberar o app"
+      : "Criar conta e pagar";
 
   return (
     <section className="mt-20">
@@ -40,8 +41,11 @@ export function AppPlanCard({
               Acesso ao MontaHD
             </h2>
             <p className="mt-3 leading-7 text-zinc-300">
-              A venda é do aplicativo — a ferramenta que baixa, descompacta e
-              monta o seu HD. O acervo entra como parte do acesso.
+              Você paga pelo <strong className="text-white">software</strong>,
+              não pelos arquivos dos portfólios. Um pagamento único libera o
+              MontaHD — a ferramenta que baixa, descompacta e monta o seu HD. O
+              acervo vem incluído no acesso ao app. No checkout da Stripe você
+              paga com cartão — e com PIX quando o método estiver disponível.
             </p>
             <p className="mt-6 text-3xl font-bold text-white">{planLabel}</p>
             {!paymentsEnabled && (
