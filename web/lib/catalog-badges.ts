@@ -23,6 +23,17 @@ export function audioCatalogBadge(
   return null;
 }
 
+function hasMeaningfulDlcNotes(notes: string[] | undefined): boolean {
+  if (!notes?.length) return false;
+  return notes.some((note) => {
+    const lower = note.toLowerCase();
+    if (/^title id [0-9a-f]{8} — destino content/.test(lower)) return false;
+    return /dlc|conteúdo opcional|disco \d|undead|multi-?disc|instale também|instale o disco|instale após/i.test(
+      lower,
+    );
+  });
+}
+
 export function catalogBadgesForGame(
   entryId: string,
   extraCount: number,
@@ -33,14 +44,14 @@ export function catalogBadgesForGame(
   const audio = audioCatalogBadge(meta?.audio);
   if (audio) badges.push(audio);
 
-  const dlcFromNotes = (meta?.dlcNotes?.length ?? 0) > 0;
+  const dlcFromNotes = hasMeaningfulDlcNotes(meta?.dlcNotes);
   if (extraCount > 0) {
     badges.push({
       kind: "dlc",
       label: extraCount === 1 ? "+1 DLC" : `+${extraCount} DLC`,
       tone: "dlc",
     });
-  } else if (dlcFromNotes) {
+  } else if (meta?.hasDlc || dlcFromNotes) {
     badges.push({ kind: "dlc", label: "Com DLC", tone: "dlc" });
   }
 
@@ -70,10 +81,10 @@ export function catalogDisplayTitle(
     suffixes.push("Legendado PT-BR");
   }
 
-  const dlcFromNotes = (meta?.dlcNotes?.length ?? 0) > 0;
+  const dlcFromNotes = hasMeaningfulDlcNotes(meta?.dlcNotes);
   if (extraCount > 0 && !titleAlreadyHas(title, "dlc")) {
     suffixes.push(extraCount === 1 ? "1 DLC" : `${extraCount} DLC`);
-  } else if (dlcFromNotes && !titleAlreadyHas(title, "dlc")) {
+  } else if ((meta?.hasDlc || dlcFromNotes) && !titleAlreadyHas(title, "dlc")) {
     suffixes.push("Com DLC");
   }
 
@@ -88,10 +99,16 @@ export function catalogDisplayTitle(
   }, title);
 }
 
+function isXbox360Boxart(url: string | null): boolean {
+  return Boolean(url?.includes("download-ssl.xbox.com"));
+}
+
+/** Prefers official Xbox 360 marketplace boxart over local/Wikipedia/PC covers. */
 export function resolveCoverUrl(
   entryId: string,
   coverUrl: string | null,
   localCoverUrl: (id: string) => string | null,
 ): string | null {
+  if (isXbox360Boxart(coverUrl)) return coverUrl;
   return localCoverUrl(entryId) ?? coverUrl;
 }

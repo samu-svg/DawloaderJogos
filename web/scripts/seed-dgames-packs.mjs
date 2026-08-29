@@ -21,9 +21,11 @@ function requireEnv(name) {
   return value;
 }
 
-function inferAudio(label) {
+function inferAudio(label, metaAudio) {
+  if (metaAudio) return metaAudio;
   const lower = label.toLowerCase();
-  if (/\bpt-?br\b|\bdublado\b|\bbrasil\b|\(br\)/i.test(lower)) return "pt-br";
+  if (/\bdublado\b/i.test(lower)) return "dublado";
+  if (/\bpt-?br\b|\bbrasil\b|\(br\)/i.test(lower)) return "pt-br";
   if (/\bpt\b|\bportugu[eê]s\b|\btraduc/i.test(lower)) return "pt-br";
   return "desconhecido";
 }
@@ -70,7 +72,7 @@ const rows = eligible.map((game, index) => {
   const titleId = resolveTitleId(game, meta);
   const cover = titleId ? xbox360CoverUrl(titleId) : FALLBACK_COVER;
   const installHint = game.format === "god" ? "content" : "games";
-  const audio = inferAudio(label);
+  const audio = inferAudio(label, meta.audio);
   const groupName = meta.groupName ?? "jogo";
   const isOptional = meta.isOptional ?? false;
   const displayTitle =
@@ -93,6 +95,7 @@ const rows = eligible.map((game, index) => {
   };
 
   if (meta.technicalNotes) pageEntry.technicalNotes = meta.technicalNotes;
+  if (meta.hasDlc) pageEntry.hasDlc = true;
   if (meta.dlcNotes) pageEntry.dlcNotes = meta.dlcNotes;
   else if (game.format === "god" && titleId && groupName === "jogo") {
     pageEntry.dlcNotes = [
@@ -110,6 +113,7 @@ const rows = eligible.map((game, index) => {
   return {
     id,
     label,
+    folderName: game.folderName,
     destination,
     size,
     storageKey,
@@ -120,6 +124,20 @@ const rows = eligible.map((game, index) => {
     titleId,
   };
 });
+
+const folderToId = Object.fromEntries(rows.map((row) => [row.folderName, row.id]));
+
+for (const row of rows) {
+  const meta = metadata[row.folderName] ?? {};
+  if (!meta.parentFolder) continue;
+  const parentId = folderToId[meta.parentFolder];
+  if (!parentId || !pages[parentId]) continue;
+  const childTitle = meta.displayTitle ?? row.label;
+  const note = `DLC opcional no catálogo: ${childTitle}.`;
+  const parent = pages[parentId];
+  parent.hasDlc = true;
+  parent.dlcNotes = [...(parent.dlcNotes ?? []), note];
+}
 
 writeFileSync(pagesPath, `${JSON.stringify(pages, null, 2)}\n`);
 
