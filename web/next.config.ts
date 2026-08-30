@@ -4,6 +4,7 @@ const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
   ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin
   : "https://*.supabase.co";
 
+// 'unsafe-inline' em script/style: exigido pelo Stripe Checkout e pelo Next.js (sem nonce no App Router).
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline' https://js.stripe.com`,

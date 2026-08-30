@@ -1,4 +1,6 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
 
 const sql = readFileSync(new URL("./seed-dgames-packs.sql", import.meta.url), "utf8");
 const footer = `ON CONFLICT (id) DO UPDATE SET
@@ -29,8 +31,11 @@ for (let i = 0; i < values.length; i += 25) {
   chunks.push(`${header}\n${batch.join(",\n")}\n${footer}`);
 }
 
-writeFileSync("C:/Users/doura/AppData/Local/Temp/dgames-chunks.json", JSON.stringify(chunks));
+const tmpDir = path.join(os.tmpdir(), "montahd-dgames");
+mkdirSync(tmpDir, { recursive: true });
+writeFileSync(path.join(tmpDir, "dgames-chunks.json"), JSON.stringify(chunks));
 for (let i = 0; i < chunks.length; i += 1) {
-  writeFileSync(`C:/Users/doura/AppData/Local/Temp/dgames-batch-${i}.sql`, chunks[i]);
+  writeFileSync(path.join(tmpDir, `dgames-batch-${i}.sql`), chunks[i]);
 }
 console.log(`batches: ${chunks.length}, entries: ${values.length}`);
+console.log(`output: ${tmpDir}`);

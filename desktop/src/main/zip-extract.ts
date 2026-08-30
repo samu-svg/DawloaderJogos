@@ -1,4 +1,4 @@
-import { access, lstat, mkdir, mkdtemp, readdir, rm } from "node:fs/promises";
+import { access, lstat, mkdir, mkdtemp, readdir, realpath, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import extract from "extract-zip";
@@ -139,6 +139,7 @@ export function assertZipEntryPath(rootDir: string, entryName: string): string {
   return resolved;
 }
 
+/** Recusa symlinks, junctions e hardlinks que apontem fora da pasta de extração. */
 export async function assertNoSymlinks(rootDir: string): Promise<void> {
   const root = path.resolve(rootDir);
   const stack = [root];
@@ -152,6 +153,24 @@ export async function assertNoSymlinks(rootDir: string): Promise<void> {
       if (stats.isSymbolicLink()) {
         throw new Error("O zip contém um atalho (symlink), que não é aceito.");
       }
+      if (!stats.isDirectory() && stats.nlink > 1) {
+        throw new Error("O zip contém um hardlink, que não é aceito.");
+      }
+
+      let canonical = full;
+      try {
+        canonical = await realpath(full);
+      } catch {
+        // arquivo sumiu entre lstat e realpath — ignora
+        continue;
+      }
+      const relative = path.relative(root, canonical);
+      if (relative.startsWith("..") || path.isAbsolute(relative)) {
+        throw new Error(
+          "O zip contém um link para fora da pasta de extração (symlink ou hardlink).",
+        );
+      }
+
       if (stats.isDirectory()) stack.push(full);
     }
   }

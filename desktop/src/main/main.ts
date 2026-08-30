@@ -10,6 +10,7 @@ import {
 } from "../shared/catalog-launch";
 import type { Manifest, ResolvedManifestEntry } from "../shared/manifest";
 import {
+  assertHostedSha256,
   findDuplicateDestinations,
   validateDestination,
 } from "../shared/manifest";
@@ -38,6 +39,7 @@ import type { HdLibraryHint } from "../shared/hd-library";
 import { largestPcStagingBytes, notEnoughPcSpaceMessage } from "../shared/pc-space";
 import { ensureStagingRoot, getFreeBytes } from "./staging";
 import { openExternalUrl } from "./open-external";
+import { fetchSameOrigin } from "./safe-fetch";
 import { startAutoUpdate } from "./auto-update";
 
 const PROTOCOL = "montahd";
@@ -185,7 +187,7 @@ async function fetchManifest(
     headers.Authorization = `Bearer ${manifestToken}`;
   }
 
-  const response = await fetch(url, { headers });
+  const response = await fetchSameOrigin(url, { headers });
   if (response.status === 401 || response.status === 403) {
     let detail =
       "Assinatura ativa necessária. Abra o catálogo pelo site e clique em Instalar no HD.";
@@ -217,6 +219,7 @@ async function fetchManifest(
     if (!pathCheck.ok) {
       throw new Error(`Destino inválido em "${entry.label}": ${pathCheck.error}`);
     }
+    assertHostedSha256(entry.kind, entry.sha256);
   }
 
   return manifest;
@@ -231,7 +234,7 @@ async function requestManifestToken(
     hdFingerprint: string;
   },
 ): Promise<string | null> {
-  const response = await fetch(`${normalizeBaseUrl(baseUrl)}/api/manifest-token`, {
+  const response = await fetchSameOrigin(`${normalizeBaseUrl(baseUrl)}/api/manifest-token`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),

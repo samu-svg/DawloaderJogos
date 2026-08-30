@@ -13,6 +13,7 @@ import {
   type EntryInstallState,
 } from "../shared/install-state";
 import { deleteHdItem, readHdIndex } from "./hd-library";
+import { isPathUnderRoot } from "../shared/path-safety";
 import { resolveUnderRoot } from "./paths";
 import { removeStagingEntry, stagingEntryDir } from "./staging";
 
@@ -96,8 +97,7 @@ export async function clearEntryInstallFiles(options: {
   try {
     await deleteHdItem(rootDir, installRel);
   } catch {
-    const root = path.resolve(rootDir);
-    if (existsSync(installDir) && path.resolve(installDir) !== root) {
+    if (existsSync(installDir) && isPathUnderRoot(rootDir, installDir)) {
       await rm(installDir, { recursive: true, force: true });
     }
   }
