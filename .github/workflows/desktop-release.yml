@@ -54,20 +54,26 @@ jobs:
             exit 1
           }
 
-      - name: Instalar e compilar
+      - name: Instalar e compilar (Windows nativo — NSIS)
         working-directory: desktop
         run: |
           npm ci
-          npm run dist
+          npm run dist:win
 
       - name: Copiar para web/public/downloads
         shell: pwsh
         run: |
           $v = "${{ steps.version.outputs.version }}"
           $setup = "desktop/release20/MontaHD-$v-setup.exe"
+          $portable = "desktop/release20/MontaHD-$v-portable.exe"
           $yml = "desktop/release20/latest.yml"
           if (-not (Test-Path $setup)) { throw "Faltou $setup — build NSIS falhou?" }
+          if ((Get-Item $setup).Length -lt 50MB) {
+            throw "Setup corrompido ($([math]::Round((Get-Item $setup).Length / 1MB, 2)) MB). Esperado ~80 MB."
+          }
+          if (-not (Test-Path $portable)) { throw "Faltou $portable" }
           if (-not (Test-Path $yml)) { throw "Faltou $yml" }
+          Copy-Item $portable web/public/downloads/ -Force
           New-Item -ItemType Directory -Force -Path web/public/downloads | Out-Null
           Copy-Item $setup web/public/downloads/ -Force
           Copy-Item $yml web/public/downloads/ -Force

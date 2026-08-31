@@ -9,7 +9,8 @@
     "build": "tsc",
     "start": "electron .",
     "pack": "npm run build && electron-builder --dir",
-    "dist": "npm run build && electron-builder"
+    "dist": "npm run build && electron-builder",
+    "dist:win": "npm run build && electron-builder --win nsis portable --x64"
   },
   "build": {
     "appId": "com.montahd.desktop",
