@@ -1,7 +1,8 @@
 {
   "name": "montahd-desktop",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "private": true,
+  "author": "MontaHD",
   "description": "Baixa arquivos de um manifesto e organiza no HD",
   "main": "dist/main/main.js",
   "scripts": {
@@ -15,15 +16,23 @@
   "build": {
     "appId": "com.montahd.desktop",
     "productName": "MontaHD",
+    "copyright": "Copyright © 2026 MontaHD",
     "icon": "build/icon.png",
     "directories": {
-      "output": "release20"
+      "output": "release21"
     },
     "files": [
       "dist/**/*",
+      "renderer/**/*",
+      "!**/*.map",
+      "!**/*.test.js"
+    ],
+    "asarUnpack": [
       "renderer/**/*"
     ],
     "win": {
+      "publisherName": "MontaHD",
+      "requestedExecutionLevel": "asInvoker",
       "target": [
         {
           "target": "nsis",
@@ -56,12 +65,13 @@
       "enableNodeOptionsEnvironmentVariable": false,
       "enableNodeCliInspectArguments": false,
       "enableEmbeddedAsarIntegrityValidation": true,
-      "onlyLoadAppFromAsar": true,
+      "onlyLoadAppFromAsar": false,
       "grantFileProtocolExtraPrivileges": false
     },
     "nsis": {
       "oneClick": false,
       "perMachine": false,
+      "allowElevation": false,
       "allowToChangeInstallationDirectory": false,
       "createDesktopShortcut": "always",
       "createStartMenuShortcut": true,

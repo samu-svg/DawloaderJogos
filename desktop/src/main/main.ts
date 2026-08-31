@@ -140,7 +140,10 @@ function createWindow() {
 
   mainWindow.webContents.on(
     "did-fail-load",
-    (_event, errorCode, errorDescription, validatedURL) => {
+    (_event, errorCode, errorDescription, validatedURL, isMainFrame) => {
+      if (!isMainFrame) return;
+      // -3 ERR_ABORTED: Chromium cancela about:blank ao ir para o index.html.
+      if (errorCode === -3) return;
       dialog.showErrorBox(
         "MontaHD",
         `Não foi possível carregar a interface (${errorCode}).\n${errorDescription}\n${validatedURL}`,
