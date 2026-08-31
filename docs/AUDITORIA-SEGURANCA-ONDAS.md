@@ -195,7 +195,7 @@ Estes passos **complementam** as ondas; o código sozinho não basta.
 | **8 — Supabase Auth** | Confirm email, leaked passwords, MFA admin, schema `private` **não** exposto | Manual |
 | **9 — Backfill SHA-256** | 186 entries antigas sem hash passam a instalar no desktop 0.6.0 **com verificação** | Em curso (`backfill-hosted-sha256.mjs`) |
 | **10 — Policy `entries_select_public`** | Confirmar que **não existe** no banco | SQL no Supabase |
-| **11 — Desktop 0.6.0** | Publicar `.exe` + `latest.yml` em `/downloads` | Manual |
+| **11 — Desktop 0.6.0** | Publicar `.exe` + `latest.yml` em `/downloads` | GitHub Actions `desktop-release` ou manual |
 | **12 — Rotação de chaves** | R2 API token, `MANIFEST_TOKEN_SECRET` após auditoria | Manual |
 | **13 — Code signing** | Authenticode Windows (confiança do instalador) | Quando possível |
 
