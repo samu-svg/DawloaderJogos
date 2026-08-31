@@ -22,13 +22,27 @@ export function DesktopDownloadCard({
             pedir &quot;Executar mesmo assim&quot; por não ser assinado.
           </p>
         </div>
-        <a
-          href={download.href}
-          download={download.fileName}
-          className="inline-flex shrink-0 items-center justify-center rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-hover"
-        >
-          Baixar o app
-        </a>
+        <div className="flex flex-col items-center gap-2 sm:flex-row">
+          <a
+            href={download.portableHref}
+            download={download.portableFileName}
+            className="inline-flex shrink-0 items-center justify-center rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-hover"
+          >
+            Baixar portable
+          </a>
+          <a
+            href={download.href}
+            download={download.fileName}
+            className="inline-flex shrink-0 items-center justify-center rounded-xl border border-border px-6 py-3 text-sm font-semibold text-zinc-300 transition hover:border-zinc-500 hover:text-white"
+          >
+            Instalador (.exe)
+          </a>
+        </div>
+        <p className="text-xs text-zinc-600">
+          Use o <strong className="font-medium text-zinc-500">portable</strong>{" "}
+          se o instalador ainda não estiver disponível. Compile o instalador
+          somente no PowerShell do Windows — não no WSL.
+        </p>
       </div>
     </section>
   );

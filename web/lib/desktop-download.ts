@@ -13,12 +13,18 @@ export function getDesktopDownloadUrl(): string {
   return `/downloads/${DESKTOP_SETUP_FILENAME}`;
 }
 
+export function getDesktopPortableDownloadUrl(): string {
+  return `/downloads/${DESKTOP_PORTABLE_FILENAME}`;
+}
+
 export function getDesktopDownloadInfo() {
   return {
     version: DESKTOP_APP_VERSION,
     fileName: DESKTOP_SETUP_FILENAME,
+    portableFileName: DESKTOP_PORTABLE_FILENAME,
     sizeLabel: DESKTOP_SETUP_SIZE_LABEL,
     href: getDesktopDownloadUrl(),
+    portableHref: getDesktopPortableDownloadUrl(),
     platform: "Windows (64-bit)",
   };
 }

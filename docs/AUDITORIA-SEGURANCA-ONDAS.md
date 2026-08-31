@@ -196,6 +196,14 @@ Estes passos **complementam** as ondas; o código sozinho não basta.
 | **9 — Backfill SHA-256** | 186 entries antigas sem hash passam a instalar no desktop 0.6.0 **com verificação** | Em curso (`backfill-hosted-sha256.mjs`) |
 | **10 — Policy `entries_select_public`** | Confirmar que **não existe** no banco | SQL no Supabase |
 | **11 — Desktop 0.6.0** | Publicar `.exe` + `latest.yml` em `/downloads` | GitHub Actions `desktop-release` ou manual |
+
+**Passo 11 — armadilhas comuns**
+
+- **WSL / Linux / Git Bash no Windows:** gera `MontaHD-*-setup.exe` de **~450 KB** (inválido). O portable (~81 MB) até compila, mas o NSIS exige **PowerShell nativo do Windows**.
+- **Validação:** setup válido ≈ **80 MB**; portable ≈ **81 MB**.
+- **Manual (Windows nativo):** `cd desktop` → `npm.cmd run dist:win` → `pwsh -File scripts/publish-windows.ps1` → commit em `web/public/downloads/`.
+- **Automático:** merge em `main` → GitHub → Actions → **desktop-release** → Run workflow (runner `windows-latest`).
+- **Enquanto o setup não existe:** o site oferece o **portable** em `/downloads/MontaHD-0.6.0-portable.exe`.
 | **12 — Rotação de chaves** | R2 API token, `MANIFEST_TOKEN_SECRET` após auditoria | Manual |
 | **13 — Code signing** | Authenticode Windows (confiança do instalador) | Quando possível |
 
