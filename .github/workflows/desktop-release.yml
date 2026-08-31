@@ -1,0 +1,89 @@
+# Gera MontaHD-*-setup.exe no Windows e publica em web/public/downloads/.
+# A Vercel faz deploy do site no push para main.
+#
+# Como usar:
+#   1. Bump da versão em desktop/package.json E web/lib/desktop-download.ts
+#   2. Commit + push em main
+#   3. GitHub → Actions → "desktop-release" → Run workflow
+#
+# Ou crie a tag desktop-v0.6.0 e push (dispara automaticamente).
+
+name: desktop-release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "desktop-v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desktop-release
+  cancel-in-progress: false
+
+jobs:
+  build-and-publish:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Versão do desktop
+        id: version
+        shell: pwsh
+        run: |
+          $v = (Get-Content desktop/package.json -Raw | ConvertFrom-Json).version
+          "version=$v" >> $env:GITHUB_OUTPUT
+          Write-Host "MontaHD $v"
+
+      - name: Conferir DESKTOP_APP_VERSION no site
+        shell: pwsh
+        run: |
+          $v = "${{ steps.version.outputs.version }}"
+          if (-not (Select-String -Path web/lib/desktop-download.ts -Pattern "DESKTOP_APP_VERSION = `"$v`"" -Quiet)) {
+            Write-Error "Atualize DESKTOP_APP_VERSION em web/lib/desktop-download.ts para $v antes de publicar."
+            exit 1
+          }
+
+      - name: Instalar e compilar
+        working-directory: desktop
+        run: |
+          npm ci
+          npm run dist
+
+      - name: Copiar para web/public/downloads
+        shell: pwsh
+        run: |
+          $v = "${{ steps.version.outputs.version }}"
+          $setup = "desktop/release20/MontaHD-$v-setup.exe"
+          $yml = "desktop/release20/latest.yml"
+          if (-not (Test-Path $setup)) { throw "Faltou $setup — build NSIS falhou?" }
+          if (-not (Test-Path $yml)) { throw "Faltou $yml" }
+          New-Item -ItemType Directory -Force -Path web/public/downloads | Out-Null
+          Copy-Item $setup web/public/downloads/ -Force
+          Copy-Item $yml web/public/downloads/ -Force
+          $blockmap = "desktop/release20/MontaHD-$v-setup.exe.blockmap"
+          if (Test-Path $blockmap) { Copy-Item $blockmap web/public/downloads/ -Force }
+          Get-ChildItem web/public/downloads
+
+      - name: Commit e push (/downloads)
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web/public/downloads/
+          if git diff --staged --quiet; then
+            echo "Nada novo em web/public/downloads (mesmos binários?)."
+            exit 0
+          fi
+          git commit -m "Publica MontaHD ${{ steps.version.outputs.version }} em /downloads [skip ci]"
+          git push
