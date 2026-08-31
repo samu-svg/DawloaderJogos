@@ -103,5 +103,5 @@ jobs:
             echo "Nada novo em web/public/downloads (mesmos binários?)."
             exit 0
           fi
-          git commit -m "Publica MontaHD ${{ steps.version.outputs.version }} em /downloads [skip ci]"
+          git commit -m "Publica MontaHD ${{ steps.version.outputs.version }} em /downloads"
           git push origin main
