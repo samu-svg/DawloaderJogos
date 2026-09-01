@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   assertHostedSha256,
+  assertManifestNotExpired,
   normalizeManifestSha256,
 } from "./manifest.ts";
 
@@ -21,4 +22,16 @@ test("hosted sem SHA-256 é recusado; external passa", () => {
   assert.doesNotThrow(() => assertHostedSha256("hosted", HASH));
   assert.doesNotThrow(() => assertHostedSha256("external", undefined));
   assert.doesNotThrow(() => assertHostedSha256(undefined, undefined));
+});
+
+test("assertManifestNotExpired recusa manifesto vencido ou sem data", () => {
+  assert.throws(() => assertManifestNotExpired(undefined), /validade/);
+  assert.throws(() => assertManifestNotExpired("ontem"), /validade/);
+  assert.throws(
+    () => assertManifestNotExpired(new Date(Date.now() - 1000).toISOString()),
+    /expirou/,
+  );
+  assert.doesNotThrow(() =>
+    assertManifestNotExpired(new Date(Date.now() + 60_000).toISOString()),
+  );
 });

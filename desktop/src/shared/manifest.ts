@@ -35,6 +35,21 @@ export function assertHostedSha256(
   }
 }
 
+export function assertManifestNotExpired(expiresAt: string | undefined): void {
+  if (!expiresAt?.trim()) {
+    throw new Error("Manifesto sem validade. Recarregue pelo site.");
+  }
+  const when = Date.parse(expiresAt);
+  if (!Number.isFinite(when)) {
+    throw new Error("Manifesto com validade inválida. Recarregue pelo site.");
+  }
+  if (when < Date.now()) {
+    throw new Error(
+      "Este link de instalação expirou. Volte ao site e clique em Instalar no HD.",
+    );
+  }
+}
+
 export interface ResolvedManifestEntry {
   id: string;
   label: string;

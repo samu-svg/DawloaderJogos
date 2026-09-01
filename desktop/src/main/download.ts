@@ -5,7 +5,8 @@ import path from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { formatFsError } from "../shared/fs-errors";
-import { assertHttpUrl } from "../shared/http-url";
+import { assertSafeDownloadUrl } from "../shared/http-url";
+import { fetchSafeRedirects } from "./safe-fetch";
 import { HD_PARTIAL_SUFFIX, STAGING_PARTIAL_NAME } from "../shared/install-state";
 import { assertHostedSha256, type ManifestEntryKind } from "../shared/manifest";
 import {
@@ -60,7 +61,7 @@ export interface PreparedDownload {
 const HD_EXTRACT_DIR = ".montahd";
 
 function assertHttpDownloadUrl(url: string): void {
-  assertHttpUrl(url);
+  assertSafeDownloadUrl(url);
 }
 
 function assertDownloadableResponse(response: Response): void {
@@ -128,14 +129,14 @@ class NeedsPcStagingError extends Error {
 
 async function probeRemoteSize(url: string, signal?: AbortSignal): Promise<number> {
   try {
-    const head = await fetch(url, { method: "HEAD", signal });
+    const head = await fetchSafeRedirects(url, { method: "HEAD", signal });
     const len = Number(head.headers.get("content-length") ?? 0);
     if (Number.isFinite(len) && len > 0) return len;
   } catch {
     // alguns CDNs não respondem HEAD
   }
   try {
-    const range = await fetch(url, {
+    const range = await fetchSafeRedirects(url, {
       method: "GET",
       headers: { Range: "bytes=0-0" },
       signal,
@@ -237,7 +238,7 @@ async function downloadToFile(
   mkdirSync(path.dirname(filePath), { recursive: true });
   let startAt = existsSync(filePath) ? statSync(filePath).size : 0;
 
-  let response = await fetch(url, {
+  let response = await fetchSafeRedirects(url, {
     headers: startAt > 0 ? { Range: `bytes=${startAt}-` } : {},
     signal,
   });
@@ -245,7 +246,7 @@ async function downloadToFile(
   if (startAt > 0 && (!response.ok || response.status !== 206)) {
     await unlink(filePath).catch(() => undefined);
     startAt = 0;
-    response = await fetch(url, { signal });
+    response = await fetchSafeRedirects(url, { signal });
   }
 
   if (!response.ok || !response.body) {

@@ -15,16 +15,21 @@ export async function POST(request: Request) {
   const limited = await enforceRateLimit(request, "upload-start", RATE_LIMITS.upload);
   if (limited) return limited;
 
-  const body = (await request.json()) as {
+  let body: {
     portfolioSlug?: string;
     fileName?: string;
     contentType?: string;
     sizeBytes?: number;
   };
+  try {
+    body = (await request.json()) as typeof body;
+  } catch {
+    return NextResponse.json({ error: "Pedido inválido." }, { status: 400 });
+  }
 
   const portfolioSlug = body.portfolioSlug?.trim();
   const fileName = body.fileName?.trim();
-  const contentType = resolveUploadContentType(body.contentType);
+  const contentType = resolveUploadContentType(body.contentType, fileName);
   const sizeBytes = Number(body.sizeBytes);
 
   if (!portfolioSlug || !fileName) {
@@ -41,7 +46,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!isAllowedUploadContentType(contentType)) {
+  if (!isAllowedUploadContentType(contentType, fileName)) {
     return NextResponse.json(
       { error: "Tipo de arquivo não permitido. Envie um zip." },
       { status: 400 },

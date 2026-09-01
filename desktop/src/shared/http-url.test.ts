@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { assertHttpUrl, windowsExternalOpenCommand } from "../shared/http-url.ts";
+import {
+  assertHttpUrl,
+  assertSafeDownloadUrl,
+  isBlockedDownloadHost,
+  windowsExternalOpenCommand,
+} from "../shared/http-url.ts";
 
 test("assertHttpUrl rejeita esquemas perigosos", () => {
   for (const url of [
@@ -34,6 +39,19 @@ test("windowsExternalOpenCommand isola metacaracteres em argv", () => {
     assert.equal(args.length, 2);
     assert.ok(!args[1].includes('"'));
   }
+});
+
+test("isBlockedDownloadHost recusa metadados e faixas privadas", () => {
+  assert.equal(isBlockedDownloadHost("cdn.example.com"), false);
+  assert.equal(isBlockedDownloadHost("169.254.169.254"), true);
+  assert.equal(isBlockedDownloadHost("127.0.0.1"), true);
+  assert.equal(isBlockedDownloadHost("10.0.0.8"), true);
+  assert.equal(isBlockedDownloadHost("192.168.1.1"), true);
+  assert.equal(isBlockedDownloadHost("localhost"), true);
+  assert.throws(
+    () => assertSafeDownloadUrl("http://169.254.169.254/latest/meta-data"),
+    /interno/,
+  );
 });
 
 test("windowsExternalOpenCommand recusa esquema perigoso antes de montar argv", () => {

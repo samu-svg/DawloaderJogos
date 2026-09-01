@@ -104,6 +104,7 @@ export async function uploadFileToR2(options: {
       portfolioSlug,
       storageKey: start.storageKey,
       uploadId: start.uploadId,
+      sizeBytes: file.size,
       parts,
     });
 

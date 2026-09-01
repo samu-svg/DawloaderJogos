@@ -1,5 +1,6 @@
 import { requireEditablePortfolio } from "@/lib/catalog";
 import { getApiUser } from "@/lib/auth";
+import { passwordIsExpired } from "@/lib/password-policy";
 import { isR2Configured } from "@/lib/r2-configured";
 import { canEditPortfolio } from "@/lib/rbac";
 
@@ -25,6 +26,14 @@ export async function requirePortfolioUploadAccess(
   const user = await getApiUser();
   if (!user) {
     return { ok: false, status: 401, error: "Faça login." };
+  }
+
+  if (passwordIsExpired(user.passwordChangedAt)) {
+    return {
+      ok: false,
+      status: 403,
+      error: "Sua senha expirou. Troque em /conta antes de enviar arquivos.",
+    };
   }
 
   if (!canEditPortfolio(user.role)) {

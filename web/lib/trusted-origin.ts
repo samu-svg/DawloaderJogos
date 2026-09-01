@@ -1,9 +1,14 @@
 /** Aceita POST de auth só da origem deste site (defesa extra contra CSRF). */
-export function isTrustedAuthOrigin(request: Request): boolean {
+export function isTrustedAuthOrigin(
+  request: Request,
+  options?: { requireOrigin?: boolean },
+): boolean {
   const originHeader = request.headers.get("origin");
   const refererHeader = request.headers.get("referer");
   const raw = originHeader || refererHeader;
-  if (!raw) return true;
+  const requireOrigin =
+    options?.requireOrigin ?? process.env.NODE_ENV === "production";
+  if (!raw) return !requireOrigin;
 
   let parsed: URL;
   try {

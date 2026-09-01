@@ -3,19 +3,26 @@ import { recordAudit, requestIp } from "@/lib/audit";
 import { logError } from "@/lib/logger";
 import { enforceRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { storageKeyBelongsToPortfolio } from "@/lib/storage-keys";
-import { completeUpload } from "@/lib/storage";
+import { completeUpload, deleteObject, headObjectSize } from "@/lib/storage";
 import { requirePortfolioUploadAccess } from "@/lib/upload-auth";
+import { uploadedSizeMatchesDeclaration } from "@/lib/upload-limits";
 
 export async function POST(request: Request) {
   const limited = await enforceRateLimit(request, "upload-complete", RATE_LIMITS.upload);
   if (limited) return limited;
 
-  const body = (await request.json()) as {
+  let body: {
     portfolioSlug?: string;
     storageKey?: string;
     uploadId?: string;
+    sizeBytes?: number;
     parts?: { partNumber?: number; etag?: string }[];
   };
+  try {
+    body = (await request.json()) as typeof body;
+  } catch {
+    return NextResponse.json({ error: "Pedido inválido." }, { status: 400 });
+  }
 
   const portfolioSlug = body.portfolioSlug?.trim();
   const storageKey = body.storageKey?.trim();
@@ -56,6 +63,14 @@ export async function POST(request: Request) {
 
   try {
     await completeUpload(storageKey, uploadId, normalized);
+    const actualBytes = await headObjectSize(storageKey);
+    if (!uploadedSizeMatchesDeclaration(Number(body.sizeBytes), actualBytes)) {
+      await deleteObject(storageKey).catch(() => undefined);
+      return NextResponse.json(
+        { error: "O arquivo enviado é maior do que o tamanho declarado." },
+        { status: 400 },
+      );
+    }
     await recordAudit({
       action: "upload.complete",
       entity: "portfolio",

@@ -11,9 +11,12 @@ import {
 import type { Manifest, ResolvedManifestEntry } from "../shared/manifest";
 import {
   assertHostedSha256,
+  assertManifestNotExpired,
   findDuplicateDestinations,
   validateDestination,
 } from "../shared/manifest";
+import { assertSafeDownloadUrl } from "../shared/http-url";
+import { assertAuthorizedRoot, rememberAuthorizedRoot } from "./authorized-roots";
 import { preloadPath, rendererPath } from "./app-paths";
 import { type DownloadProgress } from "./download";
 import {
@@ -219,6 +222,7 @@ async function fetchManifest(
     throw new Error(`Não foi possível carregar o manifesto (${response.status}).`);
   }
   const manifest = (await response.json()) as Manifest;
+  assertManifestNotExpired(manifest.expiresAt);
 
   const duplicates = findDuplicateDestinations(manifest.entries);
   if (duplicates.length > 0) {
@@ -233,6 +237,7 @@ async function fetchManifest(
       throw new Error(`Destino inválido em "${entry.label}": ${pathCheck.error}`);
     }
     assertHostedSha256(entry.kind, entry.sha256);
+    if (entry.downloadUrl) assertSafeDownloadUrl(entry.downloadUrl);
   }
 
   trustedEntries = new Map(manifest.entries.map((entry) => [entry.id, entry]));
@@ -329,12 +334,12 @@ ipcMain.handle("select-folder", async (event) => {
     title: "Escolha a pasta raiz do HD",
   });
   if (result.canceled || result.filePaths.length === 0) return null;
-  return result.filePaths[0];
+  return rememberAuthorizedRoot(result.filePaths[0]);
 });
 
 ipcMain.handle("compute-hd-fingerprint", (event, rootDir: string) => {
   assertTrustedSender(event);
-  return computeHdFingerprint(rootDir);
+  return computeHdFingerprint(assertAuthorizedRoot(rootDir));
 });
 
 ipcMain.handle(
@@ -387,7 +392,7 @@ ipcMain.handle(
   "list-hd-library",
   async (event, payload: { rootDir: string; hints?: HdLibraryHint[] }) => {
     assertTrustedSender(event);
-    return listHdLibrary(payload.rootDir, payload.hints ?? []);
+    return listHdLibrary(assertAuthorizedRoot(payload.rootDir), payload.hints ?? []);
   },
 );
 
@@ -395,7 +400,7 @@ ipcMain.handle(
   "remember-hd-labels",
   async (event, payload: { rootDir: string; hints: HdLibraryHint[] }) => {
     assertTrustedSender(event);
-    await rememberHdLabels(payload.rootDir, payload.hints ?? []);
+    await rememberHdLabels(assertAuthorizedRoot(payload.rootDir), payload.hints ?? []);
   },
 );
 
@@ -410,7 +415,7 @@ ipcMain.handle(
   ) => {
     assertTrustedSender(event);
     return inspectInstallStates(
-      payload.rootDir,
+      assertAuthorizedRoot(payload.rootDir),
       payload.entries,
       stagingRootPath(),
     );
@@ -421,7 +426,7 @@ ipcMain.handle(
   "delete-hd-item",
   async (event, payload: { rootDir: string; destination: string }) => {
     assertTrustedSender(event);
-    return deleteHdItem(payload.rootDir, payload.destination);
+    return deleteHdItem(assertAuthorizedRoot(payload.rootDir), payload.destination);
   },
 );
 
@@ -437,6 +442,7 @@ ipcMain.handle(
     },
   ) => {
     assertTrustedSender(event);
+    const rootDir = assertAuthorizedRoot(payload.rootDir);
     abortController?.abort();
     abortController = new AbortController();
     const signal = abortController.signal;
@@ -469,14 +475,14 @@ ipcMain.handle(
       return { results };
     }
 
-    await removeStaleHdExtractDirs(payload.rootDir).catch(() => undefined);
+    await removeStaleHdExtractDirs(rootDir).catch(() => undefined);
 
     const resetIds = new Set(payload.resetEntryIds ?? []);
     for (const entry of requestedEntries) {
       if (!resetIds.has(entry.id)) continue;
       try {
         await clearEntryInstallFiles({
-          rootDir: payload.rootDir,
+          rootDir,
           destination: entry.destination,
           entryId: entry.id,
           stagingRoot,
@@ -528,7 +534,7 @@ ipcMain.handle(
     for (const entry of entriesToDownload) {
       if (signal.aborted) break;
 
-      const resolved = resolveUnderRoot(payload.rootDir, entry.destination);
+      const resolved = resolveUnderRoot(rootDir, entry.destination);
       if (!resolved.ok) {
         send("download-progress", {
           entryId: entry.id,
@@ -546,7 +552,7 @@ ipcMain.handle(
     }
 
     const pipelineResults = await runPipelinedDownloads(sortPipelineEntries(pipelineItems), {
-      hdRoot: payload.rootDir,
+      hdRoot: rootDir,
       stagingRoot,
       signal,
       onProgress: (progress) => send("download-progress", progress),
@@ -568,9 +574,9 @@ ipcMain.handle(
         continue;
       }
 
-      const installedRel = installedRelativePath(payload.rootDir, result.installedPath);
+      const installedRel = installedRelativePath(rootDir, result.installedPath);
       if (installedRel) {
-        await recordInstalled(payload.rootDir, {
+        await recordInstalled(rootDir, {
           id: entry.id,
           label: entry.label,
           destination: installedRel,

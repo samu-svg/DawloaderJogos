@@ -1,7 +1,7 @@
 import type { AppUser } from "@/lib/auth";
 import { getApiUser } from "@/lib/auth";
 import { userOwnsHdFingerprint } from "@/lib/hd-access";
-import { hasSubscriptionBypass, isBootstrapAdminEmail, parseRole, type Role } from "@/lib/rbac";
+import { hasSubscriptionBypass, parseRole, type Role } from "@/lib/rbac";
 import {
   subscriptionIsActive,
   verifyManifestAccessToken,
@@ -91,12 +91,12 @@ export async function resolveManifestAccess(
     let role: Role = "user";
     try {
       const supabase = createServiceRoleClient();
-      const [{ data: authUser }, { data: profile }] = await Promise.all([
-        supabase.auth.admin.getUserById(payload.sub),
-        supabase.from("profiles").select("role").eq("id", payload.sub).maybeSingle(),
-      ]);
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", payload.sub)
+        .maybeSingle();
       role = parseRole(profile?.role);
-      if (isBootstrapAdminEmail(authUser.user?.email)) role = "admin";
     } catch {
       return {
         allowed: false,
