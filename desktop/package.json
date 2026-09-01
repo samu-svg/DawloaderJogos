@@ -1,6 +1,6 @@
 {
   "name": "montahd-desktop",
-  "version": "0.6.4",
+  "version": "0.6.6",
   "private": true,
   "author": "MontaHD",
   "description": "Baixa arquivos de um manifesto e organiza no HD",
@@ -81,7 +81,8 @@
       "runAfterFinish": true,
       "shortcutName": "MontaHD",
       "uninstallDisplayName": "MontaHD",
-      "artifactName": "MontaHD-${version}-setup.exe"
+      "artifactName": "MontaHD-${version}-setup.exe",
+      "include": "build/installer.nsh"
     },
     "protocols": [
       {

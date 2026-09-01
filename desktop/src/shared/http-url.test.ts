@@ -4,7 +4,7 @@ import {
   assertHttpUrl,
   assertSafeDownloadUrl,
   isBlockedDownloadHost,
-  windowsExplorerOpenCommand,
+  windowsCmdStartOpenCommand,
   windowsExternalOpenCommand,
 } from "../shared/http-url.ts";
 
@@ -55,14 +55,21 @@ test("isBlockedDownloadHost recusa metadados e faixas privadas", () => {
   );
 });
 
-test("windowsExplorerOpenCommand usa explorer.exe e recusa esquema perigoso", () => {
-  const { command, args } = windowsExplorerOpenCommand(
+test("windowsCmdStartOpenCommand usa cmd.exe e recusa esquema perigoso", () => {
+  const { command, args } = windowsCmdStartOpenCommand(
     "https://montahd.vercel.app/baixar",
   );
-  assert.match(command.replace(/\\/g, "/"), /\/explorer\.exe$/i);
-  assert.deepEqual(args, ["https://montahd.vercel.app/baixar"]);
+  assert.match(command.replace(/\\/g, "/"), /\/System32\/cmd\.exe$/i);
+  assert.deepEqual(args, [
+    "/d",
+    "/s",
+    "/c",
+    "start",
+    "",
+    "https://montahd.vercel.app/baixar",
+  ]);
   assert.throws(
-    () => windowsExplorerOpenCommand("file:///C:/Windows/notepad.exe"),
+    () => windowsCmdStartOpenCommand("file:///C:/Windows/notepad.exe"),
     /inválida/,
   );
 });

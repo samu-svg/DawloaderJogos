@@ -5,26 +5,25 @@ import {
   parseMontaHDEntryIds,
 } from "./montahd-link.ts";
 
-test("monta link profundo com url e slug", () => {
+test("monta link profundo no formato install/slug (sem & na query)", () => {
   const link = buildMontaHDCatalogLink(
     "https://montahd.vercel.app/",
     "jogos360",
   );
-  assert.equal(
-    link,
-    "montahd://open?url=https%3A%2F%2Fmontahd.vercel.app&slug=jogos360",
-  );
+  assert.equal(link, "montahd://install/jogos360");
+  assert.doesNotMatch(link, /&/);
 });
 
-test("inclui sessao de instalacao no link profundo", () => {
+test("inclui sessao de instalacao no path do link profundo", () => {
   const link = buildMontaHDCatalogLink(
     "https://montahd.vercel.app",
     "jogos360",
     ["abc-123", "def-456"],
-    { installSession: "sess-xyz" },
+    { installSession: "sess.abc-xyz" },
   );
+  assert.equal(link, "montahd://install/jogos360/sess.abc-xyz");
+  assert.doesNotMatch(link, /&/);
   assert.doesNotMatch(link, /entries=/);
-  assert.match(link, /session=sess-xyz/);
 });
 
 test("inclui ids na url quando nao ha sessao", () => {
@@ -33,7 +32,10 @@ test("inclui ids na url quando nao ha sessao", () => {
     "jogos360",
     ["abc-123", "def-456"],
   );
-  assert.match(link, /entries=abc-123%2Cdef-456/);
+  assert.equal(
+    link,
+    "montahd://install/jogos360?entries=abc-123%2Cdef-456",
+  );
   assert.doesNotMatch(link, /session=/);
   assert.doesNotMatch(link, /token=/);
 });

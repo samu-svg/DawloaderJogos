@@ -1,7 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  findDeepLinkInArgv,
   isAllowedCatalogOrigin,
+  isTrustedCatalogHost,
   normalizeSiteUrl,
   parseMontaHDDeepLink,
   requireAllowedCatalogOrigin,
@@ -24,6 +26,17 @@ test("localhost só entra na allowlist quando o app não está empacotado", () =
   assert.equal(isAllowedCatalogOrigin("http://localhost:3000"), false);
   assert.equal(isAllowedCatalogOrigin("https://montahd.vercel.app"), true);
   assert.equal(isAllowedCatalogOrigin("https://evil.example"), false);
+});
+
+test("aceita preview e alias do projeto no Vercel", () => {
+  assert.equal(isTrustedCatalogHost("montahd.vercel.app"), true);
+  assert.equal(isTrustedCatalogHost("montahd-git-main-user.vercel.app"), true);
+  assert.equal(isTrustedCatalogHost("dawloaderjogos.vercel.app"), true);
+  assert.equal(isTrustedCatalogHost("evil.vercel.app"), false);
+  assert.equal(
+    isAllowedCatalogOrigin("https://montahd-git-main-user.vercel.app/baixar"),
+    true,
+  );
 });
 
 test("IPC recusa origem fora da lista", () => {
@@ -75,6 +88,18 @@ test("parseia varios ids no parametro entries", () => {
 
 test("aceita launch so com sessao (ids ficam no manifesto filtrado)", () => {
   const launch = parseMontaHDDeepLink(
+    "montahd://install/jogos360/sess-xyz",
+  );
+
+  assert.ok(launch);
+  assert.deepEqual(launch.entryIds, []);
+  assert.equal(launch.installSession, "sess-xyz");
+  assert.equal(launch.slug, "jogos360");
+  assert.equal(launch.baseUrl, "https://montahd.vercel.app");
+});
+
+test("aceita formato legado open?url=…&slug=…&session=…", () => {
+  const launch = parseMontaHDDeepLink(
     "montahd://open?url=https%3A%2F%2Fmontahd.vercel.app&slug=jogos360&session=sess",
   );
 
@@ -91,4 +116,42 @@ test("mantem compatibilidade com token legado", () => {
   assert.ok(launch);
   assert.equal(launch.manifestToken, "tok");
   assert.equal(launch.installSession, null);
+});
+
+test("reconstroi deep link partido pelo Windows em &", () => {
+  const reconstructed = findDeepLinkInArgv([
+    "C:\\Program Files\\MontaHD\\MontaHD.exe",
+    "montahd://open?url=https%3A%2F%2Fmontahd.vercel.app",
+    "slug=jogos360",
+    "session=sess-xyz",
+  ]);
+
+  assert.equal(
+    reconstructed,
+    "montahd://open?url=https%3A%2F%2Fmontahd.vercel.app&slug=jogos360&session=sess-xyz",
+  );
+
+  const launch = parseMontaHDDeepLink(reconstructed!);
+  assert.ok(launch);
+  assert.equal(launch.slug, "jogos360");
+  assert.equal(launch.installSession, "sess-xyz");
+});
+
+test("findDeepLinkInArgv ignora aspas e maiúsculas", () => {
+  const reconstructed = findDeepLinkInArgv([
+    '"MONTAHD://open?url=https%3A%2F%2Fmontahd.vercel.app"',
+    '"slug=jogos360"',
+  ]);
+  assert.ok(reconstructed);
+  const launch = parseMontaHDDeepLink(reconstructed);
+  assert.ok(launch);
+  assert.equal(launch.slug, "jogos360");
+});
+
+test("sem slug o fragmento sozinho não vira launch", () => {
+  const broken = findDeepLinkInArgv([
+    "C:\\MontaHD.exe",
+    "montahd://open?url=https%3A%2F%2Fmontahd.vercel.app",
+  ]);
+  assert.equal(parseMontaHDDeepLink(broken!), null);
 });

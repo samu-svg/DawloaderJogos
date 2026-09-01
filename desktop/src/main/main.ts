@@ -17,7 +17,9 @@ import {
 } from "../shared/manifest";
 import { assertSafeDownloadUrl } from "../shared/http-url";
 import { assertAuthorizedRoot, rememberAuthorizedRoot } from "./authorized-roots";
+import { loadLastHdRoot, saveLastHdRoot } from "./last-hd-root";
 import { preloadPath, rendererPath } from "./app-paths";
+import { registerProtocolClient } from "./register-protocol";
 import { type DownloadProgress } from "./download";
 import {
   installedRelativePath,
@@ -50,7 +52,9 @@ import { openExternalUrl } from "./open-external";
 import { fetchSameOrigin } from "./safe-fetch";
 import { startAutoUpdate } from "./auto-update";
 
-const PROTOCOL = "montahd";
+if (app.isPackaged) {
+  registerProtocolClient();
+}
 
 function stagingRootPath(): string {
   return path.join(app.getPath("userData"), "staging");
@@ -71,35 +75,16 @@ if (!gotSingleInstanceLock) {
   app.quit();
 }
 
-function registerProtocolClient() {
-  if (process.defaultApp) {
-    if (process.argv.length >= 2) {
-      app.setAsDefaultProtocolClient(PROTOCOL, process.execPath, [
-        path.resolve(process.argv[1]),
-      ]);
-      return;
-    }
-  }
-
-  app.setAsDefaultProtocolClient(PROTOCOL);
+function flushCatalogLaunch() {
+  if (!pendingCatalogLaunch || !mainWindow || mainWindow.isDestroyed()) return;
+  if (mainWindow.webContents.isDestroyed()) return;
+  mainWindow.webContents.send("catalog-launch", pendingCatalogLaunch);
 }
 
 function deliverCatalogLaunch(launch: CatalogLaunch) {
   pendingCatalogLaunch = launch;
-
-  if (!mainWindow) return;
-
-  if (mainWindow.webContents.isLoading()) {
-    mainWindow.webContents.once("did-finish-load", () => {
-      mainWindow?.webContents.send("catalog-launch", launch);
-    });
-  } else {
-    mainWindow.webContents.send("catalog-launch", launch);
-  }
-
-  if (mainWindow.isMinimized()) mainWindow.restore();
-  mainWindow.show();
-  mainWindow.focus();
+  flushCatalogLaunch();
+  focusMainWindow();
 }
 
 function catalogOriginOptions() {
@@ -148,6 +133,9 @@ function createWindow() {
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
   mainWindow.webContents.on("will-navigate", (event) => {
     event.preventDefault();
+  });
+  mainWindow.webContents.on("did-finish-load", () => {
+    flushCatalogLaunch();
   });
 
   const indexHtml = rendererPath("index.html");
@@ -296,11 +284,14 @@ if (gotSingleInstanceLock) {
 
   app.whenReady().then(() => {
     registerProtocolClient();
-    createWindow();
-    startAutoUpdate();
+    const lastHd = loadLastHdRoot(app.getPath("userData"));
+    if (lastHd) rememberAuthorizedRoot(lastHd);
 
     const deepLink = findDeepLinkInArgv(process.argv);
     if (deepLink) handleDeepLink(deepLink);
+
+    createWindow();
+    startAutoUpdate();
 
     app.on("activate", () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -340,7 +331,16 @@ ipcMain.handle("select-folder", async (event) => {
     title: "Escolha a pasta raiz do HD",
   });
   if (result.canceled || result.filePaths.length === 0) return null;
-  return rememberAuthorizedRoot(result.filePaths[0]);
+  const resolved = rememberAuthorizedRoot(result.filePaths[0]);
+  saveLastHdRoot(app.getPath("userData"), resolved);
+  return resolved;
+});
+
+ipcMain.handle("get-last-hd-root", (event) => {
+  assertTrustedSender(event);
+  const lastRoot = loadLastHdRoot(app.getPath("userData"));
+  if (!lastRoot) return null;
+  return rememberAuthorizedRoot(lastRoot);
 });
 
 ipcMain.handle("compute-hd-fingerprint", (event, rootDir: string) => {

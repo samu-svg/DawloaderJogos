@@ -64,18 +64,18 @@ export function windowsExternalOpenCommand(url: string): {
   };
 }
 
-/** Fallback estável no Windows: explorer.exe com URL http(s) validada. */
-export function windowsExplorerOpenCommand(url: string): {
+/** Fallback no Windows: `cmd /c start` abre o navegador padrão. */
+export function windowsCmdStartOpenCommand(url: string): {
   command: string;
   args: string[];
 } {
   const safeUrl = assertHttpUrl(url).toString();
-  const windowsDir =
+  const systemRoot =
     process.platform === "win32"
       ? process.env.SystemRoot || process.env.WINDIR || "C:\\Windows"
       : "C:\\Windows";
   return {
-    command: path.join(windowsDir, "explorer.exe"),
-    args: [safeUrl],
+    command: path.join(systemRoot, "System32", "cmd.exe"),
+    args: ["/d", "/s", "/c", "start", "", safeUrl],
   };
 }

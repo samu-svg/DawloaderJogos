@@ -5,11 +5,23 @@
 const DEFAULT_SITE_URL = "https://montahd.vercel.app";
 const SITE_URL_STORAGE_KEY = "montahd.siteUrl";
 
+function isTrustedCatalogHost(hostname) {
+  const host = hostname.toLowerCase();
+  if (!host.endsWith(".vercel.app")) return false;
+  const label = host.slice(0, -".vercel.app".length);
+  return (
+    label === "montahd" ||
+    label === "dawloaderjogos" ||
+    label.startsWith("montahd-") ||
+    label.startsWith("dawloaderjogos-")
+  );
+}
+
 function isAllowedCatalogOrigin(input, allowLocalhost) {
   try {
     const parsed = new URL(input);
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
-    if (parsed.origin === DEFAULT_SITE_URL) return true;
+    if (isTrustedCatalogHost(parsed.hostname)) return true;
     if (
       allowLocalhost &&
       (parsed.hostname === "localhost" ||
@@ -762,6 +774,44 @@ function init() {
     return text;
   }
 
+  function applySelectedRoot(folder) {
+    selectedRoot = folder;
+    rootPath.textContent = folder;
+    rootPath.classList.remove("muted");
+    rootPathCard.classList.add("ready");
+    syncLibraryPath();
+  }
+
+  function showPickHdForLaunch() {
+    showWelcomeView();
+    openCatalogBtn.classList.add("hidden");
+    pickHdSiteBtn.classList.remove("hidden");
+    pickHdSiteBtn.disabled = false;
+    heroTitle.textContent = "Escolha a pasta do HD";
+    heroDesc.textContent =
+      "Jogos selecionados no site. Escolha a pasta raiz do HD vinculado à sua assinatura para carregar a lista.";
+    setSummary("Clique em Escolher pasta do HD para continuar.");
+  }
+
+  async function authorizeHdAndLoadGames() {
+    const folder = selectedRoot;
+    if (!folder || !pendingInstallSession) {
+      throw new Error("Escolha a pasta do HD para continuar.");
+    }
+    const baseUrl = /** @type {HTMLInputElement} */ (baseUrlInput).value.trim();
+    const hdFingerprint = await window.montahd.computeHdFingerprint(folder);
+    pendingManifestToken = await window.montahd.requestManifestToken(baseUrl, {
+      session: pendingInstallSession,
+      hdFingerprint,
+    });
+    pendingInstallSession = null;
+    pendingCatalogFromSite = false;
+    pickHdSiteBtn.classList.add("hidden");
+    pickHdSiteBtn.disabled = false;
+    openCatalogBtn.classList.remove("hidden");
+    await loadManifest({ fromSite: true });
+  }
+
   async function applyCatalogLaunch(launch) {
     if (catalogLaunchInFlight) return;
     catalogLaunchInFlight = true;
@@ -780,12 +830,19 @@ function init() {
 
       if (pendingInstallSession) {
         pendingCatalogFromSite = true;
-        showWelcomeView();
-        pickHdSiteBtn.classList.remove("hidden");
-        heroTitle.textContent = "Escolha a pasta do HD";
-        heroDesc.textContent =
-          "Jogos selecionados no site. Escolha a pasta raiz do HD vinculado à sua assinatura para carregar a lista.";
-        setSummary("Clique em Escolher pasta do HD para continuar.");
+        openCatalogBtn.classList.add("hidden");
+        if (selectedRoot) {
+          setSummary("Autorizando HD e carregando jogos…");
+          try {
+            await authorizeHdAndLoadGames();
+            return;
+          } catch (error) {
+            loadError.textContent = formatInstallError(error);
+            loadError.classList.remove("hidden");
+            setSummary("Não foi possível autorizar este HD. Escolha a pasta de novo.", "error");
+          }
+        }
+        showPickHdForLaunch();
         return;
       }
 
@@ -796,7 +853,6 @@ function init() {
           await loadManifest({ fromSite: true });
         } catch (error) {
           pendingManifestToken = null;
-          showWelcomeView();
           loadError.textContent = formatInstallError(error);
           loadError.classList.remove("hidden");
           setSummary("Não foi possível carregar os jogos.", "error");
@@ -804,7 +860,20 @@ function init() {
         return;
       }
 
-      await loadManifest({ fromSite: true });
+      pendingCatalogFromSite = true;
+      openCatalogBtn.classList.add("hidden");
+      if (selectedRoot) {
+        setSummary("Carregando jogos selecionados no site…");
+        try {
+          await loadManifest({ fromSite: true });
+          return;
+        } catch (error) {
+          loadError.textContent = formatInstallError(error);
+          loadError.classList.remove("hidden");
+          setSummary("Não foi possível carregar os jogos.", "error");
+        }
+      }
+      showPickHdForLaunch();
     } finally {
       catalogLaunchInFlight = false;
     }
@@ -814,13 +883,25 @@ function init() {
     void applyCatalogLaunch(launch);
   });
 
-  void window.montahd.consumeCatalogLaunch().then((launch) => {
+  void (async () => {
+    try {
+      const lastRoot = await window.montahd.getLastHdRoot();
+      if (lastRoot) applySelectedRoot(lastRoot);
+    } catch {
+      // sem HD lembrado
+    }
+
+    const launch = await window.montahd.consumeCatalogLaunch();
     if (launch) {
       void applyCatalogLaunch(launch);
       return;
     }
-    setSummary("Aguardando seleção pelo site…");
-  });
+    setSummary(
+      selectedRoot
+        ? "HD lembrado. Aguardando seleção pelo site…"
+        : "Aguardando seleção pelo site…",
+    );
+  })();
 
   async function loadManifest(options = {}) {
     const fromSite = options.fromSite === true;
@@ -884,7 +965,11 @@ function init() {
       loadError.textContent = formatInstallError(error);
       loadError.classList.remove("hidden");
       setSummary("Não foi possível carregar os jogos.", "error");
-      if (fromSite) showWelcomeView();
+      if (fromSite && pendingCatalogFromSite) {
+        showPickHdForLaunch();
+      } else if (fromSite) {
+        showWelcomeView();
+      }
     } finally {
       loadBtn.disabled = false;
       loadBtn.querySelector(".btn-label").textContent = "Carregar manifesto";
@@ -896,11 +981,7 @@ function init() {
     const folder = await window.montahd.selectFolder();
     if (!folder) return;
 
-    selectedRoot = folder;
-    rootPath.textContent = folder;
-    rootPath.classList.remove("muted");
-    rootPathCard.classList.add("ready");
-    syncLibraryPath();
+    applySelectedRoot(folder);
 
     if (!forLibrary && pendingCatalogFromSite && pendingInstallSession) {
       loadError.classList.add("hidden");
@@ -908,17 +989,7 @@ function init() {
       setSummary("Autorizando HD e carregando jogos…");
 
       try {
-        const baseUrl = /** @type {HTMLInputElement} */ (baseUrlInput).value.trim();
-        const hdFingerprint = await window.montahd.computeHdFingerprint(folder);
-        pendingManifestToken = await window.montahd.requestManifestToken(baseUrl, {
-          session: pendingInstallSession,
-          hdFingerprint,
-        });
-        pendingInstallSession = null;
-        pendingCatalogFromSite = false;
-        pickHdSiteBtn.classList.add("hidden");
-        pickHdSiteBtn.disabled = false;
-        await loadManifest({ fromSite: true });
+        await authorizeHdAndLoadGames();
       } catch (error) {
         pickHdSiteBtn.disabled = false;
         loadError.textContent = formatInstallError(error);
