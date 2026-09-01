@@ -8,13 +8,14 @@ import { StoreFooter } from "@/components/store-footer";
 import { currentAppUser } from "@/lib/auth";
 import { loadAcervo } from "@/lib/games";
 import { canAccessPainel } from "@/lib/rbac";
-import { stripePlanLabel, subscriptionsEnabled } from "@/lib/stripe";
+import { lowestPlanPriceLabel } from "@/lib/stripe-plans";
+import { subscriptionsEnabled } from "@/lib/stripe";
 import { userHasCatalogAccess } from "@/lib/subscription";
 
 export const metadata: Metadata = {
   title: "O app MontaHD — baixa e organiza os jogos no seu HD",
   description:
-    "Você paga pelo software MontaHD, não pelos arquivos. O app baixa, verifica, descompacta e coloca cada jogo na pasta certa do HD. Acervo incluído na assinatura mensal, sem anúncios.",
+    "Você paga pelo software MontaHD, não pelos arquivos. O app baixa, verifica, descompacta e coloca cada jogo na pasta certa do HD. Planos de 1, 2 ou 3 meses — cartão ou PIX.",
 };
 
 export default async function AppPage() {
@@ -42,7 +43,7 @@ export default async function AppPage() {
           gameCount={games.length}
           collectionCount={collections.length}
           totalBytes={totalBytes}
-          planLabel={stripePlanLabel()}
+          planLabel={lowestPlanPriceLabel()}
         />
 
         <AppValueProps />
@@ -50,7 +51,7 @@ export default async function AppPage() {
         <HowItWorks />
 
         <AppPlanCard
-          planLabel={stripePlanLabel()}
+          planLabel={lowestPlanPriceLabel()}
           hasAccess={hasAccess}
           loggedIn={Boolean(user)}
           paymentsEnabled={subscriptionsEnabled()}

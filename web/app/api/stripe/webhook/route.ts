@@ -3,33 +3,39 @@ import type Stripe from "stripe";
 import { recordAudit } from "@/lib/audit";
 import { logError } from "@/lib/logger";
 import { enforceRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
+import { accessMonthsFromMetadata } from "@/lib/stripe-plans";
 import { getStripe, subscriptionsEnabled } from "@/lib/stripe";
 import {
-  checkoutSessionGrantsLifetimeAccess,
+  checkoutSessionGrantsPrepaidAccess,
   userIdFromCheckoutSession,
   userIdFromPaymentIntent,
 } from "@/lib/stripe-access";
 import {
   findUserIdByStripeCustomer,
-  upsertLifetimeAccessFromPayment,
+  upsertPrepaidAccessFromPayment,
   upsertSubscriptionFromStripe,
 } from "@/lib/stripe-subscription-sync";
 
 export const runtime = "nodejs";
 
-async function grantLifetimeAccess(userId: string, customerId: string, entityId: string) {
-  await upsertLifetimeAccessFromPayment(userId, customerId);
+async function grantPrepaidAccess(
+  userId: string,
+  customerId: string,
+  entityId: string,
+  months: number,
+) {
+  await upsertPrepaidAccessFromPayment(userId, customerId, months);
   await recordAudit({
     actorId: userId,
     action: "stripe.payment.completed",
     entity: "subscription",
     entityId,
-    metadata: { status: "active", kind: "one_time" },
+    metadata: { status: "active", kind: "prepaid", months },
   });
 }
 
 async function unlockFromCheckoutSession(session: Stripe.Checkout.Session) {
-  if (!checkoutSessionGrantsLifetimeAccess(session)) return;
+  if (!checkoutSessionGrantsPrepaidAccess(session)) return;
 
   const userId =
     userIdFromCheckoutSession(session) ??
@@ -39,7 +45,8 @@ async function unlockFromCheckoutSession(session: Stripe.Checkout.Session) {
 
   if (!userId || !session.customer) return;
 
-  await grantLifetimeAccess(userId, String(session.customer), session.id);
+  const months = accessMonthsFromMetadata(session.metadata) ?? 1;
+  await grantPrepaidAccess(userId, String(session.customer), session.id, months);
 }
 
 async function syncSubscription(subscription: Stripe.Subscription) {
@@ -125,13 +132,18 @@ export async function POST(request: Request) {
       }
       case "payment_intent.succeeded": {
         const intent = event.data.object as Stripe.PaymentIntent;
+        // Assinaturas geram PaymentIntent com invoice — não é PIX pré-pago.
+        if ("invoice" in intent && intent.invoice) break;
+        if (intent.metadata?.payment_method === "card") break;
+
         const customerId =
           typeof intent.customer === "string" ? intent.customer : intent.customer?.id;
         const userId =
           userIdFromPaymentIntent(intent) ??
           (customerId ? await findUserIdByStripeCustomer(customerId) : null);
         if (userId && customerId) {
-          await grantLifetimeAccess(userId, customerId, intent.id);
+          const months = accessMonthsFromMetadata(intent.metadata) ?? 1;
+          await grantPrepaidAccess(userId, customerId, intent.id, months);
         }
         break;
       }

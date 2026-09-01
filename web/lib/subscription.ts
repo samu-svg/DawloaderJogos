@@ -1,11 +1,11 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { AppUser } from "@/lib/auth";
 import { hasSubscriptionBypass } from "@/lib/rbac";
-import {
-  ACTIVE_SUBSCRIPTION_STATUSES,
-  subscriptionsEnabled,
-} from "@/lib/stripe";
+import { subscriptionsEnabled } from "@/lib/stripe";
+import { subscriptionIsActive } from "@/lib/subscription-active";
 import { createClient } from "@/lib/supabase/server";
+
+export { subscriptionIsActive } from "@/lib/subscription-active";
 
 export type SubscriptionRow = {
   status: string;
@@ -26,13 +26,6 @@ export async function getUserSubscription(
   if (error) throw new Error(error.message);
   if (!data) return null;
   return data;
-}
-
-export function subscriptionIsActive(
-  subscription: { status: string } | null | undefined,
-): boolean {
-  if (!subscription) return false;
-  return ACTIVE_SUBSCRIPTION_STATUSES.has(subscription.status);
 }
 
 export async function userHasCatalogAccess(user: AppUser): Promise<boolean> {

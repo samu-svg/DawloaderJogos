@@ -42,9 +42,9 @@ export function AppPlanCard({
             </h2>
             <p className="mt-3 leading-7 text-zinc-300">
               Você paga pelo <strong className="text-white">software</strong>,
-              não pelos arquivos dos portfólios. A assinatura mensal libera o
-              MontaHD — a ferramenta que baixa, descompacta e monta o seu HD. O
-              acervo vem incluído enquanto estiver ativo.
+              não pelos arquivos dos portfólios. Planos de 1, 2 ou 3 meses liberam o
+              MontaHD — a ferramenta que baixa, descompacta e monta o seu HD. Cartão
+              recorrente ou PIX à vista.
             </p>
             <p className="mt-6 text-3xl font-bold text-white">{planLabel}</p>
             {!paymentsEnabled && (

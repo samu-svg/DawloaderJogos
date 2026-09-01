@@ -1,14 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import {
-  ManageSubscriptionButton,
-  SubscribeCheckoutButton,
-} from "@/components/subscribe-checkout-button";
+import { ManageSubscriptionButton } from "@/components/subscribe-checkout-button";
+import { PlanPicker } from "@/components/plan-picker";
 import { SiteHeader } from "@/components/site-header";
 import { requireAppUser } from "@/lib/auth";
 import { canAccessPainel, hasSubscriptionBypass } from "@/lib/rbac";
 import { safeInternalPath } from "@/lib/safe-redirect";
-import { stripePlanLabel, subscriptionsEnabled } from "@/lib/stripe";
+import { subscriptionsEnabled } from "@/lib/stripe";
 import {
   getUserSubscription,
   subscriptionIsActive,
@@ -17,7 +15,7 @@ import {
 
 const INCLUDED = [
   "Licença do software MontaHD para Windows",
-  "Acervo completo — acesse tudo enquanto a assinatura estiver ativa",
+  "Acervo completo — acesse tudo enquanto o plano estiver ativo",
   "Download e extração automáticos",
   "Use em qualquer pasta do HD, sem limite de dispositivos vinculados",
   "Sem anúncios e sem encurtadores",
@@ -51,15 +49,15 @@ export default async function AssinarPage({ searchParams }: PageProps) {
       <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-16">
         <div className="space-y-3 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-2">
-            Assinatura mensal
+            Planos MontaHD
           </p>
           <h1 className="text-3xl font-bold tracking-tight text-white">
             Libere o MontaHD
           </h1>
           <p className="mx-auto max-w-lg text-sm leading-6 text-zinc-400">
             Você paga pelo <strong className="text-zinc-200">software MontaHD</strong>,
-            não pelos arquivos dos portfólios. Enquanto a assinatura estiver ativa,
-            o app e o acervo inteiro ficam liberados.
+            não pelos arquivos dos portfólios. Escolha 1, 2 ou 3 meses — cartão
+            recorrente ou PIX à vista.
           </p>
         </div>
 
@@ -77,11 +75,13 @@ export default async function AssinarPage({ searchParams }: PageProps) {
           ) : active ? (
             <div className="space-y-5">
               <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
-                Assinatura ativa — app e acervo disponíveis neste período.
+                Plano ativo — app e acervo disponíveis neste período.
               </p>
               {subscription?.current_period_end && (
                 <p className="text-sm text-zinc-400">
-                  Renova em{" "}
+                  {subscription.stripe_subscription_id
+                    ? "Renova em "
+                    : "Acesso até "}
                   {new Date(subscription.current_period_end).toLocaleDateString(
                     "pt-BR",
                   )}
@@ -95,27 +95,18 @@ export default async function AssinarPage({ searchParams }: PageProps) {
                 >
                   Abrir meu acervo
                 </Link>
-                <ManageSubscriptionButton />
+                {subscription?.stripe_subscription_id && (
+                  <ManageSubscriptionButton />
+                )}
               </div>
             </div>
           ) : (
             <div className="space-y-6">
               {cancelado === "1" && (
                 <p className="rounded-xl border border-border bg-surface px-4 py-3 text-sm text-zinc-300">
-                  Assinatura cancelada no checkout. Você pode tentar de novo quando quiser.
+                  Pagamento cancelado no checkout. Você pode tentar de novo quando quiser.
                 </p>
               )}
-              <div>
-                <p className="text-3xl font-bold text-white">
-                  {stripePlanLabel()}
-                </p>
-                <p className="mt-1 text-sm text-zinc-500">cobrança mensal</p>
-                <p className="mt-2 text-sm leading-6 text-zinc-400">
-                  Pague com <strong className="text-zinc-200">cartão</strong> no
-                  checkout seguro da Stripe. O valor é pela licença do software —
-                  não pelos jogos. Cancele quando quiser pelo portal da assinatura.
-                </p>
-              </div>
               <ul className="space-y-2.5">
                 {INCLUDED.map((item) => (
                   <li
@@ -129,7 +120,7 @@ export default async function AssinarPage({ searchParams }: PageProps) {
                   </li>
                 ))}
               </ul>
-              <SubscribeCheckoutButton label="Assinar e liberar o app" />
+              <PlanPicker />
             </div>
           )}
         </div>

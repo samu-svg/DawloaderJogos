@@ -1,12 +1,10 @@
 import Stripe from "stripe";
+import { lowestPlanPriceLabel, stripePlansConfigured } from "@/lib/stripe-plans";
 
 let stripeClient: Stripe | null = null;
 
 export function stripeConfigured(): boolean {
-  return Boolean(
-    process.env.STRIPE_SECRET_KEY?.trim() &&
-      process.env.STRIPE_PRICE_ID?.trim(),
-  );
+  return stripePlansConfigured();
 }
 
 export function subscriptionsEnabled(): boolean {
@@ -25,15 +23,11 @@ export function getStripe(): Stripe {
   return stripeClient;
 }
 
-export function stripePriceId(): string {
-  const priceId = process.env.STRIPE_PRICE_ID?.trim();
-  if (!priceId) throw new Error("STRIPE_PRICE_ID não está definida.");
-  return priceId;
-}
-
+/** @deprecated Use lowestPlanPriceLabel() ou STRIPE_PLANS */
 export function stripePlanLabel(): string {
-  const raw = process.env.STRIPE_PLAN_LABEL?.trim() || "R$ 49,90";
-  return raw.includes("/") ? raw : `${raw}/mês`;
+  const raw = process.env.STRIPE_PLAN_LABEL?.trim();
+  if (raw) return raw.includes("/") ? raw : `${raw}/mês`;
+  return `${lowestPlanPriceLabel()}/mês`;
 }
 
 export const ACTIVE_SUBSCRIPTION_STATUSES = new Set([

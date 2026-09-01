@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
-  checkoutSessionGrantsLifetimeAccess,
+  checkoutSessionGrantsPrepaidAccess,
   userIdFromCheckoutSession,
   userIdFromPaymentIntent,
 } from "./stripe-access.ts";
 
-test("pagamento único pago libera acesso vitalício", () => {
+test("pagamento único pago libera acesso pré-pago", () => {
   assert.equal(
-    checkoutSessionGrantsLifetimeAccess({
+    checkoutSessionGrantsPrepaidAccess({
       mode: "payment",
       payment_status: "paid",
     }),
@@ -18,7 +18,7 @@ test("pagamento único pago libera acesso vitalício", () => {
 
 test("PIX pendente não libera acesso", () => {
   assert.equal(
-    checkoutSessionGrantsLifetimeAccess({
+    checkoutSessionGrantsPrepaidAccess({
       mode: "payment",
       payment_status: "unpaid",
     }),
@@ -28,7 +28,7 @@ test("PIX pendente não libera acesso", () => {
 
 test("checkout de assinatura não usa o unlock one-time", () => {
   assert.equal(
-    checkoutSessionGrantsLifetimeAccess({
+    checkoutSessionGrantsPrepaidAccess({
       mode: "subscription",
       payment_status: "paid",
     }),

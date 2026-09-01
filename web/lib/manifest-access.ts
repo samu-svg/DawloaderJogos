@@ -34,15 +34,17 @@ function acervoAberto(): boolean {
   return process.env.ACERVO_ABERTO?.trim() === "true";
 }
 
-async function subscriptionStatusForUser(userId: string): Promise<string | null> {
+async function subscriptionStatusForUser(
+  userId: string,
+): Promise<{ status: string; current_period_end: string | null } | null> {
   try {
     const supabase = createServiceRoleClient();
     const { data } = await supabase
       .from("subscriptions")
-      .select("status")
+      .select("status, current_period_end")
       .eq("user_id", userId)
       .maybeSingle();
-    return data?.status ?? null;
+    return data ?? null;
   } catch {
     return null;
   }
@@ -112,8 +114,8 @@ export async function resolveManifestAccess(
       };
     }
 
-    const status = await subscriptionStatusForUser(payload.sub);
-    if (!subscriptionIsActive(status ? { status } : null)) {
+    const subscription = await subscriptionStatusForUser(payload.sub);
+    if (!subscriptionIsActive(subscription)) {
       return { allowed: false, status: 403 };
     }
 
@@ -140,8 +142,8 @@ export async function resolveManifestAccess(
     };
   }
 
-  const status = await subscriptionStatusForUser(user.id);
-  if (!subscriptionIsActive(status ? { status } : null)) {
+  const subscription = await subscriptionStatusForUser(user.id);
+  if (!subscriptionIsActive(subscription)) {
     return { allowed: false, status: 403 };
   }
 

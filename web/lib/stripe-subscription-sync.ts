@@ -1,23 +1,36 @@
 import type Stripe from "stripe";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
-export async function upsertLifetimeAccessFromPayment(
+export async function upsertPrepaidAccessFromPayment(
   userId: string,
   customerId: string,
+  months: number,
 ) {
+  const periodEnd = new Date();
+  periodEnd.setMonth(periodEnd.getMonth() + months);
+
   const supabase = createServiceRoleClient();
   const { error } = await supabase.from("subscriptions").upsert(
     {
       user_id: userId,
       stripe_customer_id: customerId,
+      stripe_subscription_id: null,
       status: "active",
-      current_period_end: null,
+      current_period_end: periodEnd.toISOString(),
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id" },
   );
 
   if (error) throw new Error(error.message);
+}
+
+/** @deprecated PIX pré-pago usa upsertPrepaidAccessFromPayment */
+export async function upsertLifetimeAccessFromPayment(
+  userId: string,
+  customerId: string,
+) {
+  return upsertPrepaidAccessFromPayment(userId, customerId, 1);
 }
 
 export async function upsertSubscriptionFromStripe(

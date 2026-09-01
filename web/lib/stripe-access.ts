@@ -1,9 +1,16 @@
 import type Stripe from "stripe";
 
-export function checkoutSessionGrantsLifetimeAccess(
+export function checkoutSessionGrantsPrepaidAccess(
   session: Pick<Stripe.Checkout.Session, "mode" | "payment_status">,
 ): boolean {
   return session.mode === "payment" && session.payment_status === "paid";
+}
+
+/** @deprecated Use checkoutSessionGrantsPrepaidAccess */
+export function checkoutSessionGrantsLifetimeAccess(
+  session: Pick<Stripe.Checkout.Session, "mode" | "payment_status">,
+): boolean {
+  return checkoutSessionGrantsPrepaidAccess(session);
 }
 
 export function userIdFromCheckoutSession(

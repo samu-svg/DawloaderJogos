@@ -2,7 +2,7 @@ const STEPS = [
   {
     step: "01",
     title: "Pague o software",
-    text: "O pagamento é pelo app MontaHD — não pelos jogos. A assinatura mensal libera o software e o acervo inteiro enquanto estiver ativa.",
+    text: "O pagamento é pelo app MontaHD — não pelos jogos. Escolha 1, 2 ou 3 meses com cartão recorrente ou PIX à vista.",
   },
   {
     step: "02",
