@@ -31,7 +31,6 @@ const api = {
       session?: string;
       slug?: string;
       entryIds?: string[];
-      hdFingerprint: string;
     },
   ): Promise<string | null> =>
     ipcRenderer.invoke("request-manifest-token", { baseUrl, ...payload }),

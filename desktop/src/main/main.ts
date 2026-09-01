@@ -273,7 +273,6 @@ async function requestManifestToken(
     session?: string;
     slug?: string;
     entryIds?: string[];
-    hdFingerprint: string;
   },
 ): Promise<string | null> {
   const response = await fetchSameOrigin(`${normalizeBaseUrl(baseUrl)}/api/manifest-token`, {
@@ -291,12 +290,12 @@ async function requestManifestToken(
 
   if (response.status === 403) {
     throw new Error(
-      data.error ?? "Seu plano não permite usar este HD. Use o HD registrado na sua conta.",
+      data.error ?? "Assinatura ativa necessária. Assine em montahd.vercel.app/assinar.",
     );
   }
   if (!response.ok) {
     throw new Error(
-      data.error ?? `Não foi possível autorizar o HD (${response.status}).`,
+      data.error ?? `Não foi possível autorizar o download (${response.status}).`,
     );
   }
 
@@ -402,7 +401,6 @@ ipcMain.handle(
       session?: string;
       slug?: string;
       entryIds?: string[];
-      hdFingerprint: string;
     },
   ) => {
     assertTrustedSender(event);
@@ -410,7 +408,6 @@ ipcMain.handle(
       session: payload.session,
       slug: payload.slug,
       entryIds: payload.entryIds,
-      hdFingerprint: payload.hdFingerprint,
     });
   },
 );

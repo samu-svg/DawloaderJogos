@@ -32,7 +32,8 @@ export function stripePriceId(): string {
 }
 
 export function stripePlanLabel(): string {
-  return process.env.STRIPE_PLAN_LABEL?.trim() || "R$ 49,90";
+  const raw = process.env.STRIPE_PLAN_LABEL?.trim() || "R$ 49,90";
+  return raw.includes("/") ? raw : `${raw}/mês`;
 }
 
 export const ACTIVE_SUBSCRIPTION_STATUSES = new Set([

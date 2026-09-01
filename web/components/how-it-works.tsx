@@ -2,12 +2,12 @@ const STEPS = [
   {
     step: "01",
     title: "Pague o software",
-    text: "O pagamento é pelo app MontaHD — não pelos jogos. Um pagamento único libera o software, 1 HD e o acervo inteiro. No checkout da Stripe aparecem cartão e, quando disponível, PIX.",
+    text: "O pagamento é pelo app MontaHD — não pelos jogos. A assinatura mensal libera o software e o acervo inteiro enquanto estiver ativa.",
   },
   {
     step: "02",
     title: "Marque os jogos",
-    text: "No app, escolha os títulos do acervo e aponte a pasta raiz do seu HD.",
+    text: "No site, marque os títulos do acervo e clique em Instalar no HD. No app, escolha a pasta onde gravar.",
   },
   {
     step: "03",

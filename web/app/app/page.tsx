@@ -14,7 +14,7 @@ import { userHasCatalogAccess } from "@/lib/subscription";
 export const metadata: Metadata = {
   title: "O app MontaHD — baixa e organiza os jogos no seu HD",
   description:
-    "Você paga pelo software MontaHD, não pelos arquivos. O app baixa, verifica, descompacta e coloca cada jogo na pasta certa do HD. Acervo incluído no pagamento único, sem anúncios.",
+    "Você paga pelo software MontaHD, não pelos arquivos. O app baixa, verifica, descompacta e coloca cada jogo na pasta certa do HD. Acervo incluído na assinatura mensal, sem anúncios.",
 };
 
 export default async function AppPage() {

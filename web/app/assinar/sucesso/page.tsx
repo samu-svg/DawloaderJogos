@@ -18,9 +18,8 @@ export default async function AssinarSucessoPage() {
           Pagamento recebido
         </h1>
         <p className="mt-3 text-sm leading-6 text-zinc-400">
-          Estamos confirmando o pagamento único do software. Em alguns segundos
-          o app e o acervo serão liberados — atualize a página se necessário.
-          Pagamentos PIX podem levar um instante a mais.
+          Assinatura confirmada. Em alguns segundos o app e o acervo serão
+          liberados — atualize a página se necessário.
         </p>
         <Link
           href="/baixar"

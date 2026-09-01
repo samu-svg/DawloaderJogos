@@ -1,6 +1,5 @@
 import type { AppUser } from "@/lib/auth";
 import { getApiUser } from "@/lib/auth";
-import { userOwnsHdFingerprint } from "@/lib/hd-access";
 import { hasSubscriptionBypass, parseRole, type Role } from "@/lib/rbac";
 import {
   subscriptionIsActive,
@@ -19,8 +18,8 @@ export type ManifestAccessResult =
        * Whether the caller may receive signed download URLs.
        *
        * A signed URL works for anyone who holds it, so it is only handed to a
-       * caller that proved it is installing on an HD registered to the account
-       * (the desktop flow). A plain browser session gets metadata only —
+       * caller that proved an active subscription via the desktop Bearer token.
+       * A plain browser session gets metadata only —
        * otherwise a subscriber could copy the JSON and hand the whole catalog
        * to people with no account at all.
        */
@@ -116,25 +115,6 @@ export async function resolveManifestAccess(
     const status = await subscriptionStatusForUser(payload.sub);
     if (!subscriptionIsActive(status ? { status } : null)) {
       return { allowed: false, status: 403 };
-    }
-
-    if (!payload.hd) {
-      return {
-        allowed: false,
-        status: 403,
-        error:
-          "Autorize a pasta do HD no app antes de baixar. Volte ao site, clique em Instalar no HD e escolha a pasta do disco.",
-      };
-    }
-
-    const ownsHd = await userOwnsHdFingerprint(payload.sub, payload.hd);
-    if (!ownsHd) {
-      return {
-        allowed: false,
-        status: 403,
-        error:
-          "Este HD não está vinculado à sua conta. Use o HD registrado ou troque em /conta se o plano permitir.",
-      };
     }
 
     return {

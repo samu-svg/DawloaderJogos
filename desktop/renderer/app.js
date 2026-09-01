@@ -4,6 +4,25 @@
 
 const DEFAULT_SITE_URL = "https://montahd.vercel.app";
 const SITE_URL_STORAGE_KEY = "montahd.siteUrl";
+/** Fallback quando o Chromium bloqueia localStorage em file:// (sandbox). */
+let memorySiteUrl = null;
+
+function readSiteUrlStorage() {
+  try {
+    return localStorage.getItem(SITE_URL_STORAGE_KEY);
+  } catch {
+    return memorySiteUrl;
+  }
+}
+
+function writeSiteUrlStorage(url) {
+  memorySiteUrl = url;
+  try {
+    localStorage.setItem(SITE_URL_STORAGE_KEY, url);
+  } catch {
+    // memória já atualizada
+  }
+}
 
 function isTrustedCatalogHost(hostname) {
   const host = hostname.toLowerCase();
@@ -177,12 +196,11 @@ function init() {
   const progressCells = new Map();
 
   function getSiteUrl() {
-    const stored = localStorage.getItem(SITE_URL_STORAGE_KEY);
-    return normalizeSiteUrl(stored);
+    return normalizeSiteUrl(readSiteUrlStorage());
   }
 
   function saveSiteUrl(url) {
-    localStorage.setItem(SITE_URL_STORAGE_KEY, normalizeSiteUrl(url));
+    writeSiteUrlStorage(normalizeSiteUrl(url));
   }
 
   function catalogUrl() {
@@ -814,20 +832,17 @@ function init() {
     pickHdSiteBtn.disabled = false;
     heroTitle.textContent = "Jogos recebidos do site";
     heroDesc.textContent =
-      "Falta só escolher a pasta raiz do HD para carregar a lista e começar a instalar.";
+      "Escolha a pasta raiz do HD onde os jogos serão gravados.";
     setSummary("Clique em Escolher pasta do HD para continuar.");
   }
 
-  async function authorizeHdAndLoadGames() {
-    const folder = selectedRoot;
-    if (!folder || !pendingInstallSession) {
-      throw new Error("Escolha a pasta do HD para continuar.");
+  async function loadGamesFromInstallSession() {
+    if (!pendingInstallSession) {
+      throw new Error("Sessão de instalação ausente. Volte ao site e clique em Instalar no HD.");
     }
     const baseUrl = /** @type {HTMLInputElement} */ (baseUrlInput).value.trim();
-    const hdFingerprint = await window.montahd.computeHdFingerprint(folder);
     pendingManifestToken = await window.montahd.requestManifestToken(baseUrl, {
       session: pendingInstallSession,
-      hdFingerprint,
     });
     pendingInstallSession = null;
     pendingCatalogFromSite = false;
@@ -862,32 +877,22 @@ function init() {
       pendingCatalogFromSite = true;
       openCatalogBtn.classList.add("hidden");
 
-      // Com sessão o manifesto só vem depois de autorizar o HD; sem sessão
-      // (token legado ou acervo aberto) a lista carrega antes de escolher a pasta.
-      if (pendingInstallSession && !selectedRoot) {
-        showPickHdForLaunch();
-        return;
-      }
-
       setSummary(
         pendingInstallSession
-          ? "Autorizando HD e carregando jogos…"
+          ? "Carregando jogos do site…"
           : "Carregando jogos selecionados no site…",
       );
 
       try {
-        if (pendingInstallSession) await authorizeHdAndLoadGames();
+        if (pendingInstallSession) await loadGamesFromInstallSession();
         else await loadManifest({ fromSite: true });
       } catch (error) {
         const detail = formatInstallError(error);
         window.montahd.log(`launch falhou: ${detail}`);
-        showPickHdForLaunch();
+        showWelcomeView();
         loadError.textContent = detail;
         loadError.classList.remove("hidden");
-        setSummary(
-          "Não foi possível carregar os jogos. Escolha a pasta do HD e tente de novo.",
-          "error",
-        );
+        setSummary("Não foi possível carregar os jogos do site.", "error");
       }
     } finally {
       catalogLaunchInFlight = false;
@@ -1011,24 +1016,6 @@ function init() {
     if (!folder) return;
 
     applySelectedRoot(folder);
-
-    if (!forLibrary && pendingCatalogFromSite && pendingInstallSession) {
-      loadError.classList.add("hidden");
-      pickHdSiteBtn.disabled = true;
-      setSummary("Autorizando HD e carregando jogos…");
-
-      try {
-        await authorizeHdAndLoadGames();
-      } catch (error) {
-        pickHdSiteBtn.disabled = false;
-        loadError.textContent = formatInstallError(error);
-        loadError.classList.remove("hidden");
-        setSummary("Não foi possível autorizar este HD.", "error");
-      } finally {
-        pickHdSiteBtn.disabled = false;
-      }
-      return;
-    }
 
     await persistCatalogHints();
 

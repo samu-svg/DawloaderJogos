@@ -72,14 +72,14 @@ export async function POST(request: Request) {
   const siteUrl = await getSiteUrl();
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
-    mode: "payment",
+    mode: "subscription",
     locale: "pt-BR",
     line_items: [{ price: stripePriceId(), quantity: 1 }],
     success_url: `${siteUrl}/assinar/sucesso?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${siteUrl}/assinar?cancelado=1`,
     client_reference_id: user.id,
     metadata: userMeta,
-    payment_intent_data: { metadata: userMeta },
+    subscription_data: { metadata: userMeta },
   });
 
   if (!session.url) {

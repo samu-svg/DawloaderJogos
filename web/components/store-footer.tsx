@@ -19,7 +19,7 @@ export function StoreFooter() {
             </p>
             <p className="mx-auto mt-1 max-w-md text-sm text-zinc-500">
               Software que baixa, descompacta e monta o seu HD. Você paga pelo
-              app, não pelos arquivos — acervo incluído no pagamento único, sem
+              app, não pelos arquivos — acervo incluído na assinatura mensal, sem
               anúncios.
             </p>
           </div>

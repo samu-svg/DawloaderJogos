@@ -15,7 +15,7 @@ const PROPS = [
     accent: "text-pink-300",
     ring: "border-pink-500/30 bg-pink-500/10",
     title: "Zero anúncios",
-    text: "Sem pop-up, sem encurtador, sem espera. O pagamento único do app cobre a infraestrutura — a experiência é limpa do início ao fim.",
+    text: "Sem pop-up, sem encurtador, sem espera. A assinatura mensal cobre a infraestrutura — a experiência é limpa do início ao fim.",
   },
   {
     accent: "text-emerald-300",
