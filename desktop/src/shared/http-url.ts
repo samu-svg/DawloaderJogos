@@ -1,3 +1,5 @@
+import path from "node:path";
+
 const BLOCKED_DOWNLOAD_HOSTS = new Set([
   "localhost",
   "metadata.google.internal",
@@ -52,8 +54,28 @@ export function windowsExternalOpenCommand(url: string): {
   args: string[];
 } {
   const safeUrl = assertHttpUrl(url).toString();
+  const systemRoot =
+    process.platform === "win32"
+      ? process.env.SystemRoot || process.env.WINDIR || "C:\\Windows"
+      : "C:\\Windows";
   return {
-    command: "rundll32",
+    command: path.join(systemRoot, "System32", "rundll32.exe"),
     args: ["url.dll,FileProtocolHandler", safeUrl],
+  };
+}
+
+/** Fallback estável no Windows: explorer.exe com URL http(s) validada. */
+export function windowsExplorerOpenCommand(url: string): {
+  command: string;
+  args: string[];
+} {
+  const safeUrl = assertHttpUrl(url).toString();
+  const windowsDir =
+    process.platform === "win32"
+      ? process.env.SystemRoot || process.env.WINDIR || "C:\\Windows"
+      : "C:\\Windows";
+  return {
+    command: path.join(windowsDir, "explorer.exe"),
+    args: [safeUrl],
   };
 }

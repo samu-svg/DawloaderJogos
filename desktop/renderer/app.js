@@ -236,8 +236,10 @@ function init() {
       await window.montahd.openExternal(catalogUrl());
       setSummary("Catálogo aberto no navegador. Selecione jogos e clique em Instalar no HD.");
     } catch (error) {
+      const detail =
+        error instanceof Error ? error.message : "Não foi possível abrir o navegador.";
       setSummary(
-        error instanceof Error ? error.message : "Não foi possível abrir o navegador.",
+        `${detail} Abra o catálogo em ${catalogUrl()}`,
         "error",
       );
     } finally {

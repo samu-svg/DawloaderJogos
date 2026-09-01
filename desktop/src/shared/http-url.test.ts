@@ -4,6 +4,7 @@ import {
   assertHttpUrl,
   assertSafeDownloadUrl,
   isBlockedDownloadHost,
+  windowsExplorerOpenCommand,
   windowsExternalOpenCommand,
 } from "../shared/http-url.ts";
 
@@ -31,7 +32,7 @@ test("windowsExternalOpenCommand isola metacaracteres em argv", () => {
 
   for (const url of cases) {
     const { command, args } = windowsExternalOpenCommand(url);
-    assert.equal(command, "rundll32");
+    assert.match(command.replace(/\\/g, "/"), /\/System32\/rundll32\.exe$/i);
     assert.deepEqual(args, [
       "url.dll,FileProtocolHandler",
       assertHttpUrl(url).toString(),
@@ -51,6 +52,18 @@ test("isBlockedDownloadHost recusa metadados e faixas privadas", () => {
   assert.throws(
     () => assertSafeDownloadUrl("http://169.254.169.254/latest/meta-data"),
     /interno/,
+  );
+});
+
+test("windowsExplorerOpenCommand usa explorer.exe e recusa esquema perigoso", () => {
+  const { command, args } = windowsExplorerOpenCommand(
+    "https://montahd.vercel.app/baixar",
+  );
+  assert.match(command.replace(/\\/g, "/"), /\/explorer\.exe$/i);
+  assert.deepEqual(args, ["https://montahd.vercel.app/baixar"]);
+  assert.throws(
+    () => windowsExplorerOpenCommand("file:///C:/Windows/notepad.exe"),
+    /inválida/,
   );
 });
 
