@@ -17,16 +17,17 @@ export function isFilesystemRoot(dir: string): boolean {
   return path.parse(resolved).root === resolved;
 }
 
+/**
+ * Cria pastas uma a uma a partir da raiz do disco.
+ * No Windows, `mkdir(..., { recursive: true })` tenta criar `D:\` e cai com EPERM.
+ */
 async function ensureDirWalk(dir: string): Promise<void> {
   const resolved = path.resolve(dir);
   const { root } = path.parse(resolved);
   if (resolved === root) return;
 
   const relative = path.relative(root, resolved);
-  if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) {
-    await mkdir(resolved, { recursive: true });
-    return;
-  }
+  if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) return;
 
   let current = root;
   for (const segment of relative.split(path.sep)) {
@@ -47,10 +48,7 @@ function ensureDirWalkSync(dir: string): void {
   if (resolved === root) return;
 
   const relative = path.relative(root, resolved);
-  if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) {
-    mkdirSync(resolved, { recursive: true });
-    return;
-  }
+  if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) return;
 
   let current = root;
   for (const segment of relative.split(path.sep)) {
@@ -69,27 +67,19 @@ function ensureDirWalkSync(dir: string): void {
 export async function ensureDir(dir: string): Promise<void> {
   const resolved = path.resolve(dir);
   if (isFilesystemRoot(resolved)) return;
-  try {
-    await mkdir(resolved, { recursive: true });
-  } catch (error) {
-    if (isNodeErrorCode(error, "EPERM") || isNodeErrorCode(error, "EACCES")) {
-      await ensureDirWalk(resolved);
-      return;
-    }
-    throw error;
+  if (process.platform === "win32") {
+    await ensureDirWalk(resolved);
+    return;
   }
+  await mkdir(resolved, { recursive: true });
 }
 
 export function ensureDirSync(dir: string): void {
   const resolved = path.resolve(dir);
   if (isFilesystemRoot(resolved)) return;
-  try {
-    mkdirSync(resolved, { recursive: true });
-  } catch (error) {
-    if (isNodeErrorCode(error, "EPERM") || isNodeErrorCode(error, "EACCES")) {
-      ensureDirWalkSync(resolved);
-      return;
-    }
-    throw error;
+  if (process.platform === "win32") {
+    ensureDirWalkSync(resolved);
+    return;
   }
+  mkdirSync(resolved, { recursive: true });
 }

@@ -40,6 +40,11 @@ function init() {
     return;
   }
 
+  void window.montahd.getAppVersion().then((version) => {
+    const el = document.getElementById("app-version");
+    if (el && version) el.textContent = version;
+  }).catch(() => undefined);
+
   const baseUrlInput = document.getElementById("base-url");
   const slugInput = document.getElementById("slug");
   const loadBtn = document.getElementById("load-btn");

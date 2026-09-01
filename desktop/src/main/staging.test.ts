@@ -1,4 +1,8 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
+import { mkdtemp, rm } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import test from "node:test";
 import { getFreeBytes, safeStagingId, stagingEntryDir } from "./staging.ts";
 
@@ -18,4 +22,17 @@ test("getFreeBytes na raiz do disco não tenta mkdir", async () => {
   const bytes = await getFreeBytes(root);
   assert.ok(Number.isFinite(bytes));
   assert.ok(bytes >= 0);
+});
+
+test("getFreeBytes não cria pasta inexistente", async () => {
+  const parent = await mkdtemp(path.join(os.tmpdir(), "montahd-free-"));
+  try {
+    const missing = path.join(parent, "nao-existe");
+    const bytes = await getFreeBytes(missing);
+    assert.ok(Number.isFinite(bytes));
+    assert.ok(bytes >= 0);
+    assert.equal(existsSync(missing), false);
+  } finally {
+    await rm(parent, { recursive: true, force: true });
+  }
 });

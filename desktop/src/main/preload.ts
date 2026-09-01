@@ -17,6 +17,7 @@ export interface DownloadProgressEvent {
 
 const api = {
   openExternal: (url: string): Promise<void> => ipcRenderer.invoke("open-external", url),
+  getAppVersion: (): Promise<string> => ipcRenderer.invoke("get-app-version"),
   selectFolder: (): Promise<string | null> => ipcRenderer.invoke("select-folder"),
   computeHdFingerprint: (rootDir: string): Promise<string> =>
     ipcRenderer.invoke("compute-hd-fingerprint", rootDir),

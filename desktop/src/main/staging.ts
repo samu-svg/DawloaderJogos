@@ -16,16 +16,25 @@ function isFilesystemRoot(dir: string): boolean {
   return path.parse(resolved).root === resolved;
 }
 
+/** Sobe até a pasta (ou unidade) que já existe — não cria nada no disco. */
+export function existingAncestor(dir: string): string {
+  let current = path.resolve(dir);
+  while (!existsSync(current)) {
+    const parent = path.dirname(current);
+    if (parent === current) return current;
+    current = parent;
+  }
+  return current;
+}
+
 export async function ensureStagingRoot(stagingRoot: string): Promise<void> {
-  if (isFilesystemRoot(stagingRoot)) return;
-  await mkdir(stagingRoot, { recursive: true });
+  const resolved = path.resolve(stagingRoot);
+  if (isFilesystemRoot(resolved)) return;
+  await mkdir(resolved, { recursive: true });
 }
 
 export async function getFreeBytes(dir: string): Promise<number> {
-  if (!isFilesystemRoot(dir)) {
-    await mkdir(dir, { recursive: true });
-  }
-  const stats = await statfs(dir);
+  const stats = await statfs(existingAncestor(dir));
   return Number(stats.bavail) * Number(stats.bsize);
 }
 

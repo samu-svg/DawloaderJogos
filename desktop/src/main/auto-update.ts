@@ -7,6 +7,9 @@ export function startAutoUpdate(): void {
 
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
+  // Builds atuais não têm Authenticode; sem isso o update é recusado em silêncio.
+  (autoUpdater as unknown as { verifyUpdateCodeSignature: boolean }).verifyUpdateCodeSignature =
+    false;
   autoUpdater.on("error", () => {
     // Sem latest.yml ou sem rede: o app segue normal.
   });

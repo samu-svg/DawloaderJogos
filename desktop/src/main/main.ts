@@ -43,6 +43,7 @@ import {
   type RequestedEntry,
 } from "../shared/trusted-entries";
 import type { HdLibraryHint } from "../shared/hd-library";
+import { formatFsError } from "../shared/fs-errors";
 import { largestPcStagingBytes, notEnoughPcSpaceMessage } from "../shared/pc-space";
 import { ensureStagingRoot, getFreeBytes } from "./staging";
 import { openExternalUrl } from "./open-external";
@@ -320,6 +321,11 @@ ipcMain.handle("open-external", async (event, rawUrl: string) => {
   await openExternalUrl(url);
 });
 
+ipcMain.handle("get-app-version", (event) => {
+  assertTrustedSender(event);
+  return app.getVersion();
+});
+
 ipcMain.handle("get-pc-disk-space", async (event) => {
   assertTrustedSender(event);
   const stagingRoot = stagingRootPath();
@@ -449,6 +455,8 @@ ipcMain.handle(
 
     const results: { entryId: string; ok: boolean; error?: string }[] = [];
     const stagingRoot = stagingRootPath();
+
+    try {
 
     // The renderer only gets to choose which entries and which destination;
     // url, kind and hash are read back from the manifest this process fetched.
@@ -590,5 +598,28 @@ ipcMain.handle(
     abortController = null;
     send("download-complete", { results });
     return { results };
+    } catch (error) {
+      const message = formatFsError(error);
+      abortController = null;
+      const ids = new Set(results.map((item) => item.entryId));
+      for (const raw of payload.entries ?? []) {
+        const entryId = typeof raw.id === "string" ? raw.id : "";
+        if (!entryId || ids.has(entryId)) continue;
+        send("download-progress", {
+          entryId,
+          label: typeof raw.label === "string" ? raw.label : "",
+          downloadedBytes: 0,
+          totalBytes: 0,
+          status: "error",
+          error: message,
+        } satisfies DownloadProgress);
+        results.push({ entryId, ok: false, error: message });
+      }
+      if (results.length === 0) {
+        results.push({ entryId: "", ok: false, error: message });
+      }
+      send("download-complete", { results });
+      return { results };
+    }
   },
 );

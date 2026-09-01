@@ -246,28 +246,26 @@ async function createExtractTempDir(extractParent?: string): Promise<string> {
 
 async function ensureExtractParent(dir: string): Promise<void> {
   const resolved = path.resolve(dir);
-  if (path.parse(resolved).root === resolved) return;
-  try {
-    await mkdir(resolved, { recursive: true });
-  } catch (error) {
-    const code =
-      error !== null &&
-      typeof error === "object" &&
-      "code" in error &&
-      typeof (error as { code: unknown }).code === "string"
-        ? (error as { code: string }).code
-        : null;
-    if (code !== "EPERM" && code !== "EACCES") throw error;
+  const { root } = path.parse(resolved);
+  if (resolved === root) return;
+  const relative = path.relative(root, resolved);
+  if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) return;
+
+  let current = root;
+  for (const segment of relative.split(path.sep)) {
+    if (!segment) continue;
+    current = path.join(current, segment);
     try {
-      await mkdir(resolved);
-    } catch (retryError) {
-      const retryCode =
-        retryError !== null &&
-        typeof retryError === "object" &&
-        "code" in retryError
-          ? (retryError as { code: unknown }).code
+      await mkdir(current);
+    } catch (error) {
+      const code =
+        error !== null &&
+        typeof error === "object" &&
+        "code" in error
+          ? (error as { code: unknown }).code
           : null;
-      if (retryCode !== "EEXIST") throw retryError;
+      if (code === "EEXIST") continue;
+      throw error;
     }
   }
 }
