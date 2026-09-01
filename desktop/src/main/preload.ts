@@ -2,7 +2,8 @@ import { contextBridge, ipcRenderer } from "electron";
 import type { CatalogLaunch } from "../shared/catalog-launch";
 import type { HdLibraryHint, HdLibraryItem } from "../shared/hd-library";
 import type { EntryInstallState } from "../shared/install-state";
-import type { Manifest, ResolvedManifestEntry } from "../shared/manifest";
+import type { Manifest } from "../shared/manifest";
+import type { RequestedEntry } from "../shared/trusted-entries";
 
 export interface DownloadProgressEvent {
   entryId: string;
@@ -35,7 +36,7 @@ const api = {
     ipcRenderer.invoke("consume-catalog-launch"),
   startDownload: (
     rootDir: string,
-    entries: ResolvedManifestEntry[],
+    entries: RequestedEntry[],
     options?: { resetEntryIds?: string[] },
   ) => ipcRenderer.invoke("start-download", { rootDir, entries, ...options }),
   inspectInstallState: (

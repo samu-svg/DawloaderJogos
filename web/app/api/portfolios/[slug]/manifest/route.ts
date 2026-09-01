@@ -4,8 +4,10 @@ import { logError } from "@/lib/logger";
 import {
   MANIFEST_VERSION,
   type Manifest,
+  type ManifestPreview,
   type ResolvedManifestEntry,
   normalizeManifestSha256,
+  omitDownloadUrls,
   validateDestination,
 } from "@/lib/manifest";
 import { resolveManifestAccess } from "@/lib/manifest-access";
@@ -24,6 +26,7 @@ type EntryRow = Database["public"]["Tables"]["entries"]["Row"];
 async function resolveManifestEntries(
   rows: EntryRow[],
   allowedIds: Set<string> | null,
+  includeDownloadUrls: boolean,
 ): Promise<ResolvedManifestEntry[]> {
   const tasks = rows.map(async (row) => {
     if (allowedIds && !allowedIds.has(row.id)) return null;
@@ -31,14 +34,18 @@ async function resolveManifestEntries(
     const path = validateDestination(row.destination);
     if (!path.ok) return null;
 
-    const downloadUrl =
-      row.kind === "hosted"
-        ? row.storage_key
-          ? await signDownloadUrl(row.storage_key, row.label)
-          : null
-        : row.external_url;
+    // Preview only needs to know the entry *could* be downloaded. Never put
+    // storage_key or external_url into downloadUrl and then strip it — a
+    // forgotten strip would leak the catalog.
+    const hasSource =
+      row.kind === "hosted" ? Boolean(row.storage_key) : Boolean(row.external_url);
+    if (!hasSource) return null;
 
-    if (!downloadUrl) return null;
+    const downloadUrl = includeDownloadUrls
+      ? row.kind === "hosted"
+        ? await signDownloadUrl(row.storage_key as string, row.label)
+        : (row.external_url as string)
+      : "";
 
     return {
       id: row.id,
@@ -137,7 +144,11 @@ export async function GET(
 
     let entries: ResolvedManifestEntry[];
     try {
-      entries = await resolveManifestEntries(rows ?? [], allowedIds);
+      entries = await resolveManifestEntries(
+        rows ?? [],
+        allowedIds,
+        access.includeDownloadUrls,
+      );
     } catch (error) {
       logError("Falha ao montar o manifesto", error, { slug });
       return NextResponse.json(
@@ -153,7 +164,7 @@ export async function GET(
       );
     }
 
-    const manifest: Manifest = {
+    const base = {
       version: MANIFEST_VERSION,
       portfolio: {
         slug: portfolio.slug,
@@ -163,8 +174,11 @@ export async function GET(
       },
       totalBytes: entries.reduce((sum, entry) => sum + entry.sizeBytes, 0),
       expiresAt: new Date(Date.now() + downloadUrlTtl() * 1000).toISOString(),
-      entries,
-    };
+    } as const;
+
+    const manifest: Manifest | ManifestPreview = access.includeDownloadUrls
+      ? { ...base, entries }
+      : { ...base, entries: omitDownloadUrls(entries) };
 
     return NextResponse.json(manifest, {
       headers: { "cache-control": "no-store" },

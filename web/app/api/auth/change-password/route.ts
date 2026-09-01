@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
+import { recordAudit, requestIp } from "@/lib/audit";
 import { authErrorMessage } from "@/lib/auth-messages";
 import { getApiUser } from "@/lib/auth";
 import { PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
 import { enforceRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { isTrustedAuthOrigin } from "@/lib/trusted-origin";
 
 export async function POST(request: Request) {
@@ -54,6 +56,31 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+
+  // Only a completed password change may reset the rotation clock. Doing this
+  // here (instead of in a separately callable action) keeps the timestamp a
+  // consequence of the change rather than a step a client can invoke on its own.
+  const { error: stampError } = await createServiceRoleClient()
+    .from("profiles")
+    .update({ password_changed_at: new Date().toISOString() })
+    .eq("id", user.id);
+  if (stampError) {
+    return NextResponse.json(
+      {
+        error:
+          "Senha alterada, mas não foi possível registrar a troca. Entre em contato com o suporte.",
+      },
+      { status: 500 },
+    );
+  }
+
+  await recordAudit({
+    actorId: user.id,
+    action: "password.rotated",
+    entity: "user",
+    entityId: user.id,
+    ip: requestIp(request),
+  });
 
   return NextResponse.json({ ok: true });
 }

@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { findDuplicateDestinations, normalizeManifestSha256, validateDestination } from "./manifest.ts";
+import {
+  findDuplicateDestinations,
+  normalizeManifestSha256,
+  omitDownloadUrls,
+  validateDestination,
+} from "./manifest.ts";
 
 test("aceita caminhos relativos comuns", () => {
   for (const input of [
@@ -77,4 +82,23 @@ test("normalizeManifestSha256 só aceita SHA-256 hex de 64 chars", () => {
   assert.equal(normalizeManifestSha256(` ${hash.toUpperCase()} `), hash);
   assert.equal(normalizeManifestSha256(null), undefined);
   assert.equal(normalizeManifestSha256("not-a-hash"), undefined);
+});
+
+test("omitDownloadUrls tira a URL e deixa o restante intacto", () => {
+  const preview = omitDownloadUrls([
+    {
+      id: "1",
+      label: "Jogo",
+      destination: "Games/Jogo",
+      sizeBytes: 10,
+      kind: "hosted",
+      sha256: "a".repeat(64),
+      downloadUrl: "https://cdn.example/secret.zip?sig=abc",
+    },
+  ]);
+  assert.equal(preview.length, 1);
+  assert.equal("downloadUrl" in preview[0], false);
+  assert.equal(preview[0].id, "1");
+  assert.equal(preview[0].destination, "Games/Jogo");
+  assert.equal(JSON.stringify(preview).includes("secret.zip"), false);
 });

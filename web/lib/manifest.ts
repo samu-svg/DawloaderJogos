@@ -68,6 +68,20 @@ export interface Manifest {
   entries: ResolvedManifestEntry[];
 }
 
+/**
+ * Same shape as {@link Manifest} minus the download URLs, served to callers
+ * that may see what the catalog contains but are not authorized to fetch the
+ * bytes — currently a browser session, which cannot prove an HD binding.
+ */
+export interface ManifestPreview extends Omit<Manifest, "entries"> {
+  entries: ManifestEntry[];
+}
+
+/** Drops signed URLs so a metadata-only response cannot be reused as a download list. */
+export function omitDownloadUrls(entries: ResolvedManifestEntry[]): ManifestEntry[] {
+  return entries.map(({ downloadUrl: _downloadUrl, ...entry }) => entry);
+}
+
 export type PathValidation =
   | { ok: true; destination: string }
   | { ok: false; error: string };

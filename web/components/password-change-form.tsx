@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ackPasswordRotation } from "@/lib/actions/password";
 import { authErrorMessage } from "@/lib/auth-messages";
 import { PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
 
@@ -48,13 +47,7 @@ export function PasswordChangeForm({ expired }: { expired: boolean }) {
       return;
     }
 
-    const result = await ackPasswordRotation();
     setLoading(false);
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
-
     setMessage("Senha atualizada.");
     setPassword("");
     setConfirm("");

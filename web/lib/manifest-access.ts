@@ -8,12 +8,23 @@ import {
 } from "@/lib/subscription";
 import { subscriptionsEnabled } from "@/lib/stripe";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
+import { includeManifestDownloadUrls } from "@/lib/manifest-download-urls";
 import { logWarn } from "@/lib/logger";
 
 export type ManifestAccessResult =
   | {
       allowed: true;
       entryFilter: string[] | null;
+      /**
+       * Whether the caller may receive signed download URLs.
+       *
+       * A signed URL works for anyone who holds it, so it is only handed to a
+       * caller that proved it is installing on an HD registered to the account
+       * (the desktop flow). A plain browser session gets metadata only —
+       * otherwise a subscriber could copy the JSON and hand the whole catalog
+       * to people with no account at all.
+       */
+      includeDownloadUrls: boolean;
       user?: AppUser | null;
       userId?: string;
     }
@@ -44,7 +55,11 @@ export async function resolveManifestAccess(
 ): Promise<ManifestAccessResult> {
   if (!subscriptionsEnabled()) {
     if (acervoAberto()) {
-      return { allowed: true, entryFilter: null };
+      return {
+        allowed: true,
+        entryFilter: null,
+        includeDownloadUrls: includeManifestDownloadUrls("open-catalog"),
+      };
     }
     logWarn(
       "Assinaturas desabilitadas e ACERVO_ABERTO desligado — acesso ao manifest negado",
@@ -93,6 +108,7 @@ export async function resolveManifestAccess(
       return {
         allowed: true,
         entryFilter: payload.entries?.length ? payload.entries : null,
+        includeDownloadUrls: includeManifestDownloadUrls("bearer"),
         userId: payload.sub,
       };
     }
@@ -124,6 +140,7 @@ export async function resolveManifestAccess(
     return {
       allowed: true,
       entryFilter: payload.entries?.length ? payload.entries : null,
+      includeDownloadUrls: includeManifestDownloadUrls("bearer"),
       userId: payload.sub,
     };
   }
@@ -134,7 +151,13 @@ export async function resolveManifestAccess(
   }
 
   if (hasSubscriptionBypass(user.role)) {
-    return { allowed: true, entryFilter: null, user, userId: user.id };
+    return {
+      allowed: true,
+      entryFilter: null,
+      includeDownloadUrls: includeManifestDownloadUrls("cookie"),
+      user,
+      userId: user.id,
+    };
   }
 
   const status = await subscriptionStatusForUser(user.id);
@@ -142,5 +165,11 @@ export async function resolveManifestAccess(
     return { allowed: false, status: 403 };
   }
 
-  return { allowed: true, entryFilter: null, user, userId: user.id };
+  return {
+    allowed: true,
+    entryFilter: null,
+    includeDownloadUrls: includeManifestDownloadUrls("cookie"),
+    user,
+    userId: user.id,
+  };
 }

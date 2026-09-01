@@ -35,6 +35,10 @@ import {
 } from "./install-state";
 import { resolveUnderRoot } from "./paths";
 import { computeHdFingerprint } from "../shared/hd-fingerprint";
+import {
+  resolveTrustedEntries,
+  type RequestedEntry,
+} from "../shared/trusted-entries";
 import type { HdLibraryHint } from "../shared/hd-library";
 import { largestPcStagingBytes, notEnoughPcSpaceMessage } from "../shared/pc-space";
 import { ensureStagingRoot, getFreeBytes } from "./staging";
@@ -51,6 +55,12 @@ function stagingRootPath(): string {
 let mainWindow: BrowserWindow | null = null;
 let abortController: AbortController | null = null;
 let pendingCatalogLaunch: CatalogLaunch | null = null;
+
+/**
+ * The entries exactly as the server sent them, indexed by id. `start-download`
+ * resolves against this instead of trusting the copy the renderer sends back.
+ */
+let trustedEntries: ReadonlyMap<string, ResolvedManifestEntry> = new Map();
 
 const gotSingleInstanceLock = app.requestSingleInstanceLock();
 if (!gotSingleInstanceLock) {
@@ -224,6 +234,8 @@ async function fetchManifest(
     }
     assertHostedSha256(entry.kind, entry.sha256);
   }
+
+  trustedEntries = new Map(manifest.entries.map((entry) => [entry.id, entry]));
 
   return manifest;
 }
@@ -419,7 +431,8 @@ ipcMain.handle(
     event,
     payload: {
       rootDir: string;
-      entries: ResolvedManifestEntry[];
+      /** Untrusted: only `id` and `destination` are read from these. */
+      entries: RequestedEntry[];
       resetEntryIds?: string[];
     },
   ) => {
@@ -430,10 +443,36 @@ ipcMain.handle(
 
     const results: { entryId: string; ok: boolean; error?: string }[] = [];
     const stagingRoot = stagingRootPath();
+
+    // The renderer only gets to choose which entries and which destination;
+    // url, kind and hash are read back from the manifest this process fetched.
+    const { entries: requestedEntries, rejected } = resolveTrustedEntries(
+      trustedEntries,
+      payload.entries ?? [],
+    );
+
+    for (const item of rejected) {
+      send("download-progress", {
+        entryId: item.entryId,
+        label: item.label,
+        downloadedBytes: 0,
+        totalBytes: 0,
+        status: "error",
+        error: item.error,
+      } satisfies DownloadProgress);
+      results.push({ entryId: item.entryId, ok: false, error: item.error });
+    }
+
+    if (requestedEntries.length === 0) {
+      abortController = null;
+      send("download-complete", { results });
+      return { results };
+    }
+
     await removeStaleHdExtractDirs(payload.rootDir).catch(() => undefined);
 
     const resetIds = new Set(payload.resetEntryIds ?? []);
-    for (const entry of payload.entries) {
+    for (const entry of requestedEntries) {
       if (!resetIds.has(entry.id)) continue;
       try {
         await clearEntryInstallFiles({
@@ -458,7 +497,7 @@ ipcMain.handle(
         results.push({ entryId: entry.id, ok: false, error: message });
       }
     }
-    const entriesToDownload = payload.entries.filter(
+    const entriesToDownload = requestedEntries.filter(
       (entry) => !results.some((item) => item.entryId === entry.id),
     );
 
