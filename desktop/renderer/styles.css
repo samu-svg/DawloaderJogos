@@ -673,6 +673,10 @@ tbody tr:hover td {
   color: #fcd34d;
 }
 
+.install-tag-active {
+  color: #7dd3fc;
+}
+
 .progress-cell {
   min-width: 140px;
 }

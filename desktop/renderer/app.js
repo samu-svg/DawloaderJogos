@@ -194,6 +194,43 @@ function init() {
   let catalogLaunchInFlight = false;
   /** @type {Map<string, { fill: HTMLElement, label: HTMLElement }>} */
   const progressCells = new Map();
+  /** @type {Map<string, string>} */
+  const activeEntryPhases = new Map();
+
+  function setActiveEntryPhase(entryId, phase) {
+    if (!entryId) return;
+    if (phase) activeEntryPhases.set(entryId, phase);
+    else activeEntryPhases.delete(entryId);
+  }
+
+  function clearActiveEntryPhases() {
+    activeEntryPhases.clear();
+  }
+
+  function installTagForState(state, entryId) {
+    const phase = activeEntryPhases.get(entryId);
+    if (phase) {
+      const labels = {
+        downloading: "baixando…",
+        verifying: "verificando…",
+        extracting: "preparando arquivos…",
+        copying: "copiando para o HD…",
+        installing: "instalando no HD…",
+      };
+      return {
+        text: labels[phase] ?? "instalando…",
+        tone: "active",
+      };
+    }
+
+    if (state.kind === "installed") {
+      return { text: "já no HD", tone: "ok" };
+    }
+    if (state.canResume) {
+      return { text: "download interrompido", tone: "warn" };
+    }
+    return { text: "instalação incompleta", tone: "warn" };
+  }
 
   function getSiteUrl() {
     return normalizeSiteUrl(readSiteUrlStorage());
@@ -515,7 +552,7 @@ function init() {
     for (const tag of tags) {
       tag.classList.add("hidden");
       tag.textContent = "";
-      tag.classList.remove("install-tag-ok", "install-tag-warn");
+      tag.classList.remove("install-tag-ok", "install-tag-warn", "install-tag-active");
     }
     if (!selectedRoot || !manifest) return;
 
@@ -533,19 +570,18 @@ function init() {
       );
       const byId = new Map(states.map((state) => [state.entryId, state]));
       for (const tag of tags) {
-        const state = byId.get(tag.dataset.installTag);
-        if (!state) continue;
+        const entryId = tag.dataset.installTag;
+        const state = byId.get(entryId);
+        if (!state && !activeEntryPhases.has(entryId)) continue;
+        const tagInfo = installTagForState(
+          state ?? { kind: "incomplete", canResume: true },
+          entryId,
+        );
         tag.classList.remove("hidden");
-        if (state.kind === "installed") {
-          tag.textContent = "já no HD";
-          tag.classList.add("install-tag-ok");
-        } else if (state.canResume) {
-          tag.textContent = "download incompleto";
-          tag.classList.add("install-tag-warn");
-        } else {
-          tag.textContent = "instalação incompleta";
-          tag.classList.add("install-tag-warn");
-        }
+        tag.textContent = tagInfo.text;
+        if (tagInfo.tone === "ok") tag.classList.add("install-tag-ok");
+        else if (tagInfo.tone === "active") tag.classList.add("install-tag-active");
+        else tag.classList.add("install-tag-warn");
       }
     } catch {
       // a inspeção é só um aviso visual
@@ -1126,7 +1162,7 @@ function init() {
               : `${still.length} downloads ficaram pela metade. Dá para continuar de onde pararam.`,
             still.map((state) => `• ${state.label}`).join("\n"),
             {
-              title: "Download incompleto",
+              title: "Download interrompido",
               okLabel: "Retomar",
               cancelLabel: "Não retomar",
             },
@@ -1221,6 +1257,7 @@ function init() {
 
     downloadBtn.disabled = true;
     cancelBtn.classList.remove("hidden");
+    clearActiveEntryPhases();
     setSummary("Download em andamento…");
 
     for (const entry of toDownload) {
@@ -1249,6 +1286,7 @@ function init() {
     } finally {
       downloadBtn.disabled = false;
       cancelBtn.classList.add("hidden");
+      clearActiveEntryPhases();
       updateDownloadButton();
       void refreshInstallTags();
     }
@@ -1256,6 +1294,7 @@ function init() {
 
   cancelBtn.addEventListener("click", async () => {
     await window.montahd.cancelDownload();
+    clearActiveEntryPhases();
     setSummary("Download cancelado.", "error");
     cancelBtn.classList.add("hidden");
     downloadBtn.disabled = false;
@@ -1263,6 +1302,7 @@ function init() {
 
   window.montahd.onDownloadProgress((event) => {
     if (event.status === "downloading") {
+      setActiveEntryPhase(event.entryId, "downloading");
       const pct =
         event.totalBytes > 0 ? (event.downloadedBytes / event.totalBytes) * 100 : 0;
       const where = event.target === "pc" ? "no PC" : "no HD";
@@ -1272,11 +1312,14 @@ function init() {
         `${where} ${formatBytes(event.downloadedBytes)} / ${formatBytes(event.totalBytes)}`,
       );
     } else if (event.status === "verifying") {
+      setActiveEntryPhase(event.entryId, "verifying");
       setProgress(event.entryId, 92, "Verificando integridade…");
     } else if (event.status === "extracting") {
+      setActiveEntryPhase(event.entryId, "extracting");
       const where = event.target === "pc" ? "no PC" : "no HD";
       setProgress(event.entryId, 96, `Descompactando ${where}…`);
     } else if (event.status === "copying") {
+      setActiveEntryPhase(event.entryId, "copying");
       const pct =
         event.totalBytes > 0 ? (event.downloadedBytes / event.totalBytes) * 100 : 0;
       setProgress(
@@ -1285,6 +1328,7 @@ function init() {
         `PC → HD ${formatBytes(event.downloadedBytes)} / ${formatBytes(event.totalBytes)}`,
       );
     } else if (event.status === "installing") {
+      setActiveEntryPhase(event.entryId, "installing");
       const pct =
         event.totalBytes > 0 ? (event.downloadedBytes / event.totalBytes) * 100 : 0;
       setProgress(
@@ -1293,14 +1337,17 @@ function init() {
         `Instalando no HD ${formatBytes(event.downloadedBytes)} / ${formatBytes(event.totalBytes)}`,
       );
     } else if (event.status === "done") {
+      setActiveEntryPhase(event.entryId, null);
       setProgress(event.entryId, 100, "Concluído", "done");
     } else if (event.status === "error") {
+      setActiveEntryPhase(event.entryId, null);
       const errText = formatProgressError(event.error ?? "Erro");
       setProgress(event.entryId, 100, errText, "error");
       if (/espaço insuficiente|enospc/i.test(errText)) {
         setSummary(errText, "error");
       }
     }
+    void refreshInstallTags();
   });
 
   window.montahd.onDownloadComplete(({ results }) => {
@@ -1323,6 +1370,7 @@ function init() {
     }
     cancelBtn.classList.add("hidden");
     downloadBtn.disabled = false;
+    clearActiveEntryPhases();
     void refreshInstallTags();
   });
 }
