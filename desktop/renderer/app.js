@@ -62,6 +62,7 @@ function init() {
   const loadBtn = document.getElementById("load-btn");
   const loadError = document.getElementById("load-error");
   const welcomePanel = document.getElementById("welcome-panel");
+  const welcomeFlow = document.getElementById("welcome-flow");
   const advancedPanel = document.getElementById("advanced-panel");
   const openCatalogBtn = document.getElementById("open-catalog-btn");
   const pickHdSiteBtn = document.getElementById("pick-hd-site-btn");
@@ -207,6 +208,9 @@ function init() {
 
   function showWelcomeView() {
     welcomePanel.classList.remove("hidden");
+    welcomeFlow.classList.remove("hidden");
+    openLibraryBtn.classList.remove("hidden");
+    toggleAdvancedBtn.classList.remove("hidden");
     manifestSection.classList.add("hidden");
     librarySection.classList.add("hidden");
     heroPanel.classList.remove("hidden");
@@ -246,10 +250,15 @@ function init() {
 
     try {
       await window.montahd.openExternal(catalogUrl());
-      setSummary("Catálogo aberto no navegador. Selecione jogos e clique em Instalar no HD.");
+      setSummary(
+        "Catálogo aberto no navegador. Se pedir login, entre com sua conta, " +
+          "selecione os jogos e clique em Instalar no HD.",
+      );
     } catch (error) {
       const detail =
-        error instanceof Error ? error.message : "Não foi possível abrir o navegador.";
+        error instanceof Error
+          ? unwrapIpcError(error.message)
+          : "Não foi possível abrir o navegador.";
       setSummary(
         `${detail} Abra o catálogo em ${catalogUrl()}`,
         "error",
@@ -748,8 +757,17 @@ function init() {
     void loadManifest({ fromSite: false });
   });
 
+  /** Tira o embrulho "Error invoking remote method '…': Error:" que o IPC adiciona. */
+  function unwrapIpcError(text) {
+    return text
+      .replace(/^Error invoking remote method '[^']*':\s*/i, "")
+      .replace(/^(Uncaught\s+)?Error:\s*/i, "")
+      .trim();
+  }
+
   function formatInstallError(error) {
-    const message = error instanceof Error ? error.message : "Erro desconhecido.";
+    const raw = error instanceof Error ? error.message : "Erro desconhecido.";
+    const message = unwrapIpcError(raw) || "Erro desconhecido.";
     if (/HD|hd|vinculad|registrad|plano permite/i.test(message)) {
       return message;
     }
@@ -782,14 +800,21 @@ function init() {
     syncLibraryPath();
   }
 
+  /**
+   * Estado "veio do site, falta o HD". Esconde o passo a passo da tela inicial:
+   * ele começa com "Abra o catálogo" e faz parecer que o app voltou ao começo.
+   */
   function showPickHdForLaunch() {
     showWelcomeView();
+    welcomeFlow.classList.add("hidden");
     openCatalogBtn.classList.add("hidden");
+    openLibraryBtn.classList.add("hidden");
+    toggleAdvancedBtn.classList.add("hidden");
     pickHdSiteBtn.classList.remove("hidden");
     pickHdSiteBtn.disabled = false;
-    heroTitle.textContent = "Escolha a pasta do HD";
+    heroTitle.textContent = "Jogos recebidos do site";
     heroDesc.textContent =
-      "Jogos selecionados no site. Escolha a pasta raiz do HD vinculado à sua assinatura para carregar a lista.";
+      "Falta só escolher a pasta raiz do HD para carregar a lista e começar a instalar.";
     setSummary("Clique em Escolher pasta do HD para continuar.");
   }
 
@@ -815,8 +840,14 @@ function init() {
   async function applyCatalogLaunch(launch) {
     if (catalogLaunchInFlight) return;
     catalogLaunchInFlight = true;
+    await lastHdRestored;
 
     try {
+      window.montahd.log(
+        `launch slug=${launch.slug} sessao=${launch.installSession ? "sim" : "nao"} ` +
+          `token=${launch.manifestToken ? "sim" : "nao"} ids=${launch.entryIds?.length ?? 0} ` +
+          `hd=${selectedRoot ? "lembrado" : "nenhum"}`,
+      );
       saveSiteUrl(launch.baseUrl);
       /** @type {HTMLInputElement} */ (baseUrlInput).value = launch.baseUrl;
       /** @type {HTMLInputElement} */ (slugInput).value = launch.slug;
@@ -828,74 +859,68 @@ function init() {
       pickHdSiteBtn.disabled = false;
       loadError.classList.add("hidden");
 
-      if (pendingInstallSession) {
-        pendingCatalogFromSite = true;
-        openCatalogBtn.classList.add("hidden");
-        if (selectedRoot) {
-          setSummary("Autorizando HD e carregando jogos…");
-          try {
-            await authorizeHdAndLoadGames();
-            return;
-          } catch (error) {
-            loadError.textContent = formatInstallError(error);
-            loadError.classList.remove("hidden");
-            setSummary("Não foi possível autorizar este HD. Escolha a pasta de novo.", "error");
-          }
-        }
+      pendingCatalogFromSite = true;
+      openCatalogBtn.classList.add("hidden");
+
+      // Com sessão o manifesto só vem depois de autorizar o HD; sem sessão
+      // (token legado ou acervo aberto) a lista carrega antes de escolher a pasta.
+      if (pendingInstallSession && !selectedRoot) {
         showPickHdForLaunch();
         return;
       }
 
-      if (pendingManifestToken) {
-        pendingCatalogFromSite = true;
-        setSummary("Recebendo jogos do site…");
-        try {
-          await loadManifest({ fromSite: true });
-        } catch (error) {
-          pendingManifestToken = null;
-          loadError.textContent = formatInstallError(error);
-          loadError.classList.remove("hidden");
-          setSummary("Não foi possível carregar os jogos.", "error");
-        }
-        return;
-      }
+      setSummary(
+        pendingInstallSession
+          ? "Autorizando HD e carregando jogos…"
+          : "Carregando jogos selecionados no site…",
+      );
 
-      pendingCatalogFromSite = true;
-      openCatalogBtn.classList.add("hidden");
-      if (selectedRoot) {
-        setSummary("Carregando jogos selecionados no site…");
-        try {
-          await loadManifest({ fromSite: true });
-          return;
-        } catch (error) {
-          loadError.textContent = formatInstallError(error);
-          loadError.classList.remove("hidden");
-          setSummary("Não foi possível carregar os jogos.", "error");
-        }
+      try {
+        if (pendingInstallSession) await authorizeHdAndLoadGames();
+        else await loadManifest({ fromSite: true });
+      } catch (error) {
+        const detail = formatInstallError(error);
+        window.montahd.log(`launch falhou: ${detail}`);
+        showPickHdForLaunch();
+        loadError.textContent = detail;
+        loadError.classList.remove("hidden");
+        setSummary(
+          "Não foi possível carregar os jogos. Escolha a pasta do HD e tente de novo.",
+          "error",
+        );
       }
-      showPickHdForLaunch();
     } finally {
       catalogLaunchInFlight = false;
     }
   }
 
-  window.montahd.onCatalogLaunch((launch) => {
-    void applyCatalogLaunch(launch);
-  });
-
-  void (async () => {
+  /**
+   * O deep link do site chega assim que a página carrega, antes de o HD
+   * lembrado voltar do processo principal. Sem esperar por isso, quem já tinha
+   * escolhido o HD caía na tela de escolher pasta em vez de ir para a lista.
+   */
+  const lastHdRestored = (async () => {
     try {
       const lastRoot = await window.montahd.getLastHdRoot();
       if (lastRoot) applySelectedRoot(lastRoot);
     } catch {
       // sem HD lembrado
     }
+  })();
+
+  window.montahd.onCatalogLaunch((launch) => {
+    void applyCatalogLaunch(launch);
+  });
+
+  void (async () => {
+    await lastHdRestored;
 
     const launch = await window.montahd.consumeCatalogLaunch();
     if (launch) {
       void applyCatalogLaunch(launch);
       return;
     }
+    if (catalogLaunchInFlight) return;
     setSummary(
       selectedRoot
         ? "HD lembrado. Aguardando seleção pelo site…"
@@ -954,6 +979,8 @@ function init() {
         manifest.totalBytes > 0 ? ` · ${formatBytes(manifest.totalBytes)}` : "";
       portfolioMeta.textContent = `${manifest.entries.length} jogo(s)${totalLabel}`;
       renderEntries(manifest.entries, { allChecked: fromSite });
+      pendingCatalogFromSite = false;
+      openCatalogBtn.classList.remove("hidden");
       showInstallView();
       await persistCatalogHints();
       setSummary(
@@ -962,14 +989,16 @@ function init() {
           : `${manifest.entries.length} jogo(s) recebidos do site. Escolha a pasta de destino.`,
       );
     } catch (error) {
-      loadError.textContent = formatInstallError(error);
-      loadError.classList.remove("hidden");
-      setSummary("Não foi possível carregar os jogos.", "error");
+      const detail = formatInstallError(error);
+      window.montahd.log(`manifesto falhou (fromSite=${fromSite}): ${detail}`);
       if (fromSite && pendingCatalogFromSite) {
         showPickHdForLaunch();
       } else if (fromSite) {
         showWelcomeView();
       }
+      loadError.textContent = detail;
+      loadError.classList.remove("hidden");
+      setSummary("Não foi possível carregar os jogos.", "error");
     } finally {
       loadBtn.disabled = false;
       loadBtn.querySelector(".btn-label").textContent = "Carregar manifesto";

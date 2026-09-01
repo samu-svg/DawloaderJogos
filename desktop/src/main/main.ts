@@ -51,6 +51,9 @@ import { ensureStagingRoot, getFreeBytes } from "./staging";
 import { openExternalUrl } from "./open-external";
 import { fetchSameOrigin } from "./safe-fetch";
 import { startAutoUpdate } from "./auto-update";
+import { debugLog, initDebugLog } from "./debug-log";
+
+initDebugLog(app.getPath("userData"));
 
 if (app.isPackaged) {
   registerProtocolClient();
@@ -63,6 +66,8 @@ function stagingRootPath(): string {
 let mainWindow: BrowserWindow | null = null;
 let abortController: AbortController | null = null;
 let pendingCatalogLaunch: CatalogLaunch | null = null;
+/** Só entrega o deep link depois que o renderer registrou o listener. */
+let rendererReady = false;
 
 /**
  * The entries exactly as the server sent them, indexed by id. `start-download`
@@ -76,9 +81,16 @@ if (!gotSingleInstanceLock) {
 }
 
 function flushCatalogLaunch() {
-  if (!pendingCatalogLaunch || !mainWindow || mainWindow.isDestroyed()) return;
+  if (!pendingCatalogLaunch || !rendererReady) return;
+  if (!mainWindow || mainWindow.isDestroyed()) return;
   if (mainWindow.webContents.isDestroyed()) return;
-  mainWindow.webContents.send("catalog-launch", pendingCatalogLaunch);
+
+  // Consome aqui: sem isso o renderer recebia o mesmo launch duas vezes
+  // (evento + consume-catalog-launch) e a segunda passada abortava a primeira.
+  const launch = pendingCatalogLaunch;
+  pendingCatalogLaunch = null;
+  debugLog(`entrega catalog-launch slug=${launch.slug}`);
+  mainWindow.webContents.send("catalog-launch", launch);
 }
 
 function deliverCatalogLaunch(launch: CatalogLaunch) {
@@ -99,6 +111,11 @@ function assertTrustedSender(event: IpcMainInvokeEvent) {
 
 function handleDeepLink(rawUrl: string) {
   const launch = parseMontaHDDeepLink(rawUrl, catalogOriginOptions());
+  debugLog(
+    launch
+      ? `deep link OK slug=${launch.slug} session=${launch.installSession ? "sim" : "nao"} entries=${launch.entryIds.length}`
+      : `deep link RECUSADO: ${rawUrl}`,
+  );
   if (!launch) return;
   deliverCatalogLaunch(launch);
 }
@@ -134,9 +151,25 @@ function createWindow() {
   mainWindow.webContents.on("will-navigate", (event) => {
     event.preventDefault();
   });
+  mainWindow.webContents.on("did-start-loading", () => {
+    rendererReady = false;
+  });
   mainWindow.webContents.on("did-finish-load", () => {
+    rendererReady = true;
+    debugLog("renderer pronto");
     flushCatalogLaunch();
   });
+
+  mainWindow.webContents.on("preload-error", (_event, file, error) => {
+    debugLog(`preload-error ${file}: ${error.message}`);
+  });
+
+  mainWindow.webContents.on(
+    "console-message",
+    (_event, level, message, line, sourceId) => {
+      debugLog(`renderer[${level}] ${message} (${sourceId}:${line})`);
+    },
+  );
 
   const indexHtml = rendererPath("index.html");
 
@@ -272,6 +305,7 @@ async function requestManifestToken(
 
 if (gotSingleInstanceLock) {
   app.on("second-instance", (_event, argv) => {
+    debugLog(`second-instance argv=${JSON.stringify(argv.slice(1))}`);
     const deepLink = findDeepLinkInArgv(argv);
     if (deepLink) handleDeepLink(deepLink);
     else focusMainWindow();
@@ -287,6 +321,7 @@ if (gotSingleInstanceLock) {
     const lastHd = loadLastHdRoot(app.getPath("userData"));
     if (lastHd) rememberAuthorizedRoot(lastHd);
 
+    debugLog(`start argv=${JSON.stringify(process.argv.slice(1))}`);
     const deepLink = findDeepLinkInArgv(process.argv);
     if (deepLink) handleDeepLink(deepLink);
 
@@ -306,10 +341,20 @@ app.on("window-all-closed", () => {
 ipcMain.handle("open-external", async (event, rawUrl: string) => {
   assertTrustedSender(event);
   const url = rawUrl.trim();
+  debugLog(`open-external pedido: ${url}`);
   if (!isAllowedCatalogOrigin(url, catalogOriginOptions())) {
+    debugLog(`open-external RECUSADO (origem): ${url}`);
     throw new Error("URL inválida.");
   }
-  await openExternalUrl(url);
+  try {
+    await openExternalUrl(url);
+    debugLog("open-external OK");
+  } catch (error) {
+    debugLog(
+      `open-external FALHOU: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    throw error;
+  }
 });
 
 ipcMain.handle("get-app-version", (event) => {
@@ -386,6 +431,11 @@ ipcMain.handle("consume-catalog-launch", (event) => {
   const launch = pendingCatalogLaunch;
   pendingCatalogLaunch = null;
   return launch;
+});
+
+ipcMain.on("renderer-log", (event, message: unknown) => {
+  if (!mainWindow || event.sender !== mainWindow.webContents) return;
+  debugLog(`ui: ${String(message).slice(0, 500)}`);
 });
 
 ipcMain.handle("cancel-download", (event) => {
