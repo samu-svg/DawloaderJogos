@@ -65,9 +65,12 @@ jobs:
         shell: pwsh
         run: |
           $v = "${{ steps.version.outputs.version }}"
-          $setup = "desktop/release20/MontaHD-$v-setup.exe"
-          $portable = "desktop/release20/MontaHD-$v-portable.exe"
-          $yml = "desktop/release20/latest.yml"
+          $pkg = Get-Content desktop/package.json -Raw | ConvertFrom-Json
+          $outName = $pkg.build.directories.output
+          if (-not $outName) { $outName = "release" }
+          $setup = "desktop/$outName/MontaHD-$v-setup.exe"
+          $portable = "desktop/$outName/MontaHD-$v-portable.exe"
+          $yml = "desktop/$outName/latest.yml"
           if (-not (Test-Path $setup)) { throw "Faltou $setup — build NSIS falhou?" }
           if ((Get-Item $setup).Length -lt 50MB) {
             throw "Setup corrompido ($([math]::Round((Get-Item $setup).Length / 1MB, 2)) MB). Esperado ~80 MB."
@@ -78,7 +81,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path web/public/downloads | Out-Null
           Copy-Item $setup web/public/downloads/ -Force
           Copy-Item $yml web/public/downloads/ -Force
-          $blockmap = "desktop/release20/MontaHD-$v-setup.exe.blockmap"
+          $blockmap = "desktop/$outName/MontaHD-$v-setup.exe.blockmap"
           if (Test-Path $blockmap) { Copy-Item $blockmap web/public/downloads/ -Force }
           Get-ChildItem web/public/downloads
 

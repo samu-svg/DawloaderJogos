@@ -1,4 +1,5 @@
 import path from "node:path";
+import { formatFsError } from "../shared/fs-errors";
 import type { ResolvedManifestEntry } from "../shared/manifest";
 import {
   hasSpaceForPrefetch,
@@ -151,11 +152,20 @@ export async function runPipelinedDownloads(
 
   while (nextIndex < items.length && !options.signal?.aborted) {
     const pending = items[nextIndex];
-    const hasSpace = await canPrefetchDownload(
-      pending.entry.sizeBytes ?? 0,
-      options.hdRoot,
-      options.stagingRoot,
-    );
+    let hasSpace: boolean;
+    try {
+      hasSpace = await canPrefetchDownload(
+        pending.entry.sizeBytes ?? 0,
+        options.hdRoot,
+        options.stagingRoot,
+      );
+    } catch (error) {
+      const message = formatFsError(error);
+      for (let i = nextIndex; i < items.length; i += 1) {
+        results[i] = failResult(items[i], message, options.onProgress);
+      }
+      break;
+    }
 
     if (!hasSpace && extracts.size > 0) {
       await waitForAnyExtract();

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { safeStagingId, stagingEntryDir } from "./staging.ts";
+import { getFreeBytes, safeStagingId, stagingEntryDir } from "./staging.ts";
 
 test("safeStagingId remove caracteres perigosos", () => {
   assert.equal(safeStagingId("abc-123"), "abc-123");
@@ -11,4 +11,11 @@ test("safeStagingId remove caracteres perigosos", () => {
 test("stagingEntryDir junta a raiz com o id", () => {
   const dir = stagingEntryDir("/tmp/staging", "entry-1");
   assert.match(dir.replace(/\\/g, "/"), /\/entry-1$/);
+});
+
+test("getFreeBytes na raiz do disco não tenta mkdir", async () => {
+  const root = process.platform === "win32" ? "C:\\" : "/";
+  const bytes = await getFreeBytes(root);
+  assert.ok(Number.isFinite(bytes));
+  assert.ok(bytes >= 0);
 });

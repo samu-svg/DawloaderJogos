@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
+import { readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
   emptyHdIndex,
@@ -17,6 +17,7 @@ import {
   type HdLibraryItem,
   type HdScannedItem,
 } from "../shared/hd-library";
+import { ensureDir } from "./ensure-dir";
 import { resolveUnderRoot } from "./paths";
 
 const INDEX_DIR = ".montahd";
@@ -55,7 +56,7 @@ export async function writeHdIndex(
   index: HdLibraryIndex,
 ): Promise<void> {
   const dir = path.join(rootDir, INDEX_DIR);
-  await mkdir(dir, { recursive: true });
+  await ensureDir(dir);
   const file = indexFilePath(rootDir);
   const temp = `${file}.tmp`;
   await writeFile(temp, `${JSON.stringify(index, null, 2)}\n`, "utf8");

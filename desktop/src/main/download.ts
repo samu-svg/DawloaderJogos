@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import { createWriteStream, existsSync, mkdirSync, statSync, unlinkSync } from "node:fs";
-import { copyFile, mkdir, open, unlink } from "node:fs/promises";
+import { createWriteStream, existsSync, statSync, unlinkSync } from "node:fs";
+import { copyFile, open, unlink } from "node:fs/promises";
 import path from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
@@ -16,6 +16,7 @@ import {
   type DownloadTarget,
 } from "../shared/pc-space";
 import { copyDirectory } from "./copy-dir";
+import { ensureDir, ensureDirSync } from "./ensure-dir";
 import { removeStagingEntry, stagingEntryDir } from "./staging";
 import {
   extractZipToContentRoot,
@@ -235,7 +236,7 @@ async function downloadToFile(
   signal?: AbortSignal,
   refuseOverFat32 = false,
 ): Promise<number> {
-  mkdirSync(path.dirname(filePath), { recursive: true });
+  ensureDirSync(path.dirname(filePath));
   let startAt = existsSync(filePath) ? statSync(filePath).size : 0;
 
   let response = await fetchSafeRedirects(url, {
@@ -321,7 +322,7 @@ async function extractAndPlace(
   );
 
   try {
-    await mkdir(hdInstallDir, { recursive: true });
+    await ensureDir(hdInstallDir);
     const installRel = path.relative(hdRoot, hdInstallDir).replace(/\\/g, "/");
     const copyFilter = isGamesDestination(installRel) ? shouldCopyGameFile : undefined;
 
@@ -481,7 +482,7 @@ async function installPreparedOnHd(
     return { installedPath };
   }
 
-  await mkdir(path.dirname(destPath), { recursive: true });
+  await ensureDir(path.dirname(destPath));
   if (existsSync(destPath)) unlinkSync(destPath);
   await copyFile(zipPath, destPath);
   await unlink(zipPath).catch(() => undefined);
@@ -522,7 +523,7 @@ async function prepareViaPc(options: {
   } = options;
 
   const stagingDir = stagingEntryDir(stagingRoot, entryId);
-  mkdirSync(stagingDir, { recursive: true });
+  ensureDirSync(stagingDir);
   const zipPartial = path.join(stagingDir, STAGING_PARTIAL_NAME);
 
   const fileSize = await downloadToFile(
@@ -607,7 +608,7 @@ async function installPreparedViaPc(
       );
     }
 
-    await mkdir(path.dirname(destPath), { recursive: true });
+    await ensureDir(path.dirname(destPath));
     if (existsSync(destPath)) unlinkSync(destPath);
     await copyFile(zipPath, destPath);
     copiedToHd = true;

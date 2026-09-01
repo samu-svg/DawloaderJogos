@@ -238,10 +238,38 @@ function translateExtractError(error: unknown): Error {
 /** Pasta temporária da extração (HD `.montahd` se o zip cabe no FAT32; senão staging no PC). */
 async function createExtractTempDir(extractParent?: string): Promise<string> {
   if (extractParent?.trim()) {
-    await mkdir(extractParent, { recursive: true });
+    await ensureExtractParent(extractParent);
     return mkdtemp(path.join(extractParent, "extract-"));
   }
   return mkdtemp(path.join(os.tmpdir(), "montahd-"));
+}
+
+async function ensureExtractParent(dir: string): Promise<void> {
+  const resolved = path.resolve(dir);
+  if (path.parse(resolved).root === resolved) return;
+  try {
+    await mkdir(resolved, { recursive: true });
+  } catch (error) {
+    const code =
+      error !== null &&
+      typeof error === "object" &&
+      "code" in error &&
+      typeof (error as { code: unknown }).code === "string"
+        ? (error as { code: string }).code
+        : null;
+    if (code !== "EPERM" && code !== "EACCES") throw error;
+    try {
+      await mkdir(resolved);
+    } catch (retryError) {
+      const retryCode =
+        retryError !== null &&
+        typeof retryError === "object" &&
+        "code" in retryError
+          ? (retryError as { code: unknown }).code
+          : null;
+      if (retryCode !== "EEXIST") throw retryError;
+    }
+  }
 }
 
 export async function removeTempDir(tempDir: string): Promise<void> {

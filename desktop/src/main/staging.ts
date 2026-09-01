@@ -11,12 +11,20 @@ export function stagingEntryDir(stagingRoot: string, entryId: string): string {
   return path.join(stagingRoot, safeStagingId(entryId));
 }
 
+function isFilesystemRoot(dir: string): boolean {
+  const resolved = path.resolve(dir);
+  return path.parse(resolved).root === resolved;
+}
+
 export async function ensureStagingRoot(stagingRoot: string): Promise<void> {
+  if (isFilesystemRoot(stagingRoot)) return;
   await mkdir(stagingRoot, { recursive: true });
 }
 
 export async function getFreeBytes(dir: string): Promise<number> {
-  await mkdir(dir, { recursive: true });
+  if (!isFilesystemRoot(dir)) {
+    await mkdir(dir, { recursive: true });
+  }
   const stats = await statfs(dir);
   return Number(stats.bavail) * Number(stats.bsize);
 }

@@ -1,6 +1,7 @@
-import { copyFile, mkdir, readdir, stat } from "node:fs/promises";
+import { copyFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { isOverFat32Limit } from "../shared/pc-space";
+import { ensureDir } from "./ensure-dir";
 
 async function listFiles(dir: string): Promise<{ absPath: string; size: number }[]> {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -47,7 +48,7 @@ export async function copyDirectory(
         `O arquivo "${relative.replace(/\\/g, "/")}" tem mais de 4 GB e não cabe no HD FAT32 do Xbox 360.`,
       );
     }
-    await mkdir(path.dirname(targetPath), { recursive: true });
+    await ensureDir(path.dirname(targetPath));
     await copyFile(file.absPath, targetPath);
 
     copiedBytes += file.size;
