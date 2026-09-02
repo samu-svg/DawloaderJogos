@@ -92,7 +92,10 @@ export function hasSpaceForPrefetch(freeBytes: number, sizeBytes: number): boole
   return freeBytes >= sizeBytes;
 }
 
-/** Jogos direto no HD primeiro; depois os que passam pelo PC (evita conflito USB). */
+/**
+ * Jogos direto no HD primeiro; depois os que passam pelo PC (evita conflito USB).
+ * Preserva a ordem relativa dentro de cada grupo — o primeiro da lista começa primeiro.
+ */
 export function orderDownloadQueue<T>(
   items: T[],
   sizeOf: (item: T) => number,
@@ -106,8 +109,5 @@ export function orderDownloadQueue<T>(
     else pc.push(item);
   }
 
-  const bySize = (a: T, b: T) => sizeOf(a) - sizeOf(b);
-  hd.sort(bySize);
-  pc.sort(bySize);
   return [...hd, ...pc];
 }

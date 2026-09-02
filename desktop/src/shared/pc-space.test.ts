@@ -94,6 +94,22 @@ test("orderDownloadQueue coloca jogos HD antes dos que passam pelo PC", () => {
   const sorted = orderDownloadQueue(items, (item) => item.sizeBytes);
   assert.deepEqual(
     sorted.map((item) => item.id),
-    ["hd-tiny", "hd-small", "pc-big", "pc-huge"],
+    ["hd-small", "hd-tiny", "pc-big", "pc-huge"],
+  );
+});
+
+test("orderDownloadQueue preserva a ordem relativa dentro de cada grupo", () => {
+  const hd = 100;
+  const pc = FAT32_MAX_FILE_BYTES + 1;
+  const items = [
+    { id: "hd-first", sizeBytes: hd },
+    { id: "pc-first", sizeBytes: pc },
+    { id: "hd-second", sizeBytes: hd + 50 },
+  ];
+
+  const sorted = orderDownloadQueue(items, (item) => item.sizeBytes);
+  assert.deepEqual(
+    sorted.map((item) => item.id),
+    ["hd-first", "hd-second", "pc-first"],
   );
 });

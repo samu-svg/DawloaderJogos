@@ -26,7 +26,7 @@ export interface PipelineResult {
   error?: string;
 }
 
-/** Jogos direto no HD primeiro; depois os que passam pelo PC (evita conflito USB). */
+/** Jogos direto no HD primeiro, na ordem da lista; depois os que passam pelo PC. */
 export function sortPipelineEntries(items: PipelineEntry[]): PipelineEntry[] {
   return orderDownloadQueue(items, (item) => item.entry.sizeBytes ?? 0);
 }

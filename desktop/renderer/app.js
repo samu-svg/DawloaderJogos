@@ -99,6 +99,7 @@ function init() {
   const entriesBody = document.getElementById("entries-body");
   const selectAll = document.getElementById("select-all");
   const downloadBtn = document.getElementById("download-btn");
+  const clearListBtn = document.getElementById("clear-list-btn");
   const spaceNotice = document.getElementById("space-notice");
   const cancelBtn = document.getElementById("cancel-btn");
   const summary = document.getElementById("summary");
@@ -147,6 +148,7 @@ function init() {
     !entriesBody ||
     !selectAll ||
     !downloadBtn ||
+    !clearListBtn ||
     !spaceNotice ||
     !cancelBtn ||
     !summary ||
@@ -409,17 +411,28 @@ function init() {
         .map((input) => input.dataset.entryId),
     );
 
-    return manifest.entries
-      .filter((entry) => selectedIds.has(entry.id))
-      .map((entry) => {
-        const input = getDestinationInput(entry.id);
-        const destination = input?.value.trim() || entry.destination;
-        return { ...entry, destination };
-      });
+    return orderEntriesHdFirst(
+      manifest.entries.filter((entry) => selectedIds.has(entry.id)),
+    ).map((entry) => {
+      const input = getDestinationInput(entry.id);
+      const destination = input?.value.trim() || entry.destination;
+      return { ...entry, destination };
+    });
   }
 
   const FAT32_MAX_FILE_BYTES = 4 * 1024 * 1024 * 1024 - 1;
   const FAT32_LIMIT_LABEL = "4 GB";
+
+  /** Direto no HD no topo; preserva a ordem relativa. O primeiro da lista começa primeiro. */
+  function orderEntriesHdFirst(entries) {
+    const hd = [];
+    const pc = [];
+    for (const entry of entries) {
+      if ((entry.sizeBytes || 0) > FAT32_MAX_FILE_BYTES) pc.push(entry);
+      else hd.push(entry);
+    }
+    return [...hd, ...pc];
+  }
 
   function selectedSizes() {
     return selectedEntriesWithDestinations().map((entry) => entry.sizeBytes || 0);
@@ -459,7 +472,9 @@ function init() {
 
   function updateDownloadButton() {
     const hasSelection = checkboxes().some((input) => input.checked);
-    downloadBtn.disabled = !selectedRoot || !hasSelection;
+    const hasEntries = Boolean(manifest?.entries.length);
+    downloadBtn.disabled = !selectedRoot || !hasSelection || isDownloading();
+    clearListBtn.disabled = !hasEntries || isDownloading();
     updateSpaceNotice();
 
     if (!selectedRoot) {
@@ -469,14 +484,19 @@ function init() {
     } else {
       downloadBtn.title = "";
     }
+    clearListBtn.title = hasEntries
+      ? "Tirar jogos da lista sem apagar o HD"
+      : "Nenhum jogo na lista";
   }
 
   function renderEntries(entries, options = {}) {
     const allChecked = options.allChecked === true;
+    const ordered = orderEntriesHdFirst(entries);
+    if (manifest) manifest.entries = ordered;
     entriesBody.innerHTML = "";
     progressCells.clear();
 
-    for (const entry of entries) {
+    for (const entry of ordered) {
       const row = document.createElement("tr");
 
       const checkCell = document.createElement("td");
@@ -555,12 +575,12 @@ function init() {
     if (selectAll instanceof HTMLInputElement) {
       if (options.checkedIds) {
         selectAll.checked =
-          entries.length > 0 &&
-          entries.every((entry) => options.checkedIds.has(entry.id));
+          ordered.length > 0 &&
+          ordered.every((entry) => options.checkedIds.has(entry.id));
       } else {
         selectAll.checked =
-          entries.length > 0 &&
-          entries.every((entry) => allChecked || !entry.optional);
+          ordered.length > 0 &&
+          ordered.every((entry) => allChecked || !entry.optional);
       }
     }
 
@@ -816,6 +836,60 @@ function init() {
       manifest.entries.length === 0
         ? "Lista vazia. Escolha outros jogos no site."
         : `«${entry.label}» saiu da lista. O arquivo no HD não foi apagado.`,
+    );
+  }
+
+  async function clearListEntries() {
+    if (!manifest?.entries.length) return;
+    if (isDownloading()) {
+      setSummary("Espere o download terminar antes de alterar a lista.", "error");
+      return;
+    }
+
+    const selectedIds = new Set(
+      checkboxes()
+        .filter((input) => input.checked)
+        .map((input) => input.dataset.entryId),
+    );
+    const selectedCount = selectedIds.size;
+    const total = manifest.entries.length;
+    const removeSelectedOnly = selectedCount > 0 && selectedCount < total;
+    const toRemove = removeSelectedOnly
+      ? manifest.entries.filter((entry) => selectedIds.has(entry.id))
+      : manifest.entries;
+    const count = toRemove.length;
+    const preview = toRemove
+      .slice(0, 12)
+      .map((entry) => `• ${entry.label}`)
+      .join("\n");
+    const extra = count > 12 ? `\n… e mais ${count - 12}` : "";
+
+    const confirmed = await showConfirmModal(
+      removeSelectedOnly
+        ? `Tirar ${count} jogo(s) selecionado(s) da lista? O HD não será alterado.`
+        : `Limpar os ${count} jogo(s) da lista? O HD não será alterado.`,
+      `${preview}${extra}`,
+      {
+        title: "Limpar lista",
+        okLabel: "Limpar",
+        cancelLabel: "Voltar",
+      },
+    );
+    if (!confirmed) return;
+
+    const removeIds = new Set(toRemove.map((entry) => entry.id));
+    const remainingChecked = new Set(
+      checkboxes()
+        .filter((input) => input.checked && !removeIds.has(input.dataset.entryId))
+        .map((input) => input.dataset.entryId),
+    );
+    manifest.entries = manifest.entries.filter((entry) => !removeIds.has(entry.id));
+    updatePortfolioMeta();
+    renderEntries(manifest.entries, { checkedIds: remainingChecked });
+    setSummary(
+      manifest.entries.length === 0
+        ? "Lista vazia. Escolha outros jogos no site."
+        : `${count} jogo(s) saíram da lista. O HD não foi alterado.`,
     );
   }
 
@@ -1113,6 +1187,11 @@ function init() {
         };
       }
 
+      manifest = {
+        ...manifest,
+        entries: orderEntriesHdFirst(manifest.entries),
+      };
+
       portfolioTitle.textContent = manifest.portfolio.title;
       const totalLabel =
         manifest.totalBytes > 0 ? ` · ${formatBytes(manifest.totalBytes)}` : "";
@@ -1206,6 +1285,10 @@ function init() {
       input.checked = selectAll.checked;
     }
     updateDownloadButton();
+  });
+
+  clearListBtn.addEventListener("click", () => {
+    void clearListEntries();
   });
 
   downloadBtn.addEventListener("click", async () => {
@@ -1367,6 +1450,7 @@ function init() {
 
     downloadBtn.disabled = true;
     cancelBtn.classList.remove("hidden");
+    clearListBtn.disabled = true;
     clearActiveEntryPhases();
     setSummary("Download em andamento…");
 
@@ -1408,6 +1492,7 @@ function init() {
     setSummary("Download cancelado.", "error");
     cancelBtn.classList.add("hidden");
     downloadBtn.disabled = false;
+    updateDownloadButton();
   });
 
   const lastProgressStatus = new Map();
@@ -1494,6 +1579,7 @@ function init() {
     cancelBtn.classList.add("hidden");
     downloadBtn.disabled = false;
     clearActiveEntryPhases();
+    updateDownloadButton();
     void refreshInstallTags();
   });
 }

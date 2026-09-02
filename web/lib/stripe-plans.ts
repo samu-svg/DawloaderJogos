@@ -81,9 +81,7 @@ export function stripePriceIdFor(planId: PlanId, method: PaymentMethod): string 
 
 export function stripePlansConfigured(): boolean {
   if (!process.env.STRIPE_SECRET_KEY?.trim()) return false;
-  return STRIPE_PLANS.some(
-    (plan) => stripePriceIdFor(plan.id, "card") || stripePriceIdFor(plan.id, "pix"),
-  );
+  return STRIPE_PLANS.some((plan) => stripePriceIdFor(plan.id, "card"));
 }
 
 export function lowestPlanPriceLabel(): string {

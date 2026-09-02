@@ -3,10 +3,15 @@ import { redirect } from "next/navigation";
 import { ManageSubscriptionButton } from "@/components/subscribe-checkout-button";
 import { PlanPicker } from "@/components/plan-picker";
 import { SiteHeader } from "@/components/site-header";
+import { asaasPixAvailablePlans } from "@/lib/asaas";
 import { requireAppUser } from "@/lib/auth";
 import { canAccessPainel, hasSubscriptionBypass } from "@/lib/rbac";
 import { safeInternalPath } from "@/lib/safe-redirect";
 import { subscriptionsEnabled } from "@/lib/stripe";
+import {
+  STRIPE_PLANS,
+  stripePriceIdFor,
+} from "@/lib/stripe-plans";
 import {
   getUserSubscription,
   subscriptionIsActive,
@@ -34,6 +39,11 @@ export default async function AssinarPage({ searchParams }: PageProps) {
   const hasAccess = await userHasCatalogAccess(user);
   const subscription = enabled ? await getUserSubscription(user.id) : null;
   const active = subscriptionIsActive(subscription);
+  const cardPlans = STRIPE_PLANS.filter((plan) =>
+    stripePriceIdFor(plan.id, "card"),
+  ).map((plan) => plan.id);
+  const pixPlans = asaasPixAvailablePlans();
+  const paymentsAvailable = cardPlans.length > 0 || pixPlans.length > 0;
 
   if (hasAccess && next) {
     redirect(safeInternalPath(next, "/baixar"));
@@ -62,7 +72,7 @@ export default async function AssinarPage({ searchParams }: PageProps) {
         </div>
 
         <div className="mt-9 rounded-3xl border border-accent/30 bg-gradient-to-br from-violet-600/15 via-surface to-cyan-500/10 p-8">
-          {!enabled ? (
+          {!enabled && !paymentsAvailable ? (
             <p className="text-sm leading-6 text-zinc-400">
               Pagamentos ainda não estão ativos neste ambiente. O acervo
               permanece aberto para testes.
@@ -120,7 +130,7 @@ export default async function AssinarPage({ searchParams }: PageProps) {
                   </li>
                 ))}
               </ul>
-              <PlanPicker />
+              <PlanPicker cardPlans={cardPlans} pixPlans={pixPlans} />
             </div>
           )}
         </div>

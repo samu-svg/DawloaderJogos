@@ -70,6 +70,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Forma de pagamento inválida." }, { status: 400 });
   }
 
+  if (method === "pix") {
+    return NextResponse.json(
+      { error: "Use o botão PIX na página de planos." },
+      { status: 400 },
+    );
+  }
+
   const priceId = stripePriceIdFor(planId, method);
   if (!priceId) {
     return NextResponse.json(
