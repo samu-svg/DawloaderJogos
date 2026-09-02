@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { GameCard } from "@/components/game-card";
 import type { CatalogBadge } from "@/lib/catalog-badges";
 import { comparePopularCatalogGames } from "@/lib/catalog-sort";
@@ -66,6 +66,8 @@ export function GameCatalog({
   const [weeklyOnly, setWeeklyOnly] = useState(initialWeekly);
   const [sort, setSort] = useState<SortMode>("populares");
   const [page, setPage] = useState(1);
+  const listTopRef = useRef<HTMLElement>(null);
+  const skipInitialScrollRef = useRef(true);
 
   const weeklyCount = useMemo(
     () => games.filter((game) => game.isWeekly).length,
@@ -124,13 +126,21 @@ export function GameCatalog({
   );
   const totalBytes = filtered.reduce((sum, game) => sum + game.sizeBytes, 0);
 
+  useEffect(() => {
+    if (skipInitialScrollRef.current) {
+      skipInitialScrollRef.current = false;
+      return;
+    }
+    listTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [currentPage]);
+
   function update(action: () => void) {
     action();
     setPage(1);
   }
 
   return (
-    <section id="jogos" className="scroll-mt-20">
+    <section id="jogos" ref={listTopRef} className="scroll-mt-20">
       <div className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-4 sm:p-5">
         <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <input
