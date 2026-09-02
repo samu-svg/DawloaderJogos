@@ -8,6 +8,10 @@ import {
   parseMontaHDDeepLink,
   requireAllowedCatalogOrigin,
 } from "../shared/catalog-launch";
+import {
+  isSpecialInstallSlug,
+  packSlugFromInstallSlug,
+} from "../shared/special-downloads";
 import type { Manifest, ResolvedManifestEntry } from "../shared/manifest";
 import {
   assertHostedSha256,
@@ -214,12 +218,24 @@ function normalizeBaseUrl(input: string): string {
   return requireAllowedCatalogOrigin(input, catalogOriginOptions());
 }
 
+function manifestUrlForSlug(baseUrl: string, slug: string): string {
+  const origin = normalizeBaseUrl(baseUrl);
+  if (isSpecialInstallSlug(slug)) {
+    const packSlug = packSlugFromInstallSlug(slug);
+    if (!packSlug) {
+      throw new Error("Pack especial inválido.");
+    }
+    return `${origin}/api/special-downloads/${encodeURIComponent(packSlug)}/manifest`;
+  }
+  return `${origin}/api/portfolios/${encodeURIComponent(slug)}/manifest`;
+}
+
 async function fetchManifest(
   baseUrl: string,
   slug: string,
   manifestToken?: string,
 ): Promise<Manifest> {
-  const url = `${normalizeBaseUrl(baseUrl)}/api/portfolios/${encodeURIComponent(slug)}/manifest`;
+  const url = manifestUrlForSlug(baseUrl, slug);
   const headers: Record<string, string> = {};
   if (manifestToken) {
     headers.Authorization = `Bearer ${manifestToken}`;

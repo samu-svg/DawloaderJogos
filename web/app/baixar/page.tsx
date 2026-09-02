@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import { AbadAvatarBanner } from "@/components/abadavatar-banner";
 import { CatalogBrowser } from "@/components/catalog-browser";
 import { DesktopDownloadCard } from "@/components/desktop-download-card";
 import { toCatalogGameItems } from "@/lib/catalog-items";
+import { currentAppUser } from "@/lib/auth";
 import { loadAcervo } from "@/lib/games";
 import { getSiteUrl } from "@/lib/site-url";
+import { userHasCatalogAccess } from "@/lib/subscription";
 
 export const metadata: Metadata = {
   title: "Meu acervo — MontaHD",
@@ -15,11 +18,15 @@ type PageProps = {
 };
 
 export default async function BaixarPage({ searchParams }: PageProps) {
-  const [{ catalog, semanal }, { games, collections }, siteUrl] = await Promise.all([
-    searchParams,
-    loadAcervo(),
-    getSiteUrl(),
-  ]);
+  const [{ catalog, semanal }, appUser, { games, collections }, siteUrl] =
+    await Promise.all([
+      searchParams,
+      currentAppUser(),
+      loadAcervo(),
+      getSiteUrl(),
+    ]);
+
+  const hasAccess = appUser ? await userHasCatalogAccess(appUser) : false;
 
   const activeSlug =
     collections.find((item) => item.slug === catalog)?.slug ??
@@ -28,6 +35,11 @@ export default async function BaixarPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-8">
+      <AbadAvatarBanner
+        siteUrl={siteUrl}
+        loggedIn={Boolean(appUser)}
+        hasAccess={hasAccess}
+      />
       <DesktopDownloadCard />
       <CatalogBrowser
         games={toCatalogGameItems(games)}
