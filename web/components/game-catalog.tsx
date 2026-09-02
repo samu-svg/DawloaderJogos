@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GameCard } from "@/components/game-card";
 import type { CatalogBadge } from "@/lib/catalog-badges";
-import { comparePopularCatalogGames } from "@/lib/catalog-sort";
+import { compareCatalogGames } from "@/lib/catalog-sort";
 import { gameInitialGroup } from "@/lib/catalog-shared";
 import {
   allCategoryIds,
@@ -72,28 +72,25 @@ export function GameCatalog({
   const listTopRef = useRef<HTMLElement>(null);
   const skipInitialScrollRef = useRef(true);
 
-  const pinnedSource = useMemo(() => games.filter((game) => game.pinned), [games]);
-  const catalogSource = useMemo(() => games.filter((game) => !game.pinned), [games]);
-
   const weeklyCount = useMemo(
-    () => catalogSource.filter((game) => game.isWeekly).length,
-    [catalogSource],
+    () => games.filter((game) => game.isWeekly).length,
+    [games],
   );
 
   const availableLetters = useMemo(() => {
-    const set = new Set(catalogSource.map((game) => gameInitialGroup(game.label)));
+    const set = new Set(games.map((game) => gameInitialGroup(game.label)));
     return LETTERS.filter((item) => set.has(item));
-  }, [catalogSource]);
+  }, [games]);
 
   const categoryCounts = useMemo(() => {
     const counts = new Map<GameCategoryId, number>();
-    for (const game of catalogSource) {
+    for (const game of games) {
       for (const item of game.categories) {
         counts.set(item, (counts.get(item) ?? 0) + 1);
       }
     }
     return counts;
-  }, [catalogSource]);
+  }, [games]);
 
   const availableCategories = useMemo(
     () =>
@@ -103,7 +100,7 @@ export function GameCatalog({
 
   const matchedGames = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return catalogSource.filter((game) => {
+    return games.filter((game) => {
       if (collection && game.collectionSlug !== collection) return false;
       if (letter && gameInitialGroup(game.label) !== letter) return false;
       if (weeklyOnly && !game.isWeekly) return false;
@@ -111,28 +108,10 @@ export function GameCatalog({
       if (query && !game.label.toLowerCase().includes(query)) return false;
       return true;
     });
-  }, [catalogSource, search, collection, letter, category, weeklyOnly]);
-
-  const pinnedVisible = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    return pinnedSource.filter((game) => {
-      if (collection && game.collectionSlug !== collection) return false;
-      if (weeklyOnly) return false;
-      if (!gameMatchesCategory(game.categories, category)) return false;
-      if (query && !game.label.toLowerCase().includes(query)) return false;
-      return true;
-    });
-  }, [pinnedSource, search, collection, category, weeklyOnly]);
+  }, [games, search, collection, letter, category, weeklyOnly]);
 
   const filtered = useMemo(() => {
-    return [...matchedGames].sort((a, b) => {
-      if (sort === "maiores") return b.sizeBytes - a.sizeBytes;
-      if (sort === "populares") {
-        return comparePopularCatalogGames(a, b);
-      }
-      const comparison = a.label.localeCompare(b.label, "pt-BR");
-      return sort === "za" ? -comparison : comparison;
-    });
+    return [...matchedGames].sort((a, b) => compareCatalogGames(a, b, sort));
   }, [matchedGames, sort]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -302,49 +281,21 @@ export function GameCatalog({
         )}
       </div>
 
-      {pinnedVisible.length > 0 && (
-        <section className="mt-6 rounded-2xl border border-emerald-500/35 bg-gradient-to-br from-emerald-950/40 via-surface to-surface p-4 sm:p-5">
-          <div className="mb-4 text-center">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-300">
-              Destaque
-            </p>
-            <h2 className="mt-1 text-base font-semibold text-white">
-              Essencial para o Xbox 360
-            </h2>
-          </div>
-          <ul className="mx-auto grid max-w-sm grid-cols-1 gap-4 sm:max-w-none sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {pinnedVisible.map((game) => (
-              <li key={game.id} className="mx-auto w-full max-w-[220px]">
-                <GameCard
-                  title={game.displayTitle}
-                  slug={game.slug}
-                  coverUrl={game.coverUrl}
-                  sizeBytes={game.sizeBytes}
-                  platform={game.platform}
-                  extraCount={game.extraCount}
-                  badges={game.badges}
-                />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
       <p className="mt-4 text-center text-sm text-zinc-500">
         {filtered.length} jogo(s)
         {totalBytes > 0 ? ` · ${formatBytes(totalBytes)}` : ""}
         {totalPages > 1 ? ` · página ${currentPage} de ${totalPages}` : ""}
       </p>
 
-      {shown.length === 0 && pinnedVisible.length === 0 ? (
+      {shown.length === 0 ? (
         <div className="mt-6 rounded-2xl border border-dashed border-border p-14 text-center">
           <p className="text-zinc-500">
-            {catalogSource.length === 0
+            {games.length === 0
               ? "Nenhum jogo publicado ainda. Volte em breve."
               : "Nenhum jogo encontrado com esses filtros."}
           </p>
         </div>
-      ) : shown.length === 0 ? null : (
+      ) : (
         <ul className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
           {shown.map((game) => (
             <li key={game.id}>

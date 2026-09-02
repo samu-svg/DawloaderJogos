@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { GameCard } from "@/components/game-card";
 import { OpenMontaHDButton } from "@/components/open-montahd-button";
 import type {
   CatalogCollectionItem,
@@ -11,7 +10,7 @@ import type {
 } from "@/components/game-catalog";
 import { GameStoreCard } from "@/components/game-store-card";
 import { entryIdsForSelectedGames } from "@/lib/catalog-shared";
-import { comparePopularCatalogGames } from "@/lib/catalog-sort";
+import { compareCatalogGames } from "@/lib/catalog-sort";
 import {
   allCategoryIds,
   categoryLabel,
@@ -48,22 +47,12 @@ export function CatalogBrowser({
     collections.find((collection) => collection.slug === activeSlug) ??
     collections[0];
 
-  const pinnedGames = useMemo(
-    () => games.filter((game) => game.pinned && game.collectionSlug === activeCollection?.slug),
-    [games, activeCollection?.slug],
-  );
-
-  const catalogGames = useMemo(
-    () => games.filter((game) => !game.pinned),
-    [games],
-  );
-
   const collectionGames = useMemo(
     () =>
       activeCollection
-        ? catalogGames.filter((game) => game.collectionSlug === activeCollection.slug)
+        ? games.filter((game) => game.collectionSlug === activeCollection.slug)
         : [],
-    [catalogGames, activeCollection],
+    [games, activeCollection],
   );
 
   const categoryCounts = useMemo(() => {
@@ -101,14 +90,7 @@ export function CatalogBrowser({
   }, [collectionGames, search, category, weeklyOnly]);
 
   const sortedGames = useMemo(() => {
-    return [...matchedGames].sort((a, b) => {
-      if (sort === "maiores") return b.sizeBytes - a.sizeBytes;
-      if (sort === "populares") {
-        return comparePopularCatalogGames(a, b);
-      }
-      const comparison = a.label.localeCompare(b.label, "pt-BR");
-      return sort === "za" ? -comparison : comparison;
-    });
+    return [...matchedGames].sort((a, b) => compareCatalogGames(a, b, sort));
   }, [matchedGames, sort]);
 
   const [selectedGameIds, setSelectedGameIds] = useState<Set<string>>(
@@ -284,38 +266,6 @@ export function CatalogBrowser({
           para enviar todos de uma vez ao app.
         </p>
       </div>
-
-      {pinnedGames.length > 0 && (
-        <section className="rounded-2xl border border-emerald-500/35 bg-gradient-to-br from-emerald-950/40 via-surface to-surface p-4 sm:p-5">
-          <div className="mb-4 text-center">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-300">
-              Destaque
-            </p>
-            <h2 className="mt-1 text-base font-semibold text-white">
-              Utilitário essencial — instale pelo app
-            </h2>
-            <p className="mt-1 text-sm text-zinc-400">
-              Abra a página do item para instalar. O app só baixa se ainda não
-              estiver no HD.
-            </p>
-          </div>
-          <ul className="mx-auto grid max-w-sm grid-cols-1 gap-4 sm:max-w-none sm:grid-cols-2 lg:grid-cols-3">
-            {pinnedGames.map((game) => (
-              <li key={game.id} className="mx-auto w-full max-w-[220px]">
-                <GameCard
-                  title={game.displayTitle}
-                  slug={game.slug}
-                  coverUrl={game.coverUrl}
-                  sizeBytes={game.sizeBytes}
-                  platform={game.platform}
-                  extraCount={game.extraCount}
-                  badges={game.badges}
-                />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
 
       {matchedGames.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-12 text-center">

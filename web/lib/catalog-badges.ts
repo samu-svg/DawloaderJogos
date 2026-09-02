@@ -38,17 +38,9 @@ function hasMeaningfulDlcNotes(notes: string[] | undefined): boolean {
 export function catalogBadgesForGame(
   entryId: string,
   extraCount: number,
-  options?: { isUtility?: boolean; pinned?: boolean },
 ): CatalogBadge[] {
   const meta = gamePageMeta(entryId);
   const badges: CatalogBadge[] = [];
-
-  if (options?.pinned) {
-    badges.push({ kind: "featured", label: "Destaque", tone: "featured" });
-  }
-  if (options?.isUtility) {
-    badges.push({ kind: "utility", label: "Utilitário", tone: "utility" });
-  }
 
   const audio = audioCatalogBadge(meta?.audio);
   if (audio) badges.push(audio);

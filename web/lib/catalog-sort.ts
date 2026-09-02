@@ -44,6 +44,35 @@ export function audioSortPriority(game: PopularSortableGame): number {
   return 2;
 }
 
+export type CatalogSortMode = "populares" | "az" | "za" | "maiores";
+
+export type CatalogSortableGame = PopularSortableGame & {
+  pinned?: boolean;
+  sizeBytes?: number;
+};
+
+/** Itens fixados (ex.: utilitários) sempre no topo, em qualquer ordenação. */
+export function compareCatalogGames(
+  a: CatalogSortableGame,
+  b: CatalogSortableGame,
+  sort: CatalogSortMode,
+): number {
+  if (a.pinned && !b.pinned) return -1;
+  if (!a.pinned && b.pinned) return 1;
+
+  if (sort === "maiores") {
+    return (b.sizeBytes ?? 0) - (a.sizeBytes ?? 0);
+  }
+  if (sort === "populares") {
+    return comparePopularCatalogGames(a, b);
+  }
+
+  const labelA = a.displayTitle ?? a.label;
+  const labelB = b.displayTitle ?? b.label;
+  const comparison = labelA.localeCompare(labelB, "pt-BR");
+  return sort === "za" ? -comparison : comparison;
+}
+
 /** Ordem padrão do catálogo: GTA V → dublado → PT-BR → populares → A–Z. */
 export function comparePopularCatalogGames(
   a: PopularSortableGame,
