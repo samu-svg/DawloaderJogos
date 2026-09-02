@@ -345,13 +345,6 @@ function init() {
     return group ?? "—";
   }
 
-  function deleteTargetForEntry(entry) {
-    const input = getDestinationInput(entry.id);
-    const dest = (input?.value.trim() || entry.destination || "").replace(/\\/g, "/");
-    if (/\.(rar|7z)$/i.test(dest)) return dest;
-    return dest.replace(/\.zip$/i, "");
-  }
-
   function createCheckbox(checked, entryId) {
     const label = document.createElement("label");
     label.className = "checkbox-wrap";
@@ -488,7 +481,9 @@ function init() {
 
       const checkCell = document.createElement("td");
       const { label: checkLabel, input: checkbox } = createCheckbox(
-        allChecked || !entry.optional,
+        options.checkedIds
+          ? options.checkedIds.has(entry.id)
+          : allChecked || !entry.optional,
         entry.id,
       );
       checkbox.addEventListener("change", updateDownloadButton);
@@ -545,10 +540,11 @@ function init() {
       const deleteBtn = document.createElement("button");
       deleteBtn.type = "button";
       deleteBtn.className = "btn btn-danger btn-small";
-      deleteBtn.textContent = "Excluir";
+      deleteBtn.textContent = "Remover";
+      deleteBtn.title = "Tirar da lista — não apaga o HD";
       deleteBtn.dataset.deleteEntry = entry.id;
       deleteBtn.addEventListener("click", () => {
-        void deleteInstallEntry(entry);
+        removeEntryFromList(entry);
       });
       actionCell.appendChild(deleteBtn);
 
@@ -557,9 +553,15 @@ function init() {
     }
 
     if (selectAll instanceof HTMLInputElement) {
-      selectAll.checked =
-        entries.length > 0 &&
-        entries.every((entry) => allChecked || !entry.optional);
+      if (options.checkedIds) {
+        selectAll.checked =
+          entries.length > 0 &&
+          entries.every((entry) => options.checkedIds.has(entry.id));
+      } else {
+        selectAll.checked =
+          entries.length > 0 &&
+          entries.every((entry) => allChecked || !entry.optional);
+      }
     }
 
     updateDownloadButton();
@@ -784,40 +786,37 @@ function init() {
     return !cancelBtn.classList.contains("hidden");
   }
 
-  async function deleteInstallEntry(entry) {
-    if (!selectedRoot) {
-      setSummary("Escolha a pasta do HD antes de excluir.", "error");
-      return;
-    }
-    if (isDownloading()) {
-      setSummary("Espere o download terminar antes de excluir.", "error");
-      return;
-    }
-
-    const destination = deleteTargetForEntry(entry);
-    const preview = `${entry.label}\n→ ${selectedRoot}\\${destination.replace(/\//g, "\\")}`;
-    const confirmed = await showConfirmModal(
-      `Excluir «${entry.label}» do HD? Esta ação não pode ser desfeita.`,
-      preview,
-      {
-        title: "Excluir do HD",
-        okLabel: "Excluir",
-        danger: true,
-      },
+  function updatePortfolioMeta() {
+    if (!manifest) return;
+    const totalBytes = manifest.entries.reduce(
+      (sum, entry) => sum + (entry.sizeBytes || 0),
+      0,
     );
-    if (!confirmed) return;
+    manifest.totalBytes = totalBytes;
+    const totalLabel = totalBytes > 0 ? ` · ${formatBytes(totalBytes)}` : "";
+    portfolioMeta.textContent = `${manifest.entries.length} jogo(s)${totalLabel}`;
+  }
 
-    try {
-      await window.montahd.deleteHdItem(selectedRoot, destination);
-      setProgress(entry.id, 0, "Removido do HD");
-      setSummary(`«${entry.label}» removido do HD.`, "ok");
-      void refreshInstallTags();
-    } catch (error) {
-      setSummary(
-        error instanceof Error ? error.message : "Não foi possível excluir.",
-        "error",
-      );
+  function removeEntryFromList(entry) {
+    if (!manifest) return;
+    if (isDownloading()) {
+      setSummary("Espere o download terminar antes de alterar a lista.", "error");
+      return;
     }
+
+    const remainingChecked = new Set(
+      checkboxes()
+        .filter((input) => input.checked && input.dataset.entryId !== entry.id)
+        .map((input) => input.dataset.entryId),
+    );
+    manifest.entries = manifest.entries.filter((item) => item.id !== entry.id);
+    updatePortfolioMeta();
+    renderEntries(manifest.entries, { checkedIds: remainingChecked });
+    setSummary(
+      manifest.entries.length === 0
+        ? "Lista vazia. Escolha outros jogos no site."
+        : `«${entry.label}» saiu da lista. O arquivo no HD não foi apagado.`,
+    );
   }
 
   async function deleteLibraryItem(item) {
