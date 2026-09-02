@@ -22,12 +22,18 @@ export function toCatalogGameItem(game: AcervoGame): CatalogGameItem {
     extraCount: game.extraCount,
     entryIds: game.entryIds,
     collectionSlug: game.collectionSlug,
+    installCollectionSlug: game.installCollectionSlug ?? game.collectionSlug,
     collectionTitle: game.collectionTitle,
     platform: game.platform,
-    badges: catalogBadgesForGame(game.id, game.extraCount),
+    badges: catalogBadgesForGame(game.id, game.extraCount, {
+      isUtility: game.isUtility,
+      pinned: game.pinned,
+    }),
     featuredRank: featuredRank(game.id),
     categories: gameCategoriesForEntry(game.id, game.label, displayTitle),
     isWeekly: isWeeklyGame(game.id),
+    pinned: game.pinned,
+    isUtility: game.isUtility,
   };
 }
 

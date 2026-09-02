@@ -14,6 +14,10 @@ import {
 } from "../shared/install-state";
 import { deleteHdItem, readHdIndex } from "./hd-library";
 import { isPathUnderRoot } from "../shared/path-safety";
+import {
+  hdMarkersForEntry,
+  isDeliverableArchiveDestination,
+} from "../shared/special-downloads";
 import { resolveUnderRoot } from "./paths";
 import { removeStagingEntry, stagingEntryDir } from "./staging";
 
@@ -33,20 +37,26 @@ export async function inspectInstallStates(
 
     const destPath = resolved.fullPath;
     const installDir = installDirForDestPath(destPath);
-    const destExists = existsSync(installDir);
-    const destFileExists =
-      destPath.toLowerCase() !== installDir.toLowerCase() &&
-      existsSync(destPath) &&
-      isFile(destPath);
+    const destIsArchive = isDeliverableArchiveDestination(entry.destination);
+    const destFileExists = existsSync(destPath) && isFile(destPath);
+    const destExists = destIsArchive
+      ? destFileExists
+      : existsSync(installDir) && isDirectory(installDir);
     const hdPartialExists = existsSync(destPath + HD_PARTIAL_SUFFIX);
     const stagingPartialExists = existsSync(
       path.join(stagingEntryDir(stagingRoot, entry.id), STAGING_PARTIAL_NAME),
     );
+    const markerPresent = hdMarkersForEntry(entry.id).some((marker) => {
+      const markerResolved = resolveUnderRoot(rootDir, marker);
+      if (!markerResolved.ok) return false;
+      return existsSync(markerResolved.fullPath);
+    });
+    const deliverableOnDisk = destFileExists || markerPresent;
     const indexed = index.items.some(
       (item) =>
         (item.id === entry.id ||
           destinationsRelated(item.destination, entry.destination)) &&
-        destExists,
+        (destExists || deliverableOnDisk),
     );
 
     const classified = classifyInstallPresence({
@@ -55,6 +65,7 @@ export async function inspectInstallStates(
       hdPartialExists,
       stagingPartialExists,
       indexed,
+      deliverableOnDisk,
     });
 
     if (classified.kind === "clean") continue;
@@ -125,6 +136,14 @@ export async function removeStaleHdExtractDirs(rootDir: string): Promise<void> {
 function isFile(target: string): boolean {
   try {
     return statSync(target).isFile();
+  } catch {
+    return false;
+  }
+}
+
+function isDirectory(target: string): boolean {
+  try {
+    return statSync(target).isDirectory();
   } catch {
     return false;
   }

@@ -9,6 +9,8 @@ export interface InstallPresenceFlags {
   hdPartialExists: boolean;
   stagingPartialExists: boolean;
   indexed: boolean;
+  /** Arquivo/pasta final do utilitário já presente no HD (ex.: .rar na raiz). */
+  deliverableOnDisk?: boolean;
 }
 
 export interface EntryInstallState {
@@ -29,7 +31,7 @@ export function classifyInstallPresence(flags: InstallPresenceFlags): {
 } {
   const hasPartial = flags.hdPartialExists || flags.stagingPartialExists;
 
-  if (flags.indexed && flags.destExists) {
+  if (flags.deliverableOnDisk || (flags.indexed && flags.destExists)) {
     return { kind: "installed", canResume: false };
   }
 

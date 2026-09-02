@@ -8,6 +8,7 @@ import {
 import { listPublicCatalogs } from "@/lib/catalog";
 import { comparePopularCatalogGames } from "@/lib/catalog-sort";
 import { catalogDisplayTitle } from "@/lib/catalog-badges";
+import { specialCatalogGames } from "@/lib/special-catalog-items";
 
 export type AcervoGame = {
   id: string;
@@ -21,9 +22,14 @@ export type AcervoGame = {
   entryIds: string[];
   destination: string | null;
   collectionSlug: string;
+  /** Slug do manifesto no app quando difere do catálogo (ex.: special-abadavatar). */
+  installCollectionSlug?: string;
   collectionTitle: string;
   platform: string;
   updatedAt: string;
+  /** Fixo no topo do catálogo, fora da paginação. */
+  pinned?: boolean;
+  isUtility?: boolean;
 };
 
 export type AcervoCollection = {
@@ -77,7 +83,10 @@ export async function loadAcervo(): Promise<Acervo> {
     }
   }
 
-  return { games, collections };
+  const mainSlug = collections[0]?.slug ?? "jogos360";
+  const specials = specialCatalogGames(mainSlug);
+
+  return { games: [...specials, ...games], collections };
 }
 
 export async function findAcervoGame(slug: string): Promise<AcervoGame | null> {
@@ -96,7 +105,7 @@ export async function relatedAcervoGames(
 ): Promise<AcervoGame[]> {
   const { games } = await loadAcervo();
   return games
-    .filter((item) => item.id !== game.id)
+    .filter((item) => item.id !== game.id && !item.pinned)
     .sort((a, b) =>
       comparePopularCatalogGames(
         {

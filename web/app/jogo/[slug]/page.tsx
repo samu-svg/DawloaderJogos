@@ -258,10 +258,11 @@ export default async function GamePage({ params }: PageProps) {
 
             <GameInstallPanel
               siteUrl={siteUrl}
-              collectionSlug={game.collectionSlug}
+              collectionSlug={game.installCollectionSlug ?? game.collectionSlug}
               entryIds={game.entryIds}
               gameTitle={title}
               access={access}
+              isUtility={game.isUtility}
             />
 
             <section className="rounded-2xl border border-border bg-surface p-5 text-left">
@@ -283,8 +284,17 @@ export default async function GamePage({ params }: PageProps) {
                 </li>
                 <li>Escolha a pasta raiz do HD e confirme.</li>
                 <li>
-                  O app baixa, confere a integridade, descompacta e organiza tudo
-                  na pasta correta.
+                  {game.isUtility ? (
+                    <>
+                      O app grava o <strong className="text-zinc-200">.rar na raiz do HD</strong>{" "}
+                      e só baixa se o pack ainda não estiver lá.
+                    </>
+                  ) : (
+                    <>
+                      O app baixa, confere a integridade, descompacta e organiza tudo
+                      na pasta correta.
+                    </>
+                  )}
                 </li>
               </ol>
             </section>

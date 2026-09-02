@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { AbadAvatarBanner } from "@/components/abadavatar-banner";
 import { GameCatalog } from "@/components/game-catalog";
 import { MontaHDStrip } from "@/components/montahd-strip";
 import { SiteHeader } from "@/components/site-header";
@@ -8,7 +7,6 @@ import { canAccessPainel } from "@/lib/rbac";
 import { toCatalogGameItems } from "@/lib/catalog-items";
 import { loadAcervo } from "@/lib/games";
 import { currentAppUser } from "@/lib/auth";
-import { getSiteUrl } from "@/lib/site-url";
 import { userHasCatalogAccess } from "@/lib/subscription";
 
 export const metadata: Metadata = {
@@ -22,12 +20,11 @@ type PageProps = {
 };
 
 export default async function HomePage({ searchParams }: PageProps) {
-  const [{ colecao, semanal }, appUser, { games, collections }, siteUrl] =
+  const [{ colecao, semanal }, appUser, { games, collections }] =
     await Promise.all([
       searchParams,
       currentAppUser(),
       loadAcervo(),
-      getSiteUrl(),
     ]);
 
   const isAdmin = appUser ? canAccessPainel(appUser.role) : false;
@@ -55,12 +52,6 @@ export default async function HomePage({ searchParams }: PageProps) {
         </header>
 
         <MontaHDStrip hasAccess={hasAccess} />
-
-        <AbadAvatarBanner
-          siteUrl={siteUrl}
-          loggedIn={Boolean(appUser)}
-          hasAccess={hasAccess}
-        />
 
         <div className="mt-10">
           <GameCatalog

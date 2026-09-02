@@ -28,6 +28,10 @@ function badgeClass(tone: CatalogBadge["tone"]): string {
       return "bg-accent/85 text-white";
     case "weekly":
       return "bg-amber-500/90 text-black";
+    case "utility":
+      return "bg-emerald-700/90 text-white";
+    case "featured":
+      return "bg-amber-400/95 text-black";
   }
 }
 
@@ -44,6 +48,8 @@ export function GameCard({
   const audioBadges = badges.filter((badge) => badge.kind === "audio");
   const dlcBadges = badges.filter((badge) => badge.kind === "dlc");
   const weeklyBadges = badges.filter((badge) => badge.kind === "weekly");
+  const featuredBadges = badges.filter((badge) => badge.kind === "featured");
+  const utilityBadges = badges.filter((badge) => badge.kind === "utility");
   const hasCover = Boolean(coverUrl);
 
   return (
@@ -64,6 +70,26 @@ export function GameCard({
         {audioBadges.length > 0 && (
           <div className="absolute bottom-2 left-2 z-10 flex max-w-[calc(100%-1rem)] flex-wrap gap-1">
             {audioBadges.map((badge) => (
+              <span
+                key={badge.label}
+                className={`rounded-md px-2 py-0.5 text-[10px] font-semibold shadow-sm backdrop-blur ${badgeClass(badge.tone)}`}
+              >
+                {badge.label}
+              </span>
+            ))}
+          </div>
+        )}
+        {(featuredBadges.length > 0 || utilityBadges.length > 0) && (
+          <div className="absolute left-2 top-8 z-10 flex max-w-[calc(100%-1rem)] flex-col gap-1">
+            {featuredBadges.map((badge) => (
+              <span
+                key={badge.label}
+                className={`rounded-md px-2 py-0.5 text-[10px] font-semibold shadow-sm backdrop-blur ${badgeClass(badge.tone)}`}
+              >
+                {badge.label}
+              </span>
+            ))}
+            {utilityBadges.map((badge) => (
               <span
                 key={badge.label}
                 className={`rounded-md px-2 py-0.5 text-[10px] font-semibold shadow-sm backdrop-blur ${badgeClass(badge.tone)}`}

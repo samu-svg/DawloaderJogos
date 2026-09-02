@@ -11,6 +11,7 @@ type GameInstallPanelProps = {
   entryIds: string[];
   gameTitle: string;
   access: "anon" | "sem-assinatura" | "liberado";
+  isUtility?: boolean;
 };
 
 export function GameInstallPanel({
@@ -19,6 +20,7 @@ export function GameInstallPanel({
   entryIds,
   gameTitle,
   access,
+  isUtility = false,
 }: GameInstallPanelProps) {
   const download = getDesktopDownloadInfo();
   const [loading, setLoading] = useState(false);
@@ -122,8 +124,9 @@ export function GameInstallPanel({
     <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-6 text-center">
       <h2 className="text-base font-semibold text-white">Baixar {gameTitle}</h2>
       <p className="mt-2 text-sm leading-6 text-zinc-300">
-        Abre o MontaHD já com este jogo marcado. Escolha a pasta raiz do seu HD
-        (vinculado à assinatura) e confirme — o app baixa, verifica e descompacta sozinho.
+        {isUtility
+          ? "Abre o MontaHD com este utilitário marcado. O app grava o .rar na raiz do HD e só baixa se o pack ainda não estiver lá."
+          : "Abre o MontaHD já com este jogo marcado. Escolha a pasta raiz do seu HD (vinculado à assinatura) e confirme — o app baixa, verifica e descompacta sozinho."}
       </p>
       {error && (
         <p className="mt-3 rounded-lg border border-red-900/50 bg-red-950/40 px-4 py-2.5 text-sm text-red-300">

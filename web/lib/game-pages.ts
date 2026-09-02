@@ -11,7 +11,7 @@ export type GamePageMeta = {
   longDescription?: string;
   audio: GameAudio;
   audioNote?: string;
-  installHint?: "games" | "content";
+  installHint?: "games" | "content" | "root";
   dlcNotes?: string[];
   /** Força badge de DLC no card quando o extra não está agrupado por sort_order. */
   hasDlc?: boolean;
@@ -50,6 +50,7 @@ const PAGE_MAP = pages as Record<string, GamePageMeta>;
 const LOCAL_COVERS: Record<string, string> = {
   ...(localCovers as Record<string, string>),
   "764c602c-1b14-4244-a613-19fbdc176e84": "/covers/mario-64.png",
+  abadavatar: "/covers/abadavatar.svg",
 };
 
 export function gamePageMeta(entryId: string): GamePageMeta | null {
@@ -75,8 +76,15 @@ export function audioLabel(audio: GameAudio): string {
 
 export function installFolderKind(
   destination: string | null,
-  hint?: "games" | "content",
+  hint?: "games" | "content" | "root",
 ): { label: string; detail: string } {
+  if (hint === "root" || (destination && !destination.replace(/\\/g, "/").includes("/"))) {
+    return {
+      label: "Raiz do HD",
+      detail:
+        "O app grava o arquivo na pasta raiz que você escolher — sem subpastas Games ou Content.",
+    };
+  }
   if (hint === "content" || destination?.replace(/\\/g, "/").startsWith("Content/")) {
     return {
       label: "Content (XBLA / DLC)",

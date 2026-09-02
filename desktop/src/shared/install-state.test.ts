@@ -88,6 +88,20 @@ test("zip leftover + pasta extraida nao retoma", () => {
   );
 });
 
+test("pack .rar na raiz conta como instalado", () => {
+  assert.deepEqual(
+    classifyInstallPresence({
+      destExists: true,
+      destFileExists: true,
+      hdPartialExists: false,
+      stagingPartialExists: false,
+      indexed: false,
+      deliverableOnDisk: true,
+    }),
+    { kind: "installed", canResume: false },
+  );
+});
+
 test("nada no disco e limpo", () => {
   assert.deepEqual(
     classifyInstallPresence({

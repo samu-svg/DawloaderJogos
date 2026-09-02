@@ -18,6 +18,7 @@ export type SpecialDownload = {
   /** Nome do arquivo na raiz do HD escolhido no app. */
   downloadFileName: string;
   sizeBytes: number;
+  hdPresenceMarkers?: string[];
 };
 
 const SPECIAL_INSTALL_PREFIX = "special-";
@@ -40,7 +41,8 @@ export function packSlugFromInstallSlug(installSlug: string): string | null {
 /** Pack utilitário no R2 — fora do catálogo de jogos. */
 export const ABADAVATAR_PACK: SpecialDownload = {
   slug: "abadavatar",
-  entryId: "abadavatar",  title: "AbadAvatar v1.3 + AutoStart",
+  entryId: "abadavatar",
+  title: "AbadAvatar v1.3 + AutoStart",
   subtitle: "Pack completo",
   description:
     "Utilitário para avatar e boot automático no Xbox 360. O app MontaHD grava o .rar na raiz do HD escolhido — extraia no PC e copie conforme as instruções do pack.",
@@ -50,6 +52,12 @@ export const ABADAVATAR_PACK: SpecialDownload = {
   storageKey: "jogos/Pack -AbadAvatar V1.3 + AutoStart Imediato !.rar",
   downloadFileName: "Pack -AbadAvatar V1.3 + AutoStart Imediato.rar",
   sizeBytes: 426_379_519,
+  /** Pastas/arquivos na raiz do HD que indicam pack já copiado ou extraído. */
+  hdPresenceMarkers: [
+    "Pack -AbadAvatar V1.3 + AutoStart Imediato.rar",
+    "AbadAvatar",
+    "BadUpdate",
+  ],
 };
 
 const PACKS: Record<string, SpecialDownload> = {

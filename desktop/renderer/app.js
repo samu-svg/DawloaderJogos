@@ -1122,7 +1122,14 @@ function init() {
 
     try {
       const states = await window.montahd.inspectInstallState(selectedRoot, entries);
+      const utilitySkipIds = new Set(["abadavatar"]);
       const installed = states.filter((state) => state.kind === "installed");
+      const autoSkipInstalled = installed.filter((state) =>
+        utilitySkipIds.has(state.entryId),
+      );
+      const promptInstalled = installed.filter(
+        (state) => !utilitySkipIds.has(state.entryId),
+      );
       const resumable = states.filter(
         (state) => state.kind === "incomplete" && state.canResume,
       );
@@ -1130,12 +1137,12 @@ function init() {
         (state) => state.kind === "incomplete" && !state.canResume,
       );
 
-      if (installed.length > 0) {
+      if (promptInstalled.length > 0) {
         const reinstall = await showConfirmModal(
-          installed.length === 1
-            ? `«${installed[0].label}» já está neste HD. Instalar de novo apaga a cópia atual e baixa outra vez.`
-            : `${installed.length} jogos já estão neste HD. Instalar de novo apaga as cópias atuais e baixa outra vez.`,
-          installed.map((state) => `• ${state.label}`).join("\n"),
+          promptInstalled.length === 1
+            ? `«${promptInstalled[0].label}» já está neste HD. Instalar de novo apaga a cópia atual e baixa outra vez.`
+            : `${promptInstalled.length} jogos já estão neste HD. Instalar de novo apaga as cópias atuais e baixa outra vez.`,
+          promptInstalled.map((state) => `• ${state.label}`).join("\n"),
           {
             title: "Já instalado neste HD",
             okLabel: "Instalar de novo",
@@ -1144,11 +1151,16 @@ function init() {
           },
         );
         if (reinstall) {
-          resetEntryIds.push(...installed.map((state) => state.entryId));
+          resetEntryIds.push(...promptInstalled.map((state) => state.entryId));
         } else {
-          const skip = new Set(installed.map((state) => state.entryId));
+          const skip = new Set(promptInstalled.map((state) => state.entryId));
           toDownload = toDownload.filter((entry) => !skip.has(entry.id));
         }
+      }
+
+      if (autoSkipInstalled.length > 0) {
+        const skip = new Set(autoSkipInstalled.map((state) => state.entryId));
+        toDownload = toDownload.filter((entry) => !skip.has(entry.id));
       }
 
       if (resumable.length > 0) {

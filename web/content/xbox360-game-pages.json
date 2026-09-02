@@ -1691,5 +1691,18 @@
     "installHint": "games",
     "dlcNotes": [],
     "longDescription": "Left 4 Dead 2 expande a fórmula da Valve com cinco campanhas novas ambientadas no sul dos Estados Unidos, logo após o surto zumbi. Coach, Ellis, Nick e Rochelle atravessam cidades, pântanos, parques de diversão e cemitérios enquanto milhares de infectados perseguem o grupo.\n\nO combate recompensa cooperação constante: curativos compartilhados, cobertura cruzada e reação imediata a Smokers, Chargers, Jockeys e Spitters. Armas brancas — machados, facões e tacos de beisebol — permitem combate corpo a corpo eficiente contra hordas.\n\nModos Versus, Survival e Scavenge prolongam a vida útil além da campanha, com partidas online para quatro jogadores e suporte a tela dividida local. O diretor de IA ajusta intensidade das hordas conforme o desempenho do time.\n\nConsiderado referência do FPS cooperativo, Left 4 Dead 2 continua essencial para sessões em grupo no Xbox 360."
+  },
+  "abadavatar": {
+    "displayTitle": "AbadAvatar v1.3 + AutoStart — Pack completo",
+    "description": "Utilitário para avatar e boot automático no Xbox 360. O app grava o .rar na raiz do HD; extraia no PC e copie conforme o pack.",
+    "longDescription": "AbadAvatar v1.3 com AutoStart imediato é um pack utilitário para Xbox 360 RGH/JTAG. Inclui ferramentas de avatar e configuração de boot automático.\n\nO MontaHD baixa o arquivo .rar direto na raiz do HD que você escolher. Se o pack ou o .rar já estiverem no disco, o app detecta e não baixa de novo.\n\nExtraia o conteúdo no PC e copie para o HD seguindo as instruções do pack. O HD deve estar formatado no Xbox no formato FAT32 antes de usar.\n\nEste item aparece em destaque no catálogo por ser essencial na preparação do console.",
+    "audio": "desconhecido",
+    "installHint": "root",
+    "technicalNotes": [
+      "O HD deve estar formatado no Xbox no formato FAT32.",
+      "Arquivo entregue na raiz do HD: Pack -AbadAvatar V1.3 + AutoStart Imediato.rar",
+      "O app só baixa se o pack ainda não estiver no HD."
+    ],
+    "dlcNotes": []
   }
 }
