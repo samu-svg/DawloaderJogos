@@ -14,7 +14,7 @@ export function specialCatalogGames(mainCollectionSlug: string): AcervoGame[] {
       id: pack.entryId,
       slug: pack.slug,
       label: title,
-      coverUrl: "/covers/abadavatar.svg",
+      coverUrl: "/covers/abadavatar.jpg",
       sizeBytes: pack.sizeBytes,
       totalBytes: pack.sizeBytes,
       extraCount: 0,

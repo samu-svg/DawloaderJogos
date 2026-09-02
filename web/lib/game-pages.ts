@@ -50,7 +50,7 @@ const PAGE_MAP = pages as Record<string, GamePageMeta>;
 const LOCAL_COVERS: Record<string, string> = {
   ...(localCovers as Record<string, string>),
   "764c602c-1b14-4244-a613-19fbdc176e84": "/covers/mario-64.png",
-  abadavatar: "/covers/abadavatar.svg",
+  abadavatar: "/covers/abadavatar.jpg",
 };
 
 export function gamePageMeta(entryId: string): GamePageMeta | null {
