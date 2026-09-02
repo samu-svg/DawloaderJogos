@@ -341,7 +341,15 @@ function init() {
   function groupLabel(group) {
     if (group === "jogo") return "Jogo";
     if (group === "conteudo") return "DLC / Content";
+    if (group === "utilitario") return "Utilitário";
     return group ?? "—";
+  }
+
+  function deleteTargetForEntry(entry) {
+    const input = getDestinationInput(entry.id);
+    const dest = (input?.value.trim() || entry.destination || "").replace(/\\/g, "/");
+    if (/\.(rar|7z)$/i.test(dest)) return dest;
+    return dest.replace(/\.zip$/i, "");
   }
 
   function createCheckbox(checked, entryId) {
@@ -533,7 +541,18 @@ function init() {
       statusCell.appendChild(progress.wrap);
       progressCells.set(entry.id, { fill: progress.fill, label: progress.label });
 
-      row.append(checkCell, labelCell, typeCell, destCell, sizeCell, targetCell, statusCell);
+      const actionCell = document.createElement("td");
+      const deleteBtn = document.createElement("button");
+      deleteBtn.type = "button";
+      deleteBtn.className = "btn btn-danger btn-small";
+      deleteBtn.textContent = "Excluir";
+      deleteBtn.dataset.deleteEntry = entry.id;
+      deleteBtn.addEventListener("click", () => {
+        void deleteInstallEntry(entry);
+      });
+      actionCell.appendChild(deleteBtn);
+
+      row.append(checkCell, labelCell, typeCell, destCell, sizeCell, targetCell, statusCell, actionCell);
       entriesBody.appendChild(row);
     }
 
@@ -763,6 +782,42 @@ function init() {
 
   function isDownloading() {
     return !cancelBtn.classList.contains("hidden");
+  }
+
+  async function deleteInstallEntry(entry) {
+    if (!selectedRoot) {
+      setSummary("Escolha a pasta do HD antes de excluir.", "error");
+      return;
+    }
+    if (isDownloading()) {
+      setSummary("Espere o download terminar antes de excluir.", "error");
+      return;
+    }
+
+    const destination = deleteTargetForEntry(entry);
+    const preview = `${entry.label}\n→ ${selectedRoot}\\${destination.replace(/\//g, "\\")}`;
+    const confirmed = await showConfirmModal(
+      `Excluir «${entry.label}» do HD? Esta ação não pode ser desfeita.`,
+      preview,
+      {
+        title: "Excluir do HD",
+        okLabel: "Excluir",
+        danger: true,
+      },
+    );
+    if (!confirmed) return;
+
+    try {
+      await window.montahd.deleteHdItem(selectedRoot, destination);
+      setProgress(entry.id, 0, "Removido do HD");
+      setSummary(`«${entry.label}» removido do HD.`, "ok");
+      void refreshInstallTags();
+    } catch (error) {
+      setSummary(
+        error instanceof Error ? error.message : "Não foi possível excluir.",
+        "error",
+      );
+    }
   }
 
   async function deleteLibraryItem(item) {

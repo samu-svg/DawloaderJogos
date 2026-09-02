@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
+  destinationKey,
   emptyHdIndex,
   emptyParentsToRemove,
   mergeHdLibrary,
@@ -17,6 +18,7 @@ import {
   type HdLibraryItem,
   type HdScannedItem,
 } from "../shared/hd-library";
+import { SPECIAL_HD_MARKERS } from "../shared/special-downloads";
 import { ensureDir } from "./ensure-dir";
 import { resolveUnderRoot } from "./paths";
 
@@ -98,7 +100,10 @@ export async function listHdLibrary(
   hints: HdLibraryHint[] = [],
 ): Promise<HdLibraryItem[]> {
   const index = await readHdIndex(rootDir);
-  const scanned = await scanHd(rootDir);
+  const scanned = [
+    ...(await scanHd(rootDir)),
+    ...(await scanRootExtras(rootDir, index)),
+  ];
   const items = mergeHdLibrary({
     scanned,
     index: index.items,
@@ -130,12 +135,17 @@ export async function deleteHdItem(
   if (!resolved.ok) throw new Error(resolved.error);
 
   if (!existsSync(resolved.fullPath)) {
+    await removeRelatedHdPaths(rootDir, validated.destination);
     const index = removeInstalled(await readHdIndex(rootDir), validated.destination);
+    for (const marker of relatedDeleteMarkers(validated.destination)) {
+      removeInstalled(index, marker);
+    }
     await writeHdIndex(rootDir, index);
     return { ok: true, alreadyGone: true };
   }
 
   await rm(resolved.fullPath, { recursive: true, force: true });
+  await removeRelatedHdPaths(rootDir, validated.destination);
 
   for (const parent of emptyParentsToRemove(validated.destination)) {
     const parentResolved = resolveUnderRoot(rootDir, parent);
@@ -151,8 +161,21 @@ export async function deleteHdItem(
   }
 
   const index = removeInstalled(await readHdIndex(rootDir), validated.destination);
+  for (const marker of relatedDeleteMarkers(validated.destination)) {
+    removeInstalled(index, marker);
+  }
   await writeHdIndex(rootDir, index);
   return { ok: true };
+}
+
+function relatedDeleteMarkers(destination: string): string[] {
+  const key = destinationKey(destination);
+  for (const markers of Object.values(SPECIAL_HD_MARKERS)) {
+    if (markers.some((marker) => destinationKey(marker) === key)) {
+      return [...markers];
+    }
+  }
+  return [];
 }
 
 async function scanHd(rootDir: string): Promise<HdScannedItem[]> {
@@ -168,6 +191,48 @@ async function scanHd(rootDir: string): Promise<HdScannedItem[]> {
   }
 
   return items;
+}
+
+async function scanRootExtras(
+  rootDir: string,
+  index: HdLibraryIndex,
+): Promise<HdScannedItem[]> {
+  const wanted = new Set<string>();
+  for (const record of index.items) {
+    const dest = record.destination.replace(/\\/g, "/").replace(/\/+$/, "");
+    if (!dest.includes("/")) wanted.add(dest);
+  }
+  for (const markers of Object.values(SPECIAL_HD_MARKERS)) {
+    for (const marker of markers) wanted.add(marker);
+  }
+
+  const items: HdScannedItem[] = [];
+  for (const destination of wanted) {
+    const check = validateDeleteDestination(destination);
+    if (!check.ok) continue;
+    const resolved = resolveUnderRoot(rootDir, check.destination);
+    if (!resolved.ok || !existsSync(resolved.fullPath)) continue;
+    items.push({
+      destination: check.destination,
+      sizeBytes: await safeSize(resolved.fullPath),
+    });
+  }
+  return items;
+}
+
+async function removeRelatedHdPaths(
+  rootDir: string,
+  destination: string,
+): Promise<void> {
+  const key = destinationKey(destination);
+  for (const marker of relatedDeleteMarkers(destination)) {
+    if (destinationKey(marker) === key) continue;
+    const check = validateDeleteDestination(marker);
+    if (!check.ok) continue;
+    const resolved = resolveUnderRoot(rootDir, check.destination);
+    if (!resolved.ok || !existsSync(resolved.fullPath)) continue;
+    await rm(resolved.fullPath, { recursive: true, force: true });
+  }
 }
 
 async function scanGames(gamesDir: string): Promise<HdScannedItem[]> {

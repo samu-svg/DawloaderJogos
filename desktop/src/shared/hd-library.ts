@@ -81,7 +81,7 @@ export function inferGroup(destination: string): string {
   const root = normalizeRel(destination).split("/")[0]?.toLowerCase();
   if (root === "content") return "conteudo";
   if (root === "games") return "jogo";
-  return "desconhecido";
+  return "utilitario";
 }
 
 export function displayNameFromPath(destination: string): string {
@@ -118,6 +118,13 @@ export function shouldTreatAsInstallUnit(
   return children.some((child) => !child.isDirectory);
 }
 
+const PROTECTED_ROOT_NAMES = new Set([
+  "games",
+  "content",
+  "cache",
+  ".montahd",
+]);
+
 export function validateDeleteDestination(input: string): DeletePathCheck {
   const destination = normalizeRel(input);
   const segments = destination.split("/").filter(Boolean);
@@ -131,10 +138,20 @@ export function validateDeleteDestination(input: string): DeletePathCheck {
 
   const root = segments[0]?.toLowerCase();
 
+  if (segments.length === 1) {
+    if (PROTECTED_ROOT_NAMES.has(root) || root.startsWith(".")) {
+      return {
+        ok: false,
+        error: "Não é possível excluir esta pasta do HD.",
+      };
+    }
+    return { ok: true, destination: segments[0] };
+  }
+
   if (root !== "games" && root !== "content") {
     return {
       ok: false,
-      error: "Só é possível excluir itens nas pastas Games ou Content.",
+      error: "Só é possível excluir itens nas pastas Games ou Content, ou arquivos na raiz do HD.",
     };
   }
   if (segments.length < 2) {
@@ -145,6 +162,13 @@ export function validateDeleteDestination(input: string): DeletePathCheck {
   }
 
   return { ok: true, destination: segments.join("/") };
+}
+
+/** Pasta/arquivo a apagar no HD a partir do destino do manifesto. */
+export function deleteTargetFromManifest(destination: string): string {
+  const dest = normalizeRel(destination);
+  if (/\.(rar|7z)$/i.test(dest)) return dest;
+  return stripArchiveSuffix(dest);
 }
 
 /** Pais que podem ser removidos se ficarem vazios — nunca Games, Content ou a raiz. */

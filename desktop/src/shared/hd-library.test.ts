@@ -7,6 +7,7 @@ import {
   emptyParentsToRemove,
   inferGroup,
   installedDestinationFromManifest,
+  deleteTargetFromManifest,
   matchHint,
   mergeHdLibrary,
   removeInstalled,
@@ -22,6 +23,14 @@ test("zip vira pasta instalada sem a extensao", () => {
     installedDestinationFromManifest("Content/4D5307E6/Mapa.zip"),
     "Content/4D5307E6/Mapa",
   );
+  assert.equal(
+    deleteTargetFromManifest("Games/Halo.zip"),
+    "Games/Halo",
+  );
+  assert.equal(
+    deleteTargetFromManifest("Pack -AbadAvatar V1.3 + AutoStart Imediato.rar"),
+    "Pack -AbadAvatar V1.3 + AutoStart Imediato.rar",
+  );
 });
 
 test("validateDeleteDestination bloqueia pastas raiz", () => {
@@ -30,6 +39,11 @@ test("validateDeleteDestination bloqueia pastas raiz", () => {
   assert.equal(validateDeleteDestination("Outro/Jogo").ok, false);
   assert.equal(validateDeleteDestination("Games/Halo").ok, true);
   assert.equal(validateDeleteDestination("Content/4D5307E6/dlc").ok, true);
+  assert.equal(validateDeleteDestination("AbadAvatar").ok, true);
+  assert.equal(
+    validateDeleteDestination("Pack -AbadAvatar V1.3 + AutoStart Imediato.rar").ok,
+    true,
+  );
 });
 
 test("emptyParentsToRemove nunca inclui Games ou Content", () => {
@@ -108,6 +122,7 @@ test("mergeHdLibrary usa indice, depois dica do catalogo", () => {
   assert.equal(coded?.knownName, false);
   assert.equal(coded?.label, "AAAAAAAA");
   assert.equal(inferGroup("Content/AAAAAAAA"), "conteudo");
+  assert.equal(inferGroup("AbadAvatar"), "utilitario");
 });
 
 test("destinationsRelated ignora extensao e barra invertida", () => {
