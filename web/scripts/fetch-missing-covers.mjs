@@ -14,7 +14,7 @@ const MISSING = {
   "a1b2c3d1-0001-4000-8000-000000000026": "415607DE", // Wolfenstein PT-BR
   "b2c3d4e5-0001-4000-8000-000000000072": "415608FC", // Call of Duty - Ghosts
   "b2c3d4e5-0001-4000-8000-000000000090": "5841122D", // jogos Final de Ano (Guitar Hero bundle)
-  "b2c3d4e5-0001-4000-8000-0000000000a7": "5454086B", // RDR Undead Nightmare (GOTY)
+  "b2c3d4e5-0001-4000-8000-0000000000a7": "5454082B", // RDR GOTY Disco 2 (Undead Nightmare)
 };
 
 function download(url, dest) {
