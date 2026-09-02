@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const protectedRoutes = ["/baixar", "/assinar", "/conta", "/painel"];
+const protectedRoutes = ["/baixar", "/assinar", "/conta", "/painel", "/suporte"];
 
 function redirectWithCookies(url: URL, source: NextResponse): NextResponse {
   const redirect = NextResponse.redirect(url);

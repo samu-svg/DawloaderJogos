@@ -4,13 +4,26 @@ import { useState } from "react";
 import type { PaymentMethod, PlanId } from "@/lib/stripe-plans";
 import { STRIPE_PLANS } from "@/lib/stripe-plans";
 
+async function readCheckoutResponse(response: Response): Promise<{ url?: string; error?: string }> {
+  const text = await response.text();
+  if (!text.trim()) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(text) as { url?: string; error?: string };
+  } catch {
+    return { error: "Resposta inválida do servidor. Tente de novo em instantes." };
+  }
+}
+
 async function startCheckout(plan: PlanId, method: PaymentMethod) {
   const response = await fetch("/api/stripe/checkout", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ plan, method }),
   });
-  const data = (await response.json()) as { url?: string; error?: string };
+  const data = await readCheckoutResponse(response);
 
   if (!response.ok || !data.url) {
     throw new Error(data.error ?? "Não foi possível iniciar o pagamento.");

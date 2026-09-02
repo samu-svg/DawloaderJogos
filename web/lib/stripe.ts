@@ -12,12 +12,29 @@ export function subscriptionsEnabled(): boolean {
   return stripeConfigured();
 }
 
+function assertStripeSecretKey(key: string): void {
+  if (key.startsWith("rk_")) {
+    throw new Error(
+      "STRIPE_SECRET_KEY é uma chave restrita (rk_). Use a Secret key (sk_test_ ou sk_live_) em Settings → API keys no Stripe.",
+    );
+  }
+  if (key.startsWith("pk_")) {
+    throw new Error(
+      "STRIPE_SECRET_KEY não pode ser a Publishable key (pk_). Use a Secret key (sk_test_ ou sk_live_).",
+    );
+  }
+  if (!key.startsWith("sk_")) {
+    throw new Error("STRIPE_SECRET_KEY inválida: deve começar com sk_test_ ou sk_live_.");
+  }
+}
+
 export function getStripe(): Stripe {
   if (!stripeClient) {
     const key = process.env.STRIPE_SECRET_KEY?.trim();
     if (!key) {
       throw new Error("STRIPE_SECRET_KEY não está definida.");
     }
+    assertStripeSecretKey(key);
     stripeClient = new Stripe(key);
   }
   return stripeClient;

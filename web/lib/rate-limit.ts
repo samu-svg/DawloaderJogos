@@ -21,6 +21,9 @@ export const RATE_LIMITS = {
   auth: { limit: 8, window: "1 m" as Window },
   /** Login/cadastro: janela mais longa por e-mail. */
   authSlow: { limit: 20, window: "15 m" as Window },
+  /** Abrir/responder ticket de suporte. */
+  support: { limit: 5, window: "1 m" as Window },
+  supportSlow: { limit: 20, window: "1 h" as Window },
 } as const;
 
 const redisLimiters = new Map<string, Ratelimit>();

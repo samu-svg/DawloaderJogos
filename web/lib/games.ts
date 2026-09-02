@@ -6,7 +6,8 @@ import {
   type CatalogGameExtra,
 } from "@/lib/catalog-shared";
 import { listPublicCatalogs } from "@/lib/catalog";
-import { featuredRank } from "@/lib/featured-games";
+import { comparePopularCatalogGames } from "@/lib/catalog-sort";
+import { catalogDisplayTitle } from "@/lib/catalog-badges";
 
 export type AcervoGame = {
   id: string;
@@ -96,11 +97,19 @@ export async function relatedAcervoGames(
   const { games } = await loadAcervo();
   return games
     .filter((item) => item.id !== game.id)
-    .sort((a, b) => {
-      const rankA = featuredRank(a.id) ?? 9999;
-      const rankB = featuredRank(b.id) ?? 9999;
-      if (rankA !== rankB) return rankA - rankB;
-      return a.label.localeCompare(b.label, "pt-BR");
-    })
+    .sort((a, b) =>
+      comparePopularCatalogGames(
+        {
+          id: a.id,
+          label: a.label,
+          displayTitle: catalogDisplayTitle(a.id, a.label, a.extraCount),
+        },
+        {
+          id: b.id,
+          label: b.label,
+          displayTitle: catalogDisplayTitle(b.id, b.label, b.extraCount),
+        },
+      ),
+    )
     .slice(0, limit);
 }

@@ -16,11 +16,11 @@ export const metadata: Metadata = {
 };
 
 type PageProps = {
-  searchParams: Promise<{ colecao?: string }>;
+  searchParams: Promise<{ colecao?: string; semanal?: string }>;
 };
 
 export default async function HomePage({ searchParams }: PageProps) {
-  const [{ colecao }, appUser, { games, collections }] = await Promise.all([
+  const [{ colecao, semanal }, appUser, { games, collections }] = await Promise.all([
     searchParams,
     currentAppUser(),
     loadAcervo(),
@@ -61,6 +61,7 @@ export default async function HomePage({ searchParams }: PageProps) {
                 ? (colecao ?? null)
                 : null
             }
+            initialWeekly={semanal === "1"}
           />
         </div>
 

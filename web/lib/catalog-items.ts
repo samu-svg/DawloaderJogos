@@ -5,23 +5,29 @@ import {
 } from "@/lib/catalog-badges";
 import type { CatalogGameItem } from "@/components/game-catalog";
 import { featuredRank } from "@/lib/featured-games";
+import { gameCategoriesForEntry } from "@/lib/game-categories";
 import { localCoverUrl } from "@/lib/game-pages";
+import { isWeeklyGame } from "@/lib/weekly-games";
 import type { AcervoGame } from "@/lib/games";
 
 export function toCatalogGameItem(game: AcervoGame): CatalogGameItem {
+  const displayTitle = catalogDisplayTitle(game.id, game.label, game.extraCount);
   return {
     id: game.id,
     slug: game.slug,
     label: game.label,
-    displayTitle: catalogDisplayTitle(game.id, game.label, game.extraCount),
+    displayTitle,
     coverUrl: resolveCoverUrl(game.id, game.coverUrl, localCoverUrl),
     sizeBytes: game.totalBytes,
     extraCount: game.extraCount,
+    entryIds: game.entryIds,
     collectionSlug: game.collectionSlug,
     collectionTitle: game.collectionTitle,
     platform: game.platform,
     badges: catalogBadgesForGame(game.id, game.extraCount),
     featuredRank: featuredRank(game.id),
+    categories: gameCategoriesForEntry(game.id, game.label, displayTitle),
+    isWeekly: isWeeklyGame(game.id),
   };
 }
 

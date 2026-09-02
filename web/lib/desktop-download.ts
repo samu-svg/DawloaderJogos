@@ -2,8 +2,6 @@ export const DESKTOP_APP_VERSION = "0.6.9";
 
 export const DESKTOP_SETUP_FILENAME = `MontaHD-${DESKTOP_APP_VERSION}-setup.exe`;
 
-export const DESKTOP_PORTABLE_FILENAME = `MontaHD-${DESKTOP_APP_VERSION}-portable.exe`;
-
 /** Tamanho aproximado do instalador (para exibir na UI). */
 export const DESKTOP_SETUP_SIZE_LABEL = "≈ 83 MB";
 
@@ -13,18 +11,12 @@ export function getDesktopDownloadUrl(): string {
   return `/downloads/${DESKTOP_SETUP_FILENAME}`;
 }
 
-export function getDesktopPortableDownloadUrl(): string {
-  return `/downloads/${DESKTOP_PORTABLE_FILENAME}`;
-}
-
 export function getDesktopDownloadInfo() {
   return {
     version: DESKTOP_APP_VERSION,
     fileName: DESKTOP_SETUP_FILENAME,
-    portableFileName: DESKTOP_PORTABLE_FILENAME,
     sizeLabel: DESKTOP_SETUP_SIZE_LABEL,
     href: getDesktopDownloadUrl(),
-    portableHref: getDesktopPortableDownloadUrl(),
     platform: "Windows (64-bit)",
   };
 }

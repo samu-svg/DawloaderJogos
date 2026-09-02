@@ -146,14 +146,23 @@ export default async function GamePage({ params }: PageProps) {
               </p>
             </div>
 
-            {meta?.description && (
+            {(meta?.description || meta?.longDescription) && (
               <section className="rounded-2xl border border-border bg-surface p-5 text-left">
                 <h2 className="text-base font-semibold text-white">
                   Sobre o jogo
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-zinc-400">
-                  {meta.description}
-                </p>
+                {meta?.description && (
+                  <p className="mt-2 text-sm leading-6 text-zinc-300">
+                    {meta.description}
+                  </p>
+                )}
+                {meta?.longDescription && (
+                  <div className="mt-4 space-y-3 text-sm leading-7 text-zinc-400">
+                    {meta.longDescription.split("\n\n").map((paragraph) => (
+                      <p key={paragraph.slice(0, 48)}>{paragraph}</p>
+                    ))}
+                  </div>
+                )}
               </section>
             )}
 
@@ -261,9 +270,8 @@ export default async function GamePage({ params }: PageProps) {
               </h2>
               <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-sm leading-6 text-zinc-400">
                 <li>
-                  Instale o app MontaHD no Windows com o instalador (não o
-                  portable). Depois ele aparece na área de trabalho e no Menu
-                  Iniciar.
+                  Instale o app MontaHD no Windows com o instalador. Depois
+                  ele aparece na área de trabalho e no Menu Iniciar.
                 </li>
                 <li>
                   Assine o software para liberar downloads — você não paga pelos

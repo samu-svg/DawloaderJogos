@@ -3,7 +3,15 @@
 import { useMemo, useState } from "react";
 import { GameCard } from "@/components/game-card";
 import type { CatalogBadge } from "@/lib/catalog-badges";
+import { comparePopularCatalogGames } from "@/lib/catalog-sort";
 import { gameInitialGroup } from "@/lib/catalog-shared";
+import {
+  allCategoryIds,
+  categoryLabel,
+  gameMatchesCategory,
+  type GameCategoryId,
+} from "@/lib/game-categories";
+import { weeklyGamesLabel } from "@/lib/weekly-games";
 import { formatBytes } from "@/lib/manifest";
 
 export type CatalogGameItem = {
@@ -14,16 +22,20 @@ export type CatalogGameItem = {
   coverUrl: string | null;
   sizeBytes: number;
   extraCount: number;
+  entryIds: string[];
   collectionSlug: string;
   collectionTitle: string;
   platform: string;
   badges: CatalogBadge[];
   featuredRank: number | null;
+  categories: GameCategoryId[];
+  isWeekly: boolean;
 };
 
 export type CatalogCollectionItem = {
   slug: string;
   title: string;
+  description?: string | null;
   gameCount: number;
 };
 
@@ -31,6 +43,7 @@ type GameCatalogProps = {
   games: CatalogGameItem[];
   collections: CatalogCollectionItem[];
   initialCollection?: string | null;
+  initialWeekly?: boolean;
 };
 
 type SortMode = "populares" | "az" | "za" | "maiores";
@@ -44,39 +57,64 @@ export function GameCatalog({
   games,
   collections,
   initialCollection = null,
+  initialWeekly = false,
 }: GameCatalogProps) {
   const [search, setSearch] = useState("");
   const [collection, setCollection] = useState<string | null>(initialCollection);
   const [letter, setLetter] = useState<string | null>(null);
+  const [category, setCategory] = useState<GameCategoryId | null>(null);
+  const [weeklyOnly, setWeeklyOnly] = useState(initialWeekly);
   const [sort, setSort] = useState<SortMode>("populares");
   const [page, setPage] = useState(1);
+
+  const weeklyCount = useMemo(
+    () => games.filter((game) => game.isWeekly).length,
+    [games],
+  );
 
   const availableLetters = useMemo(() => {
     const set = new Set(games.map((game) => gameInitialGroup(game.label)));
     return LETTERS.filter((item) => set.has(item));
   }, [games]);
 
-  const filtered = useMemo(() => {
+  const categoryCounts = useMemo(() => {
+    const counts = new Map<GameCategoryId, number>();
+    for (const game of games) {
+      for (const item of game.categories) {
+        counts.set(item, (counts.get(item) ?? 0) + 1);
+      }
+    }
+    return counts;
+  }, [games]);
+
+  const availableCategories = useMemo(
+    () =>
+      allCategoryIds().filter((id) => (categoryCounts.get(id) ?? 0) > 0),
+    [categoryCounts],
+  );
+
+  const matchedGames = useMemo(() => {
     const query = search.trim().toLowerCase();
-    const result = games.filter((game) => {
+    return games.filter((game) => {
       if (collection && game.collectionSlug !== collection) return false;
       if (letter && gameInitialGroup(game.label) !== letter) return false;
+      if (weeklyOnly && !game.isWeekly) return false;
+      if (!gameMatchesCategory(game.categories, category)) return false;
       if (query && !game.label.toLowerCase().includes(query)) return false;
       return true;
     });
+  }, [games, search, collection, letter, category, weeklyOnly]);
 
-    return result.sort((a, b) => {
+  const filtered = useMemo(() => {
+    return [...matchedGames].sort((a, b) => {
       if (sort === "maiores") return b.sizeBytes - a.sizeBytes;
       if (sort === "populares") {
-        const rankA = a.featuredRank ?? 9999;
-        const rankB = b.featuredRank ?? 9999;
-        if (rankA !== rankB) return rankA - rankB;
-        return a.label.localeCompare(b.label, "pt-BR");
+        return comparePopularCatalogGames(a, b);
       }
       const comparison = a.label.localeCompare(b.label, "pt-BR");
       return sort === "za" ? -comparison : comparison;
     });
-  }, [games, search, collection, letter, sort]);
+  }, [matchedGames, sort]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -130,7 +168,7 @@ export function GameCatalog({
                   : "border border-border text-zinc-400 hover:border-zinc-600 hover:text-white"
               }`}
             >
-              Todas as coleções ({games.length})
+              Todas as coleções
             </button>
             {collections.map((item) => (
               <button
@@ -143,7 +181,64 @@ export function GameCatalog({
                     : "border border-border text-zinc-400 hover:border-zinc-600 hover:text-white"
                 }`}
               >
-                {item.title} ({item.gameCount})
+                {item.title}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {weeklyCount > 0 && (
+          <div className="flex flex-wrap justify-center gap-2 border-t border-border pt-3">
+            <button
+              type="button"
+              onClick={() => update(() => setWeeklyOnly(false))}
+              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                !weeklyOnly
+                  ? "bg-accent text-white"
+                  : "border border-border text-zinc-400 hover:border-zinc-600 hover:text-white"
+              }`}
+            >
+              Todos os jogos
+            </button>
+            <button
+              type="button"
+              onClick={() => update(() => setWeeklyOnly(true))}
+              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                weeklyOnly
+                  ? "bg-amber-500 text-black"
+                  : "border border-amber-500/40 text-amber-300 hover:border-amber-400 hover:text-amber-200"
+              }`}
+            >
+              {weeklyGamesLabel()}
+            </button>
+          </div>
+        )}
+
+        {availableCategories.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-2 border-t border-border pt-3">
+            <button
+              type="button"
+              onClick={() => update(() => setCategory(null))}
+              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                category === null
+                  ? "bg-accent text-white"
+                  : "border border-border text-zinc-400 hover:border-zinc-600 hover:text-white"
+              }`}
+            >
+              Todas as categorias
+            </button>
+            {availableCategories.map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => update(() => setCategory(item))}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                  category === item
+                    ? "bg-accent text-white"
+                    : "border border-border text-zinc-400 hover:border-zinc-600 hover:text-white"
+                }`}
+              >
+                {categoryLabel(item)}
               </button>
             ))}
           </div>

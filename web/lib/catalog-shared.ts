@@ -92,7 +92,7 @@ export function groupCatalogGames(entries: CatalogEntry[]): CatalogGame[] {
 }
 
 export function entryIdsForSelectedGames(
-  games: CatalogGame[],
+  games: ReadonlyArray<{ id: string; entryIds: string[] }>,
   selectedGameIds: ReadonlySet<string>,
 ): string[] {
   const ids: string[] = [];

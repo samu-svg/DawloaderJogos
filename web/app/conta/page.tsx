@@ -28,7 +28,10 @@ export default async function ContaPage({
         <div className="mt-8 rounded-2xl border border-border bg-surface p-6">
           <PasswordChangeForm expired={expired} />
         </div>
-        <p className="mt-6 text-center text-xs text-zinc-600">
+        <p className="mt-6 flex flex-wrap items-center justify-center gap-4 text-center text-xs text-zinc-600">
+          <Link href="/suporte" className="hover:text-zinc-400">
+            Suporte
+          </Link>
           <Link href="/baixar" className="hover:text-zinc-400">
             ← Voltar ao acervo
           </Link>

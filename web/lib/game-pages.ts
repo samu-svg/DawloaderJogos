@@ -7,6 +7,8 @@ export type GameAudio = "dublado" | "pt-br" | "ingles" | "desconhecido";
 export type GamePageMeta = {
   displayTitle?: string;
   description: string;
+  /** Sinopse completa exibida na página do jogo (além do resumo curto). */
+  longDescription?: string;
   audio: GameAudio;
   audioNote?: string;
   installHint?: "games" | "content";

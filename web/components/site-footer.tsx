@@ -12,6 +12,9 @@ export function SiteFooter() {
           <Link href="/assinar" className="hover:text-zinc-400">
             Acesso
           </Link>
+          <Link href="/suporte" className="hover:text-zinc-400">
+            Suporte
+          </Link>
         </div>
       </div>
     </footer>

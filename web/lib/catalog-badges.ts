@@ -1,9 +1,10 @@
 import { gamePageMeta, type GameAudio } from "@/lib/game-pages";
+import { isWeeklyGame } from "@/lib/weekly-games";
 
 export type CatalogBadge = {
-  kind: "audio" | "dlc";
+  kind: "audio" | "dlc" | "weekly";
   label: string;
-  tone: "pt-br" | "dublado" | "dlc";
+  tone: "pt-br" | "dublado" | "dlc" | "weekly";
 };
 
 function formatTitle(label: string): string {
@@ -53,6 +54,10 @@ export function catalogBadgesForGame(
     });
   } else if (meta?.hasDlc || dlcFromNotes) {
     badges.push({ kind: "dlc", label: "Com DLC", tone: "dlc" });
+  }
+
+  if (isWeeklyGame(entryId)) {
+    badges.push({ kind: "weekly", label: "Semana", tone: "weekly" });
   }
 
   return badges;

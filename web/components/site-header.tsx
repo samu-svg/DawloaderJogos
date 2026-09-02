@@ -61,6 +61,12 @@ export function SiteHeader({
                 {email}
               </span>
               <Link
+                href="/suporte"
+                className="hidden rounded-lg px-3 py-1.5 text-zinc-400 transition hover:text-white sm:inline"
+              >
+                Suporte
+              </Link>
+              <Link
                 href="/conta"
                 className="hidden rounded-lg px-3 py-1.5 text-zinc-400 transition hover:text-white sm:inline"
               >

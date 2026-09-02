@@ -5,6 +5,7 @@ import {
   canCreatePortfolio,
   canDeletePortfolio,
   canEditPortfolio,
+  canManageSupport,
   hasMinRole,
   hasSubscriptionBypass,
   isBootstrapAdminEmail,
@@ -30,6 +31,12 @@ test("parseRole só aceita papéis conhecidos", () => {
   assert.equal(parseRole("user"), "user");
   assert.equal(parseRole("superuser"), "user");
   assert.equal(parseRole(undefined), "user");
+});
+
+test("suporte só admin", () => {
+  assert.equal(canManageSupport("admin"), true);
+  assert.equal(canManageSupport("editor"), false);
+  assert.equal(canManageSupport("user"), false);
 });
 
 test("bootstrap admin depende só da env, sem e-mail default", () => {

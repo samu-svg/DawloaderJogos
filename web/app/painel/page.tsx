@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { PortfolioListCard } from "@/components/portfolio-list-card";
 import { requireRole } from "@/lib/auth";
-import { canCreatePortfolio } from "@/lib/rbac";
+import { canCreatePortfolio, canManageSupport } from "@/lib/rbac";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function PainelPage() {
   const user = await requireRole("admin", "editor");
   const allowCreate = canCreatePortfolio(user.role);
+  const allowSupport = canManageSupport(user.role);
   const supabase = await createClient();
 
   const { data: portfolios, error } = await supabase
@@ -27,14 +28,24 @@ export default async function PainelPage() {
             colocar.
           </p>
         </div>
-        {allowCreate && (
-          <Link
-            href="/painel/novo"
-            className="inline-flex items-center justify-center rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200"
-          >
-            Novo portfólio
-          </Link>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {allowSupport && (
+            <Link
+              href="/painel/suporte"
+              className="inline-flex items-center justify-center rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-zinc-300 transition hover:border-zinc-500 hover:text-white"
+            >
+              Suporte
+            </Link>
+          )}
+          {allowCreate && (
+            <Link
+              href="/painel/novo"
+              className="inline-flex items-center justify-center rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200"
+            >
+              Novo portfólio
+            </Link>
+          )}
+        </div>
       </div>
 
       {!portfolios?.length ? (

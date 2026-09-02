@@ -26,6 +26,8 @@ function badgeClass(tone: CatalogBadge["tone"]): string {
       return "bg-sky-600/90 text-white";
     case "dlc":
       return "bg-accent/85 text-white";
+    case "weekly":
+      return "bg-amber-500/90 text-black";
   }
 }
 
@@ -41,6 +43,7 @@ export function GameCard({
   const displayTitle = formatTitle(title);
   const audioBadges = badges.filter((badge) => badge.kind === "audio");
   const dlcBadges = badges.filter((badge) => badge.kind === "dlc");
+  const weeklyBadges = badges.filter((badge) => badge.kind === "weekly");
   const hasCover = Boolean(coverUrl);
 
   return (
@@ -73,6 +76,17 @@ export function GameCard({
         {(dlcBadges.length > 0 || extraCount > 0) && (
           <span className="absolute right-2 top-2 rounded-md bg-accent/85 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm backdrop-blur">
             {dlcBadges[0]?.label ?? `+${extraCount} DLC`}
+          </span>
+        )}
+        {weeklyBadges.length > 0 && (
+          <span
+            className={`absolute rounded-md px-2 py-0.5 text-[10px] font-semibold shadow-sm backdrop-blur ${badgeClass("weekly")} ${
+              dlcBadges.length > 0 || extraCount > 0
+                ? "right-2 top-8"
+                : "right-2 top-2"
+            }`}
+          >
+            {weeklyBadges[0].label}
           </span>
         )}
         <span className="absolute inset-x-0 bottom-0 flex h-10 items-center justify-center bg-accent/90 text-xs font-semibold text-white opacity-0 transition group-hover:opacity-100">

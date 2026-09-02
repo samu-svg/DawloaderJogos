@@ -30,6 +30,11 @@ export function hasSubscriptionBypass(role: Role): boolean {
   return role === "admin";
 }
 
+/** Fila de suporte in-site: só admin. */
+export function canManageSupport(role: Role): boolean {
+  return role === "admin";
+}
+
 export function parseRole(value: string | null | undefined): Role {
   if (value === "admin" || value === "editor" || value === "user") return value;
   return "user";

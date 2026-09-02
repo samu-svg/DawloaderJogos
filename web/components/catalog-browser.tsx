@@ -4,52 +4,111 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { OpenMontaHDButton } from "@/components/open-montahd-button";
+import type {
+  CatalogCollectionItem,
+  CatalogGameItem,
+} from "@/components/game-catalog";
 import { GameStoreCard } from "@/components/game-store-card";
+import { entryIdsForSelectedGames } from "@/lib/catalog-shared";
+import { comparePopularCatalogGames } from "@/lib/catalog-sort";
 import {
-  entryIdsForSelectedGames,
-  gameSlug,
-  groupCatalogGames,
-  type CatalogPortfolioDetail,
-} from "@/lib/catalog-shared";
+  allCategoryIds,
+  categoryLabel,
+  gameMatchesCategory,
+  type GameCategoryId,
+} from "@/lib/game-categories";
+import { weeklyGamesLabel } from "@/lib/weekly-games";
 import { formatBytes } from "@/lib/manifest";
 
 type CatalogBrowserProps = {
-  catalogs: CatalogPortfolioDetail[];
+  games: CatalogGameItem[];
+  collections: CatalogCollectionItem[];
   activeSlug: string;
   siteUrl: string;
+  initialWeekly?: boolean;
 };
 
+type SortMode = "populares" | "az" | "za" | "maiores";
+
 export function CatalogBrowser({
-  catalogs,
+  games,
+  collections,
   activeSlug,
   siteUrl,
+  initialWeekly = false,
 }: CatalogBrowserProps) {
   const router = useRouter();
   const [search, setSearch] = useState("");
+  const [category, setCategory] = useState<GameCategoryId | null>(null);
+  const [weeklyOnly, setWeeklyOnly] = useState(initialWeekly);
+  const [sort, setSort] = useState<SortMode>("populares");
 
-  const activeCatalog =
-    catalogs.find((catalog) => catalog.slug === activeSlug) ?? catalogs[0];
+  const activeCollection =
+    collections.find((collection) => collection.slug === activeSlug) ??
+    collections[0];
 
-  const games = useMemo(() => {
-    const grouped = activeCatalog
-      ? groupCatalogGames(activeCatalog.entries)
-      : [];
+  const collectionGames = useMemo(
+    () =>
+      activeCollection
+        ? games.filter((game) => game.collectionSlug === activeCollection.slug)
+        : [],
+    [games, activeCollection],
+  );
+
+  const categoryCounts = useMemo(() => {
+    const counts = new Map<GameCategoryId, number>();
+    for (const game of collectionGames) {
+      for (const item of game.categories) {
+        counts.set(item, (counts.get(item) ?? 0) + 1);
+      }
+    }
+    return counts;
+  }, [collectionGames]);
+
+  const availableCategories = useMemo(
+    () =>
+      allCategoryIds().filter((id) => (categoryCounts.get(id) ?? 0) > 0),
+    [categoryCounts],
+  );
+
+  const weeklyCount = useMemo(
+    () => collectionGames.filter((game) => game.isWeekly).length,
+    [collectionGames],
+  );
+
+  const matchedGames = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return grouped;
-    return grouped.filter((game) =>
-      game.label.toLowerCase().includes(query),
-    );
-  }, [activeCatalog, search]);
+    return collectionGames.filter((game) => {
+      if (weeklyOnly && !game.isWeekly) return false;
+      if (!gameMatchesCategory(game.categories, category)) return false;
+      if (!query) return true;
+      return (
+        game.label.toLowerCase().includes(query) ||
+        game.displayTitle.toLowerCase().includes(query)
+      );
+    });
+  }, [collectionGames, search, category, weeklyOnly]);
+
+  const sortedGames = useMemo(() => {
+    return [...matchedGames].sort((a, b) => {
+      if (sort === "maiores") return b.sizeBytes - a.sizeBytes;
+      if (sort === "populares") {
+        return comparePopularCatalogGames(a, b);
+      }
+      const comparison = a.label.localeCompare(b.label, "pt-BR");
+      return sort === "za" ? -comparison : comparison;
+    });
+  }, [matchedGames, sort]);
 
   const [selectedGameIds, setSelectedGameIds] = useState<Set<string>>(
-    () => new Set(games.map((game) => game.id)),
+    () => new Set(),
   );
 
   useEffect(() => {
-    setSelectedGameIds(new Set(games.map((game) => game.id)));
-  }, [games]);
+    setSelectedGameIds(new Set());
+  }, [activeCollection?.slug]);
 
-  if (!activeCatalog) {
+  if (!activeCollection) {
     return (
       <div className="rounded-2xl border border-dashed border-border p-12 text-center">
         <p className="text-zinc-500">Nenhuma coleção disponível no momento.</p>
@@ -57,16 +116,23 @@ export function CatalogBrowser({
     );
   }
 
-  const totalBytes = games.reduce((sum, game) => sum + game.totalBytes, 0);
+  const totalBytes = matchedGames.reduce(
+    (sum, game) => sum + game.sizeBytes,
+    0,
+  );
   const allSelected =
-    games.length > 0 && games.every((game) => selectedGameIds.has(game.id));
-  const selectedCount = games.filter((game) =>
+    matchedGames.length > 0 &&
+    matchedGames.every((game) => selectedGameIds.has(game.id));
+  const selectedCount = matchedGames.filter((game) =>
     selectedGameIds.has(game.id),
   ).length;
-  const selectedEntryIds = entryIdsForSelectedGames(games, selectedGameIds);
-  const selectedTotalBytes = games.reduce(
+  const selectedEntryIds = entryIdsForSelectedGames(
+    matchedGames,
+    selectedGameIds,
+  );
+  const selectedTotalBytes = matchedGames.reduce(
     (sum, game) =>
-      selectedGameIds.has(game.id) ? sum + game.totalBytes : sum,
+      selectedGameIds.has(game.id) ? sum + game.sizeBytes : sum,
     0,
   );
 
@@ -81,7 +147,7 @@ export function CatalogBrowser({
 
   function setAllSelected(checked: boolean) {
     setSelectedGameIds(
-      checked ? new Set(games.map((game) => game.id)) : new Set(),
+      checked ? new Set(matchedGames.map((game) => game.id)) : new Set(),
     );
   }
 
@@ -90,44 +156,117 @@ export function CatalogBrowser({
       <div className="space-y-6">
         <header className="page-header !mb-0">
           <p className="page-eyebrow text-accent">Meu acervo</p>
-          <h1 className="page-title">{activeCatalog.title}</h1>
-          {activeCatalog.description && (
-            <p className="page-lead">{activeCatalog.description}</p>
+          <h1 className="page-title">{activeCollection.title}</h1>
+          {activeCollection.description && (
+            <p className="page-lead">{activeCollection.description}</p>
           )}
           <p className="mt-2 text-sm text-zinc-500">
-            {games.length} título(s)
+            {matchedGames.length} título(s)
             {totalBytes > 0 ? ` · ${formatBytes(totalBytes)} no total` : ""}
           </p>
         </header>
 
-        {catalogs.length > 1 && (
+        {collections.length > 1 && (
           <div className="flex flex-wrap justify-center gap-2">
-            {catalogs.map((catalog) => (
+            {collections.map((collection) => (
               <button
-                key={catalog.slug}
+                key={collection.slug}
                 type="button"
-                onClick={() => router.push(`/baixar?catalog=${catalog.slug}`)}
+                onClick={() =>
+                  router.push(`/baixar?catalog=${collection.slug}`)
+                }
                 className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
-                  catalog.slug === activeCatalog.slug
+                  collection.slug === activeCollection.slug
                     ? "bg-accent text-white"
                     : "border border-border bg-surface text-zinc-400 hover:border-zinc-600 hover:text-white"
                 }`}
               >
-                {catalog.title}
+                {collection.title}
               </button>
             ))}
           </div>
         )}
 
-        <div className="relative mx-auto max-w-md">
+        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <input
             type="search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Buscar jogo..."
-            className="w-full rounded-xl border border-border bg-surface py-2.5 pl-4 pr-4 text-center text-sm text-white outline-none placeholder:text-zinc-600 focus:border-accent focus:ring-1 focus:ring-accent"
+            className="w-full rounded-xl border border-border bg-surface py-2.5 pl-4 pr-4 text-center text-sm text-white outline-none placeholder:text-zinc-600 focus:border-accent focus:ring-1 focus:ring-accent sm:max-w-md"
           />
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-zinc-500">Ordenar:</span>
+            <select
+              value={sort}
+              onChange={(event) => setSort(event.target.value as SortMode)}
+              className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-white outline-none focus:border-accent"
+            >
+              <option value="populares">Mais populares</option>
+              <option value="az">A → Z</option>
+              <option value="za">Z → A</option>
+              <option value="maiores">Maiores primeiro</option>
+            </select>
+          </div>
         </div>
+
+        {weeklyCount > 0 && (
+          <div className="flex flex-wrap justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => setWeeklyOnly(false)}
+              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                !weeklyOnly
+                  ? "bg-accent text-white"
+                  : "border border-border text-zinc-400 hover:border-zinc-600 hover:text-white"
+              }`}
+            >
+              Todos os jogos
+            </button>
+            <button
+              type="button"
+              onClick={() => setWeeklyOnly(true)}
+              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                weeklyOnly
+                  ? "bg-amber-500 text-black"
+                  : "border border-amber-500/40 text-amber-300 hover:border-amber-400 hover:text-amber-200"
+              }`}
+            >
+              {weeklyGamesLabel()}
+            </button>
+          </div>
+        )}
+
+        {availableCategories.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => setCategory(null)}
+              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                category === null
+                  ? "bg-accent text-white"
+                  : "border border-border text-zinc-400 hover:border-zinc-600 hover:text-white"
+              }`}
+            >
+              Todas as categorias
+            </button>
+            {availableCategories.map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => setCategory(item)}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                  category === item
+                    ? "bg-accent text-white"
+                    : "border border-border text-zinc-400 hover:border-zinc-600 hover:text-white"
+                }`}
+              >
+                {categoryLabel(item)}
+              </button>
+            ))}
+          </div>
+        )}
+
         <p className="text-center text-sm text-zinc-500">
           Clique nos jogos para marcar ou desmarcar. Depois use{" "}
           <strong className="font-medium text-zinc-400">Instalar no HD</strong>{" "}
@@ -135,11 +274,11 @@ export function CatalogBrowser({
         </p>
       </div>
 
-      {games.length === 0 ? (
+      {matchedGames.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-12 text-center">
           <p className="text-zinc-500">
-            {search
-              ? "Nenhum jogo encontrado com esse nome."
+            {search || category || weeklyOnly
+              ? "Nenhum jogo encontrado com esses filtros."
               : "Esta coleção ainda não tem jogos."}
           </p>
         </div>
@@ -156,26 +295,29 @@ export function CatalogBrowser({
               Selecionar todos
             </label>
             <p className="text-sm text-zinc-500">
-              {selectedCount} de {games.length} selecionado(s)
+              {selectedCount} de {matchedGames.length} selecionado(s)
               {selectedTotalBytes > 0
                 ? ` · ${formatBytes(selectedTotalBytes)}`
                 : ""}
             </p>
           </div>
 
-          <ul className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {games.map((game) => (
+          <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {sortedGames.map((game) => (
               <li key={game.id} className="space-y-2">
                 <GameStoreCard
-                  title={game.label}
+                  title={game.displayTitle}
                   coverUrl={game.coverUrl}
                   sizeBytes={game.sizeBytes}
+                  platform={game.platform}
+                  extraCount={game.extraCount}
+                  badges={game.badges}
                   selected={selectedGameIds.has(game.id)}
                   onClick={() => toggleGame(game.id)}
                   compact
                 />
                 <Link
-                  href={`/jogo/${gameSlug(game.label, game.id)}`}
+                  href={`/jogo/${game.slug}`}
                   className="block text-center text-xs font-medium text-accent hover:text-accent-hover"
                 >
                   Ver página
@@ -188,8 +330,8 @@ export function CatalogBrowser({
 
       <OpenMontaHDButton
         siteUrl={siteUrl}
-        slug={activeCatalog.slug}
-        catalogTitle={activeCatalog.title}
+        slug={activeCollection.slug}
+        catalogTitle={activeCollection.title}
         entryIds={selectedEntryIds}
         selectedCount={selectedCount}
         selectedTotalBytes={selectedTotalBytes}

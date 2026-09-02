@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { CatalogBrowser } from "@/components/catalog-browser";
 import { DesktopDownloadCard } from "@/components/desktop-download-card";
-import { listPublicCatalogs } from "@/lib/catalog";
+import { toCatalogGameItems } from "@/lib/catalog-items";
+import { loadAcervo } from "@/lib/games";
 import { getSiteUrl } from "@/lib/site-url";
 
 export const metadata: Metadata = {
@@ -10,26 +11,30 @@ export const metadata: Metadata = {
 };
 
 type PageProps = {
-  searchParams: Promise<{ catalog?: string }>;
+  searchParams: Promise<{ catalog?: string; semanal?: string }>;
 };
 
 export default async function BaixarPage({ searchParams }: PageProps) {
-  const [{ catalog }, catalogs, siteUrl] = await Promise.all([
+  const [{ catalog, semanal }, { games, collections }, siteUrl] = await Promise.all([
     searchParams,
-    listPublicCatalogs(),
+    loadAcervo(),
     getSiteUrl(),
   ]);
 
   const activeSlug =
-    catalogs.find((item) => item.slug === catalog)?.slug ?? catalogs[0]?.slug ?? "";
+    collections.find((item) => item.slug === catalog)?.slug ??
+    collections[0]?.slug ??
+    "";
 
   return (
     <div className="space-y-8">
       <DesktopDownloadCard />
       <CatalogBrowser
-        catalogs={catalogs}
+        games={toCatalogGameItems(games)}
+        collections={collections}
         activeSlug={activeSlug}
         siteUrl={siteUrl}
+        initialWeekly={semanal === "1"}
       />
     </div>
   );

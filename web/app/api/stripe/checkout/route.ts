@@ -13,7 +13,9 @@ import {
   type PaymentMethod,
   type PlanId,
 } from "@/lib/stripe-plans";
+import { logError } from "@/lib/logger";
 import { getStripe, subscriptionsEnabled } from "@/lib/stripe";
+import Stripe from "stripe";
 
 type CheckoutBody = {
   plan?: string;
@@ -77,74 +79,97 @@ export async function POST(request: Request) {
   }
 
   const plan = getPlan(planId);
-  const stripe = getStripe();
-  const admin = createServiceRoleClient();
-  const { data: existing } = await admin
-    .from("subscriptions")
-    .select("stripe_customer_id, status")
-    .eq("user_id", user.id)
-    .maybeSingle();
 
-  let customerId = existing?.stripe_customer_id;
-  const userMeta = {
-    app_user_id: user.id,
-    supabase_user_id: user.id,
-    plan: planId,
-    access_months: String(plan.months),
-    payment_method: method,
-  };
+  try {
+    const stripe = getStripe();
+    const admin = createServiceRoleClient();
+    const { data: existing } = await admin
+      .from("subscriptions")
+      .select("stripe_customer_id, status")
+      .eq("user_id", user.id)
+      .maybeSingle();
 
-  if (!customerId) {
-    const customer = await stripe.customers.create({
-      email: user.email,
-      metadata: userMeta,
-    });
-    customerId = customer.id;
+    let customerId = existing?.stripe_customer_id;
+    const userMeta = {
+      app_user_id: user.id,
+      supabase_user_id: user.id,
+      plan: planId,
+      access_months: String(plan.months),
+      payment_method: method,
+    };
 
-    const { error } = await admin.from("subscriptions").upsert(
-      {
-        user_id: user.id,
-        stripe_customer_id: customerId,
-        status: "incomplete",
-      },
-      { onConflict: "user_id" },
-    );
-    if (error) {
-      return NextResponse.json({ error: "Não foi possível preparar o pagamento." }, { status: 500 });
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        metadata: userMeta,
+      });
+      customerId = customer.id;
+
+      const { error } = await admin.from("subscriptions").upsert(
+        {
+          user_id: user.id,
+          stripe_customer_id: customerId,
+          status: "incomplete",
+        },
+        { onConflict: "user_id" },
+      );
+      if (error) {
+        return NextResponse.json(
+          { error: "Não foi possível preparar o pagamento." },
+          { status: 500 },
+        );
+      }
     }
-  }
 
-  const siteUrl = await getSiteUrl();
-  const sessionParams = buildCheckoutSession({
-    customerId,
-    priceId,
-    planId,
-    method,
-    planMonths: plan.months,
-    siteUrl,
-    userId: user.id,
-    userMeta,
-  });
+    const siteUrl = await getSiteUrl();
+    const sessionParams = buildCheckoutSession({
+      customerId,
+      priceId,
+      planId,
+      method,
+      planMonths: plan.months,
+      siteUrl,
+      userId: user.id,
+      userMeta,
+    });
 
-  const session = await stripe.checkout.sessions.create(sessionParams);
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
-  if (!session.url) {
+    if (!session.url) {
+      return NextResponse.json(
+        { error: "Não foi possível iniciar o checkout." },
+        { status: 500 },
+      );
+    }
+
+    await recordAudit({
+      actorId: user.id,
+      action: "stripe.checkout",
+      entity: "subscription",
+      entityId: user.id,
+      ip: requestIp(request),
+      metadata: { plan: planId, method },
+    });
+
+    return NextResponse.json({ url: session.url });
+  } catch (error) {
+    const stripeCode =
+      error instanceof Stripe.errors.StripeError ? error.code : undefined;
+    logError("Stripe checkout failed", error, {
+      plan: planId,
+      method,
+      userId: user.id,
+      stripeCode,
+    });
+
     return NextResponse.json(
-      { error: "Não foi possível iniciar o checkout." },
-      { status: 500 },
+      {
+        error:
+          "Não foi possível iniciar o pagamento. Tente outro plano ou forma de pagamento, ou tente de novo em instantes.",
+      },
+      { status: 502 },
     );
   }
-
-  await recordAudit({
-    actorId: user.id,
-    action: "stripe.checkout",
-    entity: "subscription",
-    entityId: user.id,
-    ip: requestIp(request),
-    metadata: { plan: planId, method },
-  });
-
-  return NextResponse.json({ url: session.url });
 }
 
 function buildCheckoutSession(input: {

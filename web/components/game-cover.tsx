@@ -23,6 +23,8 @@ function badgeClass(tone: CatalogBadge["tone"]): string {
       return "bg-sky-600/90 text-white";
     case "dlc":
       return "bg-accent/85 text-white";
+    case "weekly":
+      return "bg-amber-500/90 text-black";
   }
 }
 
