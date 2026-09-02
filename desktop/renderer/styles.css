@@ -473,9 +473,9 @@ input[type="url"]:focus,
 }
 
 .space-notice-warn {
-  color: #fde68a;
-  background: rgba(245, 158, 11, 0.12);
-  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #a5f3fc;
+  background: rgba(6, 182, 212, 0.1);
+  border: 1px solid rgba(6, 182, 212, 0.28);
 }
 
 .muted {
@@ -639,8 +639,8 @@ tbody tr:hover td {
 }
 
 .badge-content {
-  background: rgba(244, 114, 182, 0.12);
-  color: #f9a8d4;
+  background: rgba(139, 92, 246, 0.12);
+  color: #c4b5fd;
 }
 
 .badge-hd {
