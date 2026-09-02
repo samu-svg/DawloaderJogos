@@ -177,6 +177,61 @@ export type Database = {
         };
         Relationships: [];
       };
+      support_tickets: {
+        Row: {
+          id: string;
+          user_id: string;
+          user_email: string;
+          subject: string;
+          status: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          user_email: string;
+          subject: string;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_email?: string;
+          subject?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      support_messages: {
+        Row: {
+          id: string;
+          ticket_id: string;
+          author_id: string;
+          body: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          ticket_id: string;
+          author_id: string;
+          body: string;
+          created_at?: string;
+        };
+        Update: {
+          body?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_ticket_id_fkey";
+            columns: ["ticket_id"];
+            isOneToOne: false;
+            referencedRelation: "support_tickets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: { [_ in never]: never };
     Functions: { [_ in never]: never };
@@ -188,4 +243,6 @@ export type Database = {
 export type PortfolioRow = Database["public"]["Tables"]["portfolios"]["Row"];
 export type EntryRow = Database["public"]["Tables"]["entries"]["Row"];
 export type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
+export type SupportTicketRow = Database["public"]["Tables"]["support_tickets"]["Row"];
+export type SupportMessageRow = Database["public"]["Tables"]["support_messages"]["Row"];
 export type SourceKind = Database["public"]["Enums"]["source_kind"];
