@@ -547,44 +547,88 @@ function init() {
     void refreshInstallTags();
   }
 
-  async function refreshInstallTags() {
-    const tags = [...entriesBody.querySelectorAll("[data-install-tag]")];
-    for (const tag of tags) {
+  function paintInstallTag(tag, tagInfo) {
+    tag.classList.remove("install-tag-ok", "install-tag-warn", "install-tag-active");
+    if (!tagInfo) {
       tag.classList.add("hidden");
       tag.textContent = "";
-      tag.classList.remove("install-tag-ok", "install-tag-warn", "install-tag-active");
+      return;
     }
-    if (!selectedRoot || !manifest) return;
+    tag.classList.remove("hidden");
+    tag.textContent = tagInfo.text;
+    if (tagInfo.tone === "ok") tag.classList.add("install-tag-ok");
+    else if (tagInfo.tone === "active") tag.classList.add("install-tag-active");
+    else tag.classList.add("install-tag-warn");
+  }
+
+  function updateInstallTagFromPhase(entryId) {
+    const tag = [...entriesBody.querySelectorAll("[data-install-tag]")].find(
+      (el) => el.dataset.installTag === entryId,
+    );
+    if (!tag) return;
+    paintInstallTag(
+      tag,
+      installTagForState({ kind: "incomplete", canResume: true }, entryId),
+    );
+  }
+
+  let installTagRefresh = null;
+  let installTagRefreshQueued = false;
+
+  async function refreshInstallTags() {
+    if (installTagRefresh) {
+      installTagRefreshQueued = true;
+      return installTagRefresh;
+    }
+
+    installTagRefresh = (async () => {
+      const tags = [...entriesBody.querySelectorAll("[data-install-tag]")];
+      if (!selectedRoot || !manifest) {
+        for (const tag of tags) paintInstallTag(tag, null);
+        return;
+      }
+
+      try {
+        const states = await window.montahd.inspectInstallState(
+          selectedRoot,
+          manifest.entries.map((entry) => {
+            const input = getDestinationInput(entry.id);
+            return {
+              id: entry.id,
+              label: entry.label,
+              destination: input?.value.trim() || entry.destination,
+            };
+          }),
+        );
+        const byId = new Map(states.map((state) => [state.entryId, state]));
+        for (const tag of tags) {
+          const entryId = tag.dataset.installTag;
+          const state = byId.get(entryId);
+          if (!state && !activeEntryPhases.has(entryId)) {
+            paintInstallTag(tag, null);
+            continue;
+          }
+          paintInstallTag(
+            tag,
+            installTagForState(
+              state ?? { kind: "incomplete", canResume: true },
+              entryId,
+            ),
+          );
+        }
+      } catch {
+        // a inspeção é só um aviso visual
+      }
+    })();
 
     try {
-      const states = await window.montahd.inspectInstallState(
-        selectedRoot,
-        manifest.entries.map((entry) => {
-          const input = getDestinationInput(entry.id);
-          return {
-            id: entry.id,
-            label: entry.label,
-            destination: input?.value.trim() || entry.destination,
-          };
-        }),
-      );
-      const byId = new Map(states.map((state) => [state.entryId, state]));
-      for (const tag of tags) {
-        const entryId = tag.dataset.installTag;
-        const state = byId.get(entryId);
-        if (!state && !activeEntryPhases.has(entryId)) continue;
-        const tagInfo = installTagForState(
-          state ?? { kind: "incomplete", canResume: true },
-          entryId,
-        );
-        tag.classList.remove("hidden");
-        tag.textContent = tagInfo.text;
-        if (tagInfo.tone === "ok") tag.classList.add("install-tag-ok");
-        else if (tagInfo.tone === "active") tag.classList.add("install-tag-active");
-        else tag.classList.add("install-tag-warn");
+      await installTagRefresh;
+    } finally {
+      installTagRefresh = null;
+      if (installTagRefreshQueued) {
+        installTagRefreshQueued = false;
+        void refreshInstallTags();
       }
-    } catch {
-      // a inspeção é só um aviso visual
     }
   }
 
@@ -1312,7 +1356,12 @@ function init() {
     downloadBtn.disabled = false;
   });
 
+  const lastProgressStatus = new Map();
+
   window.montahd.onDownloadProgress((event) => {
+    const prevStatus = lastProgressStatus.get(event.entryId);
+    lastProgressStatus.set(event.entryId, event.status);
+
     if (event.status === "downloading") {
       setActiveEntryPhase(event.entryId, "downloading");
       const pct =
@@ -1350,16 +1399,24 @@ function init() {
       );
     } else if (event.status === "done") {
       setActiveEntryPhase(event.entryId, null);
+      lastProgressStatus.delete(event.entryId);
       setProgress(event.entryId, 100, "Concluído", "done");
     } else if (event.status === "error") {
       setActiveEntryPhase(event.entryId, null);
+      lastProgressStatus.delete(event.entryId);
       const errText = formatProgressError(event.error ?? "Erro");
       setProgress(event.entryId, 100, errText, "error");
       if (/espaço insuficiente|enospc/i.test(errText)) {
         setSummary(errText, "error");
       }
     }
-    void refreshInstallTags();
+
+    if (event.status !== prevStatus) {
+      updateInstallTagFromPhase(event.entryId);
+    }
+    if (event.status === "done" || event.status === "error") {
+      void refreshInstallTags();
+    }
   });
 
   window.montahd.onDownloadComplete(({ results }) => {
