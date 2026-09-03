@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { buildMontaHDCatalogLink } from "@/lib/montahd-link";
-import { getDesktopDownloadInfo } from "@/lib/desktop-download";
+import { launchMontaHdProtocol } from "@/lib/launch-montahd";
 import { formatBytes } from "@/lib/manifest";
+import { InstallOnHdControls } from "@/components/install-on-hd-controls";
 
 type OpenMontaHDButtonProps = {
   siteUrl: string;
@@ -23,10 +23,18 @@ export function OpenMontaHDButton({
   selectedCount,
   selectedTotalBytes = 0,
 }: OpenMontaHDButtonProps) {
-  const download = getDesktopDownloadInfo();
   const disabled = selectedCount === 0;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [launched, setLaunched] = useState(false);
+  const lastDeepLink = useRef<string | null>(null);
+  const selectionKey = `${slug}:${entryIds.join(",")}`;
+
+  useEffect(() => {
+    setLaunched(false);
+    setError(null);
+    lastDeepLink.current = null;
+  }, [selectionKey]);
 
   async function installSelected() {
     setError(null);
@@ -53,7 +61,9 @@ export function OpenMontaHDButton({
       const deepLink = buildMontaHDCatalogLink(siteUrl, slug, entryIds, {
         installSession: data.session ?? null,
       });
-      window.location.href = deepLink;
+      lastDeepLink.current = deepLink;
+      launchMontaHdProtocol(deepLink);
+      setLaunched(true);
     } catch (caught) {
       setError(
         caught instanceof Error ? caught.message : "Erro ao iniciar instalação.",
@@ -63,16 +73,21 @@ export function OpenMontaHDButton({
     }
   }
 
-  return (
-    <>
-      {error && (
-        <p className="rounded-lg border border-red-900/50 bg-red-950/40 px-4 py-3 text-sm text-red-300">
-          {error}
-        </p>
-      )}
+  function retryLaunch() {
+    if (lastDeepLink.current) {
+      launchMontaHdProtocol(lastDeepLink.current);
+    }
+  }
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-6 py-4 backdrop-blur-md">
-        <div className="content-narrow flex flex-col items-center gap-3 px-6 text-center sm:flex-row sm:items-center sm:justify-center">
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-background/90 px-4 py-4 backdrop-blur-md sm:px-6">
+      <div className="mx-auto w-full max-w-6xl space-y-3">
+        {error && (
+          <p className="rounded-2xl border border-red-900/50 bg-red-950/40 px-4 py-2.5 text-sm text-red-300">
+            {error}
+          </p>
+        )}
+        <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
           <div>
             <p className="font-semibold text-white">
               {disabled
@@ -81,35 +96,26 @@ export function OpenMontaHDButton({
                   ? "1 jogo selecionado"
                   : `${selectedCount} jogos selecionados`}
             </p>
-            {!disabled && (
-              <p className="text-sm text-zinc-500">
-                Coleção{" "}
-                <strong className="text-zinc-400">{catalogTitle}</strong>
-                {selectedTotalBytes > 0
-                  ? ` · ${formatBytes(selectedTotalBytes)}`
-                  : ""}
-              </p>
-            )}
+            <p className="mt-0.5 text-sm text-zinc-500">
+              {disabled
+                ? "Marque as capas e envie a seleção ao MontaHD."
+                : `${catalogTitle}${
+                    selectedTotalBytes > 0
+                      ? ` · ${formatBytes(selectedTotalBytes)}`
+                      : ""
+                  }`}
+            </p>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-end">
-            <Link
-              href={download.href}
-              download={download.fileName}
-              className="text-sm text-zinc-500 underline-offset-2 hover:text-zinc-300 hover:underline"
-            >
-              App Windows
-            </Link>
-            <button
-              type="button"
-              disabled={disabled || loading}
-              onClick={() => void installSelected()}
-              className="rounded-lg bg-accent px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {loading ? "Preparando..." : "Instalar no HD"}
-            </button>
-          </div>
+          <InstallOnHdControls
+            layout="bar"
+            loading={loading}
+            launched={launched}
+            disabled={disabled}
+            onInstall={() => void installSelected()}
+            onRetry={retryLaunch}
+          />
         </div>
       </div>
-    </>
+    </div>
   );
 }

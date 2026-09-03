@@ -1,8 +1,8 @@
 import { getDesktopDownloadInfo } from "@/lib/desktop-download";
 
 export function DesktopDownloadCard({
-  title = "Seu app MontaHD",
-  description = "Instale o app no Windows para que os jogos escolhidos aqui sejam baixados, descompactados e organizados no HD automaticamente.",
+  title = "App MontaHD para Windows",
+  description = "Instale uma vez. Depois, os jogos escolhidos aqui são baixados, extraídos e organizados no HD automaticamente.",
 }: {
   title?: string;
   description?: string;
@@ -10,24 +10,27 @@ export function DesktopDownloadCard({
   const download = getDesktopDownloadInfo();
 
   return (
-    <section className="rounded-2xl border border-border bg-surface p-6 text-center">
-      <div className="mx-auto flex max-w-xl flex-col items-center gap-4">
-        <div className="space-y-2">
-          <h2 className="text-base font-semibold text-white">{title}</h2>
+    <section className="overflow-hidden rounded-[28px] border border-accent/25 bg-gradient-to-br from-violet-600/15 via-surface to-cyan-500/10 px-5 py-5 sm:px-7 sm:py-6">
+      <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="max-w-xl space-y-2">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-2">
+            Primeiro passo
+          </p>
+          <h2 className="text-lg font-semibold tracking-tight text-white sm:text-xl">
+            {title}
+          </h2>
           <p className="text-sm leading-6 text-zinc-400">{description}</p>
           <p className="text-xs text-zinc-600">
-            {download.platform} · versão {download.version} ·{" "}
-            {download.sizeLabel} · instala em Programas do usuário e cria
-            atalhos na área de trabalho e no Menu Iniciar · o Windows pode
-            pedir &quot;Executar mesmo assim&quot; por não ser assinado.
+            {download.platform} · v{download.version} · {download.sizeLabel} ·
+            atalhos na área de trabalho e no Menu Iniciar
           </p>
         </div>
         <a
           href={download.href}
           download={download.fileName}
-          className="inline-flex shrink-0 items-center justify-center rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-hover"
+          className="inline-flex shrink-0 items-center justify-center rounded-2xl bg-accent px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-accent/25 transition hover:bg-accent-hover"
         >
-          Baixar instalador (.exe)
+          Baixar instalador
         </a>
       </div>
     </section>

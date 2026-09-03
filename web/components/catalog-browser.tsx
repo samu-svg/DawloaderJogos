@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { OpenMontaHDButton } from "@/components/open-montahd-button";
@@ -29,6 +29,39 @@ type CatalogBrowserProps = {
 };
 
 type SortMode = "populares" | "az" | "za" | "maiores";
+
+function FilterChip({
+  active,
+  onClick,
+  children,
+  tone = "accent",
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
+  tone?: "accent" | "weekly";
+}) {
+  const activeClass =
+    tone === "weekly"
+      ? "bg-amber-500 text-black"
+      : "bg-accent text-white";
+  const idleClass =
+    tone === "weekly"
+      ? "border border-amber-500/40 text-amber-300 hover:border-amber-400 hover:text-amber-200"
+      : "border border-border text-zinc-400 hover:border-zinc-600 hover:text-white";
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+        active ? activeClass : idleClass
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
 
 export function CatalogBrowser({
   games,
@@ -103,8 +136,10 @@ export function CatalogBrowser({
 
   if (!activeCollection) {
     return (
-      <div className="rounded-2xl border border-dashed border-border p-12 text-center">
-        <p className="text-zinc-500">Nenhuma coleção disponível no momento.</p>
+      <div className="rounded-[28px] border border-dashed border-border bg-surface/40 p-12 text-center">
+        <p className="text-sm text-zinc-500">
+          Nenhuma coleção disponível no momento.
+        </p>
       </div>
     );
   }
@@ -145,23 +180,35 @@ export function CatalogBrowser({
   }
 
   return (
-    <div className="space-y-8 pb-28">
-      <div className="space-y-6">
-        <header className="page-header !mb-0">
-          <p className="page-eyebrow text-accent">Meu acervo</p>
-          <h1 className="page-title">{activeCollection.title}</h1>
-          {activeCollection.description && (
-            <p className="page-lead">{activeCollection.description}</p>
-          )}
-          <p className="mt-2 text-sm text-zinc-500">
-            {matchedGames.length} título(s)
-            {totalBytes > 0 ? ` · ${formatBytes(totalBytes)} no total` : ""}
+    <div className="space-y-6 pb-40">
+      <header className="space-y-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-2">
+          Meu acervo
+        </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              {activeCollection.title}
+            </h1>
+            {activeCollection.description && (
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
+                {activeCollection.description}
+              </p>
+            )}
+          </div>
+          <p className="shrink-0 text-sm text-zinc-500">
+            {matchedGames.length}{" "}
+            {matchedGames.length === 1 ? "título" : "títulos"}
+            {totalBytes > 0 ? ` · ${formatBytes(totalBytes)}` : ""}
           </p>
-        </header>
+        </div>
+      </header>
 
-        {collections.length > 1 && (
-          <div className="flex flex-wrap justify-center gap-2">
-            {collections.map((collection) => (
+      {collections.length > 1 && (
+        <div className="flex flex-wrap gap-2">
+          {collections.map((collection) => {
+            const active = collection.slug === activeCollection.slug;
+            return (
               <button
                 key={collection.slug}
                 type="button"
@@ -169,131 +216,125 @@ export function CatalogBrowser({
                   router.push(`/baixar?catalog=${collection.slug}`)
                 }
                 className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
-                  collection.slug === activeCollection.slug
-                    ? "bg-accent text-white"
-                    : "border border-border bg-surface text-zinc-400 hover:border-zinc-600 hover:text-white"
+                  active
+                    ? "bg-accent text-white shadow-lg shadow-accent/20"
+                    : "border border-border bg-surface/70 text-zinc-400 hover:border-zinc-600 hover:text-white"
                 }`}
               >
                 {collection.title}
+                <span className="ml-1.5 text-xs opacity-70">
+                  {collection.gameCount}
+                </span>
               </button>
-            ))}
-          </div>
-        )}
+            );
+          })}
+        </div>
+      )}
 
-        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-          <input
-            type="search"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar jogo..."
-            className="w-full rounded-xl border border-border bg-surface py-2.5 pl-4 pr-4 text-center text-sm text-white outline-none placeholder:text-zinc-600 focus:border-accent focus:ring-1 focus:ring-accent sm:max-w-md"
-          />
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-zinc-500">Ordenar:</span>
+      <section className="space-y-4 rounded-[28px] border border-border/80 bg-surface/70 p-4 sm:p-5">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <label className="relative block min-w-0 flex-1">
+            <span className="sr-only">Buscar jogo</span>
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Buscar no acervo…"
+              className="w-full rounded-2xl border border-border bg-background py-2.5 pl-4 pr-4 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-accent focus:ring-1 focus:ring-accent"
+            />
+          </label>
+          <label className="flex items-center gap-2 text-sm text-zinc-500">
+            <span className="shrink-0">Ordenar</span>
             <select
               value={sort}
               onChange={(event) => setSort(event.target.value as SortMode)}
-              className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-white outline-none focus:border-accent"
+              className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-white outline-none focus:border-accent"
             >
               <option value="populares">Mais populares</option>
               <option value="az">A → Z</option>
               <option value="za">Z → A</option>
               <option value="maiores">Maiores primeiro</option>
             </select>
-          </div>
+          </label>
         </div>
 
-        {weeklyCount > 0 && (
-          <div className="flex flex-wrap justify-center gap-2">
-            <button
-              type="button"
-              onClick={() => setWeeklyOnly(false)}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
-                !weeklyOnly
-                  ? "bg-accent text-white"
-                  : "border border-border text-zinc-400 hover:border-zinc-600 hover:text-white"
-              }`}
-            >
-              Todos os jogos
-            </button>
-            <button
-              type="button"
-              onClick={() => setWeeklyOnly(true)}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
-                weeklyOnly
-                  ? "bg-amber-500 text-black"
-                  : "border border-amber-500/40 text-amber-300 hover:border-amber-400 hover:text-amber-200"
-              }`}
-            >
-              {weeklyGamesLabel()}
-            </button>
+        {(weeklyCount > 0 || availableCategories.length > 0) && (
+          <div className="flex flex-wrap gap-2">
+            {weeklyCount > 0 && (
+              <>
+                <FilterChip
+                  active={!weeklyOnly}
+                  onClick={() => setWeeklyOnly(false)}
+                >
+                  Todos os jogos
+                </FilterChip>
+                <FilterChip
+                  active={weeklyOnly}
+                  onClick={() => setWeeklyOnly(true)}
+                  tone="weekly"
+                >
+                  {weeklyGamesLabel()}
+                </FilterChip>
+              </>
+            )}
+            {availableCategories.length > 0 && (
+              <>
+                <FilterChip
+                  active={category === null}
+                  onClick={() => setCategory(null)}
+                >
+                  Todas as categorias
+                </FilterChip>
+                {availableCategories.map((item) => (
+                  <FilterChip
+                    key={item}
+                    active={category === item}
+                    onClick={() => setCategory(item)}
+                  >
+                    {categoryLabel(item)}
+                  </FilterChip>
+                ))}
+              </>
+            )}
           </div>
         )}
-
-        {availableCategories.length > 0 && (
-          <div className="flex flex-wrap justify-center gap-2">
-            <button
-              type="button"
-              onClick={() => setCategory(null)}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
-                category === null
-                  ? "bg-accent text-white"
-                  : "border border-border text-zinc-400 hover:border-zinc-600 hover:text-white"
-              }`}
-            >
-              Todas as categorias
-            </button>
-            {availableCategories.map((item) => (
-              <button
-                key={item}
-                type="button"
-                onClick={() => setCategory(item)}
-                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
-                  category === item
-                    ? "bg-accent text-white"
-                    : "border border-border text-zinc-400 hover:border-zinc-600 hover:text-white"
-                }`}
-              >
-                {categoryLabel(item)}
-              </button>
-            ))}
-          </div>
-        )}
-
-        <p className="text-center text-sm text-zinc-500">
-          Clique nos jogos para marcar ou desmarcar. Depois use{" "}
-          <strong className="font-medium text-zinc-400">Instalar no HD</strong>{" "}
-          para enviar todos de uma vez ao app.
-        </p>
-      </div>
+      </section>
 
       {matchedGames.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border p-12 text-center">
-          <p className="text-zinc-500">
+        <div className="rounded-[28px] border border-dashed border-border bg-surface/40 px-6 py-16 text-center">
+          <p className="text-base font-medium text-white">Nenhum jogo aqui</p>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-zinc-500">
             {search || category || weeklyOnly
-              ? "Nenhum jogo encontrado com esses filtros."
+              ? "Nada corresponde a esses filtros. Limpe a busca ou escolha outra categoria."
               : "Esta coleção ainda não tem jogos."}
           </p>
         </div>
       ) : (
         <>
-          <div className="flex flex-wrap items-center justify-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 text-center">
-            <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-zinc-300">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/80 bg-surface/60 px-4 py-3">
+            <label className="flex cursor-pointer items-center gap-2.5 text-sm font-medium text-zinc-200">
               <input
                 type="checkbox"
                 checked={allSelected}
                 onChange={(event) => setAllSelected(event.target.checked)}
-                className="rounded accent-accent"
+                className="size-4 rounded accent-accent"
               />
               Selecionar todos
             </label>
             <p className="text-sm text-zinc-500">
-              {selectedCount} de {matchedGames.length} selecionado(s)
+              {selectedCount} de {matchedGames.length} selecionado
+              {selectedCount === 1 ? "" : "s"}
               {selectedTotalBytes > 0
                 ? ` · ${formatBytes(selectedTotalBytes)}`
                 : ""}
             </p>
           </div>
+
+          <p className="text-xs leading-5 text-zinc-500">
+            Clique na capa para marcar. Em seguida use{" "}
+            <strong className="font-medium text-zinc-300">Instalar no HD</strong>{" "}
+            para enviar a seleção ao app.
+          </p>
 
           <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {sortedGames.map((game) => (
@@ -311,9 +352,9 @@ export function CatalogBrowser({
                 />
                 <Link
                   href={`/jogo/${game.slug}`}
-                  className="block text-center text-xs font-medium text-accent hover:text-accent-hover"
+                  className="block text-center text-[11px] font-medium text-zinc-500 transition hover:text-white"
                 >
-                  Ver página
+                  Ver detalhes
                 </Link>
               </li>
             ))}
