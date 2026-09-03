@@ -513,6 +513,22 @@ ipcMain.handle(
 );
 
 ipcMain.handle(
+  "fetch-catalog-labels",
+  async (event, payload: { baseUrl: string }) => {
+    assertTrustedSender(event);
+    const origin = normalizeBaseUrl(payload.baseUrl);
+    const response = await fetchSameOrigin(`${origin}/api/catalog-labels`);
+    if (!response.ok) {
+      throw new Error(`Não foi possível carregar nomes do catálogo (${response.status}).`);
+    }
+    const data = (await response.json()) as {
+      labels?: HdLibraryHint[];
+    };
+    return Array.isArray(data.labels) ? data.labels : [];
+  },
+);
+
+ipcMain.handle(
   "list-hd-library",
   async (event, payload: { rootDir: string; hints?: HdLibraryHint[] }) => {
     assertTrustedSender(event);

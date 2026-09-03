@@ -125,6 +125,7 @@ function init() {
   const libraryPathCard = document.getElementById("library-path-card");
   const libraryPath = document.getElementById("library-path");
   const libraryEmpty = document.getElementById("library-empty");
+  const libraryLoading = document.getElementById("library-loading");
   const libraryTableShell = document.getElementById("library-table-shell");
   const libraryBody = document.getElementById("library-body");
   const installModeSelect = document.getElementById("install-mode");
@@ -178,6 +179,7 @@ function init() {
     !libraryPathCard ||
     !libraryPath ||
     !libraryEmpty ||
+    !libraryLoading ||
     !libraryTableShell ||
     !libraryBody ||
     !installModeSelect
@@ -812,11 +814,20 @@ function init() {
     }
   }
 
-  function renderLibrary(items) {
+  function renderLibrary(items, options = {}) {
     libraryBody.innerHTML = "";
-    const empty = items.length === 0;
+    const loading = options.loading === true;
+    const empty = !loading && items.length === 0;
+
+    libraryLoading.classList.toggle("hidden", !loading);
     libraryEmpty.classList.toggle("hidden", !empty);
-    libraryTableShell.classList.toggle("hidden", empty);
+    libraryTableShell.classList.toggle("hidden", loading || empty);
+
+    if (loading) {
+      libraryMeta.textContent = "Buscando jogos no HD…";
+      return;
+    }
+
     libraryMeta.textContent = empty
       ? "Nenhum jogo encontrado em Games ou Content."
       : `${items.length} item(ns) neste HD. DLC em Content aparece com o nome, não só o código.`;
@@ -873,6 +884,17 @@ function init() {
     }
   }
 
+  async function loadCatalogLabelHints() {
+    try {
+      const baseUrl =
+        /** @type {HTMLInputElement} */ (baseUrlInput).value.trim() || getSiteUrl();
+      const labels = await window.montahd.fetchCatalogLabels(baseUrl);
+      return Array.isArray(labels) ? labels : [];
+    } catch {
+      return [];
+    }
+  }
+
   async function refreshLibrary() {
     if (!selectedRoot) {
       renderLibrary([]);
@@ -881,11 +903,17 @@ function init() {
     }
 
     syncLibraryPath();
-    libraryMeta.textContent = "Lendo o HD…";
+    renderLibrary([], { loading: true });
+    setSummary("Carregando… buscando jogos no HD.");
     await persistCatalogHints();
 
     try {
-      const items = await window.montahd.listHdLibrary(selectedRoot, catalogHints());
+      const catalogLabels = await loadCatalogLabelHints();
+      const hints = [...catalogLabels, ...catalogHints()];
+      const items = await window.montahd.listHdLibrary(selectedRoot, hints);
+      if (catalogLabels.length > 0) {
+        await window.montahd.rememberHdLabels(selectedRoot, catalogLabels).catch(() => undefined);
+      }
       renderLibrary(items);
       setSummary(
         items.length
@@ -912,6 +940,8 @@ function init() {
       return;
     }
     showLibraryView();
+    renderLibrary([], { loading: true });
+    setSummary("Carregando… buscando jogos no HD.");
     await refreshLibrary();
   }
 

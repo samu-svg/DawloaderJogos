@@ -90,7 +90,26 @@ export function displayNameFromPath(destination: string): string {
   for (let index = rest.length - 1; index >= 0; index -= 1) {
     if (!HEX_ID.test(rest[index])) return rest[index];
   }
-  return rest[rest.length - 1] ?? segments[0] ?? destination;
+
+  // Title ID do Xbox: primeiro hex “de verdade” (pula pasta de perfil 0000…).
+  const titleId =
+    rest.find((segment) => HEX_ID.test(segment) && !/^0+$/i.test(segment)) ??
+    rest.find((segment) => HEX_ID.test(segment)) ??
+    rest[rest.length - 1];
+  if (!titleId) return segments[0] ?? destination;
+
+  const root = segments[0]?.toLowerCase();
+  if (root === "content") {
+    return `DLC ${titleId}`;
+  }
+  return titleId;
+}
+
+/** Label que ainda é só Title ID / DLC+hex — UI mostra tag "código". */
+export function isCodeOnlyDisplayName(label: string): boolean {
+  const trimmed = label.trim();
+  if (HEX_ID.test(trimmed)) return true;
+  return /^DLC\s+[0-9a-fA-F]{8,16}$/i.test(trimmed);
 }
 
 export function matchHint(
@@ -304,14 +323,15 @@ export function mergeHdLibrary(input: {
     if (usedScans.has(index)) continue;
     const scanned = input.scanned[index];
     const hint = matchHint(scanned.destination, input.hints);
+    const label = hint?.label ?? displayNameFromPath(scanned.destination);
     items.push({
       id: hint?.id ?? `scan:${destinationKey(scanned.destination)}`,
-      label: hint?.label ?? displayNameFromPath(scanned.destination),
+      label,
       destination: scanned.destination,
       group: hint?.group || inferGroup(scanned.destination),
       sizeBytes: scanned.sizeBytes,
       source: "scan",
-      knownName: Boolean(hint),
+      knownName: Boolean(hint) || !isCodeOnlyDisplayName(label),
     });
   }
 

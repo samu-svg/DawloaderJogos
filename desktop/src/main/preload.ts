@@ -65,6 +65,8 @@ const api = {
     ipcRenderer.invoke("clear-entry-install-files", { rootDir, entries }),
   listHdLibrary: (rootDir: string, hints?: HdLibraryHint[]): Promise<HdLibraryItem[]> =>
     ipcRenderer.invoke("list-hd-library", { rootDir, hints }),
+  fetchCatalogLabels: (baseUrl: string): Promise<HdLibraryHint[]> =>
+    ipcRenderer.invoke("fetch-catalog-labels", { baseUrl }),
   rememberHdLabels: (rootDir: string, hints: HdLibraryHint[]): Promise<void> =>
     ipcRenderer.invoke("remember-hd-labels", { rootDir, hints }),
   deleteHdItem: (

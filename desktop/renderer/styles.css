@@ -634,6 +634,43 @@ tbody tr:hover td {
   text-align: center;
 }
 
+.library-loading {
+  margin-top: 16px;
+  padding: 28px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+  text-align: center;
+}
+
+.library-loading-spinner {
+  width: 28px;
+  height: 28px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-top-color: var(--accent, #22d3ee);
+  animation: library-spin 0.8s linear infinite;
+}
+
+.library-loading-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.library-loading-desc {
+  margin: 6px 0 0;
+  font-size: 0.82rem;
+}
+
+@keyframes library-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .item-name {
   display: flex;
   flex-direction: column;

@@ -7,6 +7,7 @@ import {
   emptyParentsToRemove,
   inferGroup,
   installedDestinationFromManifest,
+  isCodeOnlyDisplayName,
   deleteTargetFromManifest,
   matchHint,
   mergeHdLibrary,
@@ -57,8 +58,14 @@ test("emptyParentsToRemove nunca inclui Games ou Content", () => {
 
 test("displayNameFromPath prefere nome legivel ao title id", () => {
   assert.equal(displayNameFromPath("Content/4D5307E6/MapPack"), "MapPack");
-  assert.equal(displayNameFromPath("Content/4D5307E6"), "4D5307E6");
+  assert.equal(displayNameFromPath("Content/4D5307E6"), "DLC 4D5307E6");
+  assert.equal(
+    displayNameFromPath("Content/0000000000000000/41560855"),
+    "DLC 41560855",
+  );
   assert.equal(displayNameFromPath("Games/Halo 3"), "Halo 3");
+  assert.equal(isCodeOnlyDisplayName("DLC 4D5307E6"), true);
+  assert.equal(isCodeOnlyDisplayName("MapPack"), false);
 });
 
 test("matchHint aceita destino com zip e prefixo", () => {
@@ -120,9 +127,17 @@ test("mergeHdLibrary usa indice, depois dica do catalogo", () => {
   assert.equal(dlc?.knownName, true);
   assert.equal(dlc?.source, "scan");
   assert.equal(coded?.knownName, false);
-  assert.equal(coded?.label, "AAAAAAAA");
+  assert.equal(coded?.label, "DLC AAAAAAAA");
   assert.equal(inferGroup("Content/AAAAAAAA"), "conteudo");
   assert.equal(inferGroup("AbadAvatar"), "utilitario");
+
+  const namedFolder = mergeHdLibrary({
+    scanned: [{ destination: "Content/4D5307E6/MapPack", sizeBytes: 1 }],
+    index: [],
+    hints: [],
+  });
+  assert.equal(namedFolder[0]?.label, "MapPack");
+  assert.equal(namedFolder[0]?.knownName, true);
 });
 
 test("destinationsRelated ignora extensao e barra invertida", () => {
