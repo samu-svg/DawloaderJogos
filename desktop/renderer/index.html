@@ -150,7 +150,17 @@
           </p>
 
           <div class="table-shell">
-            <table>
+            <table class="entries-table">
+              <colgroup>
+                <col class="col-check" />
+                <col class="col-game" />
+                <col class="col-type" />
+                <col class="col-path" />
+                <col class="col-size" />
+                <col class="col-target" />
+                <col class="col-progress" />
+                <col class="col-action" />
+              </colgroup>
               <thead>
                 <tr>
                   <th class="col-check">
@@ -159,12 +169,12 @@
                       <span class="checkbox-ui" aria-hidden="true"></span>
                     </label>
                   </th>
-                  <th>Jogo</th>
-                  <th>Tipo</th>
-                  <th>Pasta no HD</th>
-                  <th>Tamanho</th>
-                  <th>Destino</th>
-                  <th>Progresso</th>
+                  <th class="col-game">Jogo</th>
+                  <th class="col-type">Tipo</th>
+                  <th class="col-path">Pasta no HD</th>
+                  <th class="col-size">Tamanho</th>
+                  <th class="col-target">Destino</th>
+                  <th class="col-progress">Progresso</th>
                   <th class="col-action">Ação</th>
                 </tr>
               </thead>
@@ -220,13 +230,20 @@
           </div>
 
           <div class="table-shell" id="library-table-shell">
-            <table>
+            <table class="library-table">
+              <colgroup>
+                <col class="col-game" />
+                <col class="col-type" />
+                <col class="col-path" />
+                <col class="col-size" />
+                <col class="col-action" />
+              </colgroup>
               <thead>
                 <tr>
-                  <th>Nome</th>
-                  <th>Tipo</th>
-                  <th>Pasta no HD</th>
-                  <th>Tamanho</th>
+                  <th class="col-game">Nome</th>
+                  <th class="col-type">Tipo</th>
+                  <th class="col-path">Pasta no HD</th>
+                  <th class="col-size">Tamanho</th>
                   <th class="col-action">Ação</th>
                 </tr>
               </thead>

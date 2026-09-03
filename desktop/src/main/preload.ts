@@ -23,6 +23,8 @@ const api = {
   getAppVersion: (): Promise<string> => ipcRenderer.invoke("get-app-version"),
   selectFolder: (): Promise<string | null> => ipcRenderer.invoke("select-folder"),
   getLastHdRoot: (): Promise<string | null> => ipcRenderer.invoke("get-last-hd-root"),
+  hdRootAvailable: (rootDir: string): Promise<boolean> =>
+    ipcRenderer.invoke("hd-root-available", rootDir),
   computeHdFingerprint: (rootDir: string): Promise<string> =>
     ipcRenderer.invoke("compute-hd-fingerprint", rootDir),
   requestManifestToken: (

@@ -192,6 +192,14 @@ function init() {
   let pendingCatalogFromSite = false;
   /** @type {string | null} */
   let selectedRoot = null;
+  /** @type {boolean | null} */
+  let hdWasAvailable = null;
+  let autoResumeArmed = false;
+  let autoResumeBusy = false;
+  /** @type {Set<string> | null} */
+  let pendingAutoResumeIds = null;
+  /** @type {string[]} */
+  let lastDownloadIds = [];
   /** @type {boolean} */
   let catalogLaunchInFlight = false;
   /** @type {Map<string, { fill: HTMLElement, label: HTMLElement }>} */
@@ -500,6 +508,7 @@ function init() {
       const row = document.createElement("tr");
 
       const checkCell = document.createElement("td");
+      checkCell.className = "col-check";
       const { label: checkLabel, input: checkbox } = createCheckbox(
         options.checkedIds
           ? options.checkedIds.has(entry.id)
@@ -510,6 +519,8 @@ function init() {
       checkCell.appendChild(checkLabel);
 
       const labelCell = document.createElement("td");
+      labelCell.className = "col-game";
+      labelCell.title = entry.label;
       labelCell.textContent = entry.label;
       if (entry.optional) {
         const tag = document.createElement("span");
@@ -523,6 +534,7 @@ function init() {
       labelCell.appendChild(installTag);
 
       const typeCell = document.createElement("td");
+      typeCell.className = "col-type";
       const badge = document.createElement("span");
       badge.className =
         entry.group === "conteudo" ? "badge badge-content" : "badge badge-game";
@@ -530,20 +542,25 @@ function init() {
       typeCell.appendChild(badge);
 
       const destCell = document.createElement("td");
+      destCell.className = "col-path";
       const destInput = document.createElement("input");
       destInput.type = "text";
       destInput.className = "input-dest";
       destInput.dataset.destinationFor = entry.id;
       destInput.value = entry.destination;
+      destInput.title = entry.destination;
       destInput.addEventListener("change", () => {
+        destInput.title = destInput.value.trim() || entry.destination;
         void refreshInstallTags();
       });
       destCell.appendChild(destInput);
 
       const sizeCell = document.createElement("td");
+      sizeCell.className = "col-size";
       sizeCell.textContent = entry.sizeBytes > 0 ? formatBytes(entry.sizeBytes) : "—";
 
       const targetCell = document.createElement("td");
+      targetCell.className = "col-target";
       const targetBadge = document.createElement("span");
       const goesToPc = (entry.sizeBytes || 0) > FAT32_MAX_FILE_BYTES;
       targetBadge.className = goesToPc ? "badge badge-pc" : "badge badge-hd";
@@ -551,12 +568,14 @@ function init() {
       targetCell.appendChild(targetBadge);
 
       const statusCell = document.createElement("td");
+      statusCell.className = "col-progress";
       const progress = createProgressCell();
       progress.label.textContent = goesToPc ? "Via PC" : "Direto no HD";
       statusCell.appendChild(progress.wrap);
       progressCells.set(entry.id, { fill: progress.fill, label: progress.label });
 
       const actionCell = document.createElement("td");
+      actionCell.className = "col-action";
       const deleteBtn = document.createElement("button");
       deleteBtn.type = "button";
       deleteBtn.className = "btn btn-danger btn-small";
@@ -718,6 +737,8 @@ function init() {
       const row = document.createElement("tr");
 
       const nameCell = document.createElement("td");
+      nameCell.className = "col-game";
+      nameCell.title = item.label;
       const nameWrap = document.createElement("div");
       nameWrap.className = "item-name";
       const name = document.createElement("strong");
@@ -732,6 +753,7 @@ function init() {
       nameCell.appendChild(nameWrap);
 
       const typeCell = document.createElement("td");
+      typeCell.className = "col-type";
       const badge = document.createElement("span");
       badge.className =
         item.group === "conteudo" ? "badge badge-content" : "badge badge-game";
@@ -739,13 +761,16 @@ function init() {
       typeCell.appendChild(badge);
 
       const destCell = document.createElement("td");
-      destCell.className = "dest-sub";
+      destCell.className = "col-path dest-sub";
+      destCell.title = item.destination.replace(/\//g, "\\");
       destCell.textContent = item.destination.replace(/\//g, "\\");
 
       const sizeCell = document.createElement("td");
+      sizeCell.className = "col-size";
       sizeCell.textContent = item.sizeBytes > 0 ? formatBytes(item.sizeBytes) : "—";
 
       const actionCell = document.createElement("td");
+      actionCell.className = "col-action";
       const deleteBtn = document.createElement("button");
       deleteBtn.type = "button";
       deleteBtn.className = "btn btn-danger btn-small";
@@ -1007,23 +1032,49 @@ function init() {
         ? message
         : "Espaço insuficiente para gravar os arquivos. Verifique o HD (NTFS/exFAT) e se há espaço para o zip + pasta extraída ao mesmo tempo.";
     }
+    if (isHdDisconnectText(message)) {
+      return "O HD foi desconectado. Reconecte o cabo USB — o MontaHD retoma o download sozinho.";
+    }
     return message;
   }
 
   function formatProgressError(text) {
     if (!text) return "Erro";
+    if (isHdDisconnectText(text)) {
+      return "HD desconectado. Reconecte o cabo — o download retoma sozinho.";
+    }
     if (/enospc|no space left/i.test(text)) {
       return formatInstallError(new Error(text));
     }
     return text;
   }
 
+  function isHdDisconnectText(text) {
+    if (!text) return false;
+    return /desconect|retoma o download sozinho|device is not ready|cannot find the (path|drive)|sistema não pode encontrar|no such file or directory|unknown error, (write|open|read|stat|unlink)|unidade n[aã]o est|dispositivo n[aã]o est[aá] pronto|\benoent\b|\beio\b|\benxio\b/i.test(
+      text,
+    );
+  }
+
+  function armAutoResume(entryIds) {
+    autoResumeArmed = true;
+    if (entryIds?.length) {
+      pendingAutoResumeIds = new Set(entryIds);
+    }
+  }
+
+  function confirmModalOpen() {
+    return !confirmModal.classList.contains("hidden");
+  }
+
   function applySelectedRoot(folder) {
     selectedRoot = folder;
+    hdWasAvailable = true;
     rootPath.textContent = folder;
     rootPath.classList.remove("muted");
     rootPathCard.classList.add("ready");
     syncLibraryPath();
+    if (autoResumeArmed) void tryAutoResumeDownloads();
   }
 
   /**
@@ -1291,6 +1342,191 @@ function init() {
     void clearListEntries();
   });
 
+  async function executeDownload(toDownload, resetEntryIds) {
+    if (!selectedRoot || toDownload.length === 0) return;
+
+    const sizes = toDownload.map((entry) => entry.sizeBytes || 0);
+    const pcNeeded = largestPcStagingBytes(sizes);
+    if (pcNeeded > 0) {
+      try {
+        const disk = await window.montahd.getPcDiskSpace();
+        if (disk.freeBytes < pcNeeded) {
+          setSummary(
+            `Espaço insuficiente no PC para jogos acima de ${FAT32_LIMIT_LABEL}. ` +
+              `Livre: ${formatBytes(disk.freeBytes)}. ` +
+              `Necessário pelo menos ${formatBytes(pcNeeded)} (maior pacote acima de ${FAT32_LIMIT_LABEL}). ` +
+              `Libere espaço no computador e tente de novo.`,
+            "error",
+          );
+          return;
+        }
+      } catch {
+        // o processo principal também confere o espaço
+      }
+    }
+
+    downloadBtn.disabled = true;
+    cancelBtn.classList.remove("hidden");
+    clearListBtn.disabled = true;
+    clearActiveEntryPhases();
+    lastDownloadIds = toDownload.map((entry) => entry.id);
+    setSummary("Download em andamento…");
+
+    for (const entry of toDownload) {
+      setProgress(entry.id, 0, "Na fila");
+    }
+
+    const idsToReset = [...new Set(resetEntryIds)].filter((id) =>
+      toDownload.some((entry) => entry.id === id),
+    );
+
+    try {
+      const result = await window.montahd.startDownload(selectedRoot, toDownload, {
+        resetEntryIds: idsToReset,
+      });
+      const failed = result.results.filter((item) => !item.ok);
+      if (failed.some((item) => isHdDisconnectText(item.error ?? ""))) {
+        armAutoResume(failed.map((item) => item.entryId));
+        setSummary(
+          "HD desconectado. Reconecte o cabo USB — o download retoma sozinho.",
+          "error",
+        );
+      } else {
+        const okCount = result.results.filter((item) => item.ok).length;
+        setSummary(
+          `Concluído: ${okCount}/${result.results.length} jogo(s) instalados.`,
+          okCount === result.results.length ? "ok" : "error",
+        );
+      }
+      void refreshInstallTags();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Erro durante o download.";
+      if (isHdDisconnectText(message)) {
+        armAutoResume(lastDownloadIds);
+        setSummary(
+          "HD desconectado. Reconecte o cabo USB — o download retoma sozinho.",
+          "error",
+        );
+      } else {
+        setSummary(message, "error");
+      }
+    } finally {
+      downloadBtn.disabled = false;
+      cancelBtn.classList.add("hidden");
+      clearActiveEntryPhases();
+      updateDownloadButton();
+      void refreshInstallTags();
+    }
+  }
+
+  async function tryAutoResumeDownloads() {
+    if (autoResumeBusy || isDownloading() || !manifest || !selectedRoot) return;
+    if (confirmModalOpen()) return;
+
+    autoResumeBusy = true;
+    try {
+      let available = false;
+      try {
+        available = await window.montahd.hdRootAvailable(selectedRoot);
+      } catch {
+        available = false;
+      }
+      if (!available) return;
+
+      const selected = selectedEntriesWithDestinations();
+      if (selected.length === 0) return;
+
+      const wanted = pendingAutoResumeIds
+        ? selected.filter((entry) => pendingAutoResumeIds.has(entry.id))
+        : selected;
+      if (wanted.length === 0) return;
+
+      /** @type {string[]} */
+      const resetEntryIds = [];
+      let toDownload = wanted;
+      const sessionIds = pendingAutoResumeIds;
+
+      try {
+        const states = await window.montahd.inspectInstallState(selectedRoot, wanted);
+        const installedIds = new Set(
+          states.filter((state) => state.kind === "installed").map((state) => state.entryId),
+        );
+        const resumableIds = new Set(
+          states
+            .filter((state) => state.kind === "incomplete" && state.canResume)
+            .map((state) => state.entryId),
+        );
+        const leftoverIds = new Set(
+          states
+            .filter((state) => state.kind === "incomplete" && !state.canResume)
+            .map((state) => state.entryId),
+        );
+
+        toDownload = wanted.filter((entry) => !installedIds.has(entry.id));
+
+        if (sessionIds) {
+          for (const entry of toDownload) {
+            if (leftoverIds.has(entry.id)) resetEntryIds.push(entry.id);
+          }
+        } else {
+          toDownload = toDownload.filter((entry) => resumableIds.has(entry.id));
+        }
+      } catch {
+        if (!sessionIds) toDownload = [];
+      }
+
+      if (toDownload.length === 0) {
+        autoResumeArmed = false;
+        pendingAutoResumeIds = null;
+        return;
+      }
+
+      pendingAutoResumeIds = null;
+      autoResumeArmed = false;
+      setSummary(
+        toDownload.length === 1
+          ? `HD reconectado. Retomando «${toDownload[0].label}»…`
+          : `HD reconectado. Retomando ${toDownload.length} download(s)…`,
+      );
+      await executeDownload(toDownload, resetEntryIds);
+    } finally {
+      autoResumeBusy = false;
+    }
+  }
+
+  async function pollHdPresence() {
+    if (!selectedRoot) return;
+
+    let available = false;
+    try {
+      available = await window.montahd.hdRootAvailable(selectedRoot);
+    } catch {
+      available = false;
+    }
+
+    if (available) {
+      const shouldResume = hdWasAvailable === false || autoResumeArmed;
+      hdWasAvailable = true;
+      if (shouldResume) void tryAutoResumeDownloads();
+      return;
+    }
+
+    if (hdWasAvailable === true) {
+      if (isDownloading() && lastDownloadIds.length > 0) {
+        armAutoResume(lastDownloadIds);
+        void window.montahd.cancelDownload();
+      } else {
+        autoResumeArmed = true;
+      }
+      setSummary(
+        "HD desconectado. Reconecte o cabo USB — o download retoma sozinho.",
+        "error",
+      );
+    }
+    hdWasAvailable = false;
+  }
+
   downloadBtn.addEventListener("click", async () => {
     if (!manifest || !selectedRoot) return;
 
@@ -1423,77 +1659,38 @@ function init() {
       .join("\n\n");
 
     const sizes = toDownload.map((entry) => entry.sizeBytes || 0);
-    const pcNeeded = largestPcStagingBytes(sizes);
     const confirmed = await showConfirmModal(
       `Baixar ${toDownload.length} jogo(s)? ` + installSpaceNotice(sizes),
       preview,
     );
     if (!confirmed) return;
 
-    if (pcNeeded > 0) {
-      try {
-        const disk = await window.montahd.getPcDiskSpace();
-        if (disk.freeBytes < pcNeeded) {
-          setSummary(
-            `Espaço insuficiente no PC para jogos acima de ${FAT32_LIMIT_LABEL}. ` +
-              `Livre: ${formatBytes(disk.freeBytes)}. ` +
-              `Necessário pelo menos ${formatBytes(pcNeeded)} (maior pacote acima de ${FAT32_LIMIT_LABEL}). ` +
-              `Libere espaço no computador e tente de novo.`,
-            "error",
-          );
-          return;
-        }
-      } catch {
-        // segue o download; o processo principal também confere o espaço
-      }
-    }
-
-    downloadBtn.disabled = true;
-    cancelBtn.classList.remove("hidden");
-    clearListBtn.disabled = true;
-    clearActiveEntryPhases();
-    setSummary("Download em andamento…");
-
-    for (const entry of toDownload) {
-      setProgress(entry.id, 0, "Na fila");
-    }
-
-    const idsToReset = [...new Set(resetEntryIds)].filter((id) =>
-      toDownload.some((entry) => entry.id === id),
-    );
-
-    try {
-      const result = await window.montahd.startDownload(selectedRoot, toDownload, {
-        resetEntryIds: idsToReset,
-      });
-      const okCount = result.results.filter((item) => item.ok).length;
-      setSummary(
-        `Concluído: ${okCount}/${result.results.length} jogo(s) instalados.`,
-        okCount === result.results.length ? "ok" : "error",
-      );
-      void refreshInstallTags();
-    } catch (error) {
-      setSummary(
-        error instanceof Error ? error.message : "Erro durante o download.",
-        "error",
-      );
-    } finally {
-      downloadBtn.disabled = false;
-      cancelBtn.classList.add("hidden");
-      clearActiveEntryPhases();
-      updateDownloadButton();
-      void refreshInstallTags();
-    }
+    autoResumeArmed = false;
+    pendingAutoResumeIds = null;
+    await executeDownload(toDownload, resetEntryIds);
   });
 
   cancelBtn.addEventListener("click", async () => {
+    if (hdWasAvailable !== false) {
+      autoResumeArmed = false;
+      pendingAutoResumeIds = null;
+    }
     await window.montahd.cancelDownload();
     clearActiveEntryPhases();
-    setSummary("Download cancelado.", "error");
+    setSummary(
+      hdWasAvailable === false
+        ? "HD desconectado. Reconecte o cabo USB — o download retoma sozinho."
+        : "Download cancelado.",
+      "error",
+    );
     cancelBtn.classList.add("hidden");
     downloadBtn.disabled = false;
     updateDownloadButton();
   });
+
+  setInterval(() => {
+    void pollHdPresence();
+  }, 2500);
 
   const lastProgressStatus = new Map();
 
@@ -1547,6 +1744,12 @@ function init() {
       setProgress(event.entryId, 100, errText, "error");
       if (/espaço insuficiente|enospc/i.test(errText)) {
         setSummary(errText, "error");
+      } else if (isHdDisconnectText(event.error ?? errText)) {
+        armAutoResume([event.entryId, ...lastDownloadIds]);
+        setSummary(
+          "HD desconectado. Reconecte o cabo USB — o download retoma sozinho.",
+          "error",
+        );
       }
     }
 
@@ -1564,7 +1767,14 @@ function init() {
     const diskFull = failed.some((item) =>
       /espaço insuficiente|enospc|no space left/i.test(item.error ?? ""),
     );
-    if (diskFull && okCount < results.length) {
+    const disconnected = failed.some((item) => isHdDisconnectText(item.error ?? ""));
+    if (disconnected || (autoResumeArmed && hdWasAvailable === false)) {
+      if (disconnected) armAutoResume(failed.map((item) => item.entryId));
+      setSummary(
+        "HD desconectado. Reconecte o cabo USB — o download retoma sozinho.",
+        "error",
+      );
+    } else if (diskFull && okCount < results.length) {
       setSummary(
         "Instalação interrompida: falta espaço no disco. Jogos até 4 GB instalam no HD; " +
           "pacotes maiores usam o PC por causa do FAT32 do Xbox 360. Libere espaço e tente de novo.",

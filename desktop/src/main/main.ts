@@ -1,4 +1,5 @@
 import path from "node:path";
+import { existsSync } from "node:fs";
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import type { IpcMainInvokeEvent } from "electron";
 import type { CatalogLaunch } from "../shared/catalog-launch";
@@ -134,9 +135,9 @@ function focusMainWindow() {
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 980,
-    height: 740,
-    minWidth: 760,
+    width: 1120,
+    height: 760,
+    minWidth: 900,
     minHeight: 580,
     title: "MontaHD",
     icon: rendererPath("icon.png"),
@@ -401,6 +402,16 @@ ipcMain.handle("get-last-hd-root", (event) => {
   const lastRoot = loadLastHdRoot(app.getPath("userData"));
   if (!lastRoot) return null;
   return rememberAuthorizedRoot(lastRoot);
+});
+
+ipcMain.handle("hd-root-available", (event, rootDir: string) => {
+  assertTrustedSender(event);
+  const resolved = assertAuthorizedRoot(rootDir);
+  try {
+    return existsSync(resolved);
+  } catch {
+    return false;
+  }
 });
 
 ipcMain.handle("compute-hd-fingerprint", (event, rootDir: string) => {
