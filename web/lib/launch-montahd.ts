@@ -21,7 +21,11 @@ function defaultHost(): LaunchMontaHdHost | null {
   if (!document.body) return null;
   return {
     createElement: (tagName) => document.createElement(tagName),
-    body: document.body,
+    body: {
+      appendChild(node) {
+        document.body.appendChild(node as Node);
+      },
+    },
     setTimeout: (fn, ms) => window.setTimeout(fn, ms),
   };
 }
