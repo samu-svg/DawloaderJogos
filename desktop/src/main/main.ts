@@ -487,6 +487,32 @@ ipcMain.handle("cancel-download", (event) => {
 });
 
 ipcMain.handle(
+  "clear-entry-install-files",
+  async (
+    event,
+    payload: {
+      rootDir: string;
+      entries: { id: string; destination: string }[];
+    },
+  ) => {
+    assertTrustedSender(event);
+    const rootDir = assertAuthorizedRoot(payload.rootDir);
+    const stagingRoot = stagingRootPath();
+    for (const entry of payload.entries ?? []) {
+      if (typeof entry.id !== "string" || typeof entry.destination !== "string") {
+        continue;
+      }
+      await clearEntryInstallFiles({
+        rootDir,
+        destination: entry.destination,
+        entryId: entry.id,
+        stagingRoot,
+      });
+    }
+  },
+);
+
+ipcMain.handle(
   "list-hd-library",
   async (event, payload: { rootDir: string; hints?: HdLibraryHint[] }) => {
     assertTrustedSender(event);
@@ -658,6 +684,18 @@ ipcMain.handle(
       signal,
       installMode,
       onProgress: (progress) => send("download-progress", progress),
+      onEntryComplete: async (item, result) => {
+        if (!result.ok || !result.installedPath) return;
+        const installedRel = installedRelativePath(rootDir, result.installedPath);
+        if (!installedRel) return;
+        await recordInstalled(rootDir, {
+          id: item.entry.id,
+          label: item.entry.label,
+          destination: installedRel,
+          group: item.entry.group,
+          sizeBytes: item.entry.sizeBytes,
+        }).catch(() => undefined);
+      },
     });
 
     for (const result of pipelineResults) {
@@ -668,23 +706,6 @@ ipcMain.handle(
           error: result.error,
         });
         continue;
-      }
-
-      const entry = entriesToDownload.find((item) => item.id === result.entryId);
-      if (!entry || !result.installedPath) {
-        results.push({ entryId: result.entryId, ok: true });
-        continue;
-      }
-
-      const installedRel = installedRelativePath(rootDir, result.installedPath);
-      if (installedRel) {
-        await recordInstalled(rootDir, {
-          id: entry.id,
-          label: entry.label,
-          destination: installedRel,
-          group: entry.group,
-          sizeBytes: entry.sizeBytes,
-        }).catch(() => undefined);
       }
       results.push({ entryId: result.entryId, ok: true });
     }

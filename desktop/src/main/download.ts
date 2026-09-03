@@ -362,13 +362,6 @@ async function extractAndPlace(
       }
     }
 
-    onProgress({
-      entryId,
-      label,
-      downloadedBytes: installed.bytesCopied,
-      totalBytes: installed.bytesCopied,
-      status: "done",
-    });
     return hdInstallDir;
   } finally {
     await removeTempDir(tempDir);
@@ -486,13 +479,6 @@ async function installPreparedOnHd(
   if (existsSync(destPath)) unlinkSync(destPath);
   await copyFile(zipPath, destPath);
   await unlink(zipPath).catch(() => undefined);
-  onProgress({
-    entryId,
-    label,
-    downloadedBytes: fileSize,
-    totalBytes: expectedSize || fileSize,
-    status: "done",
-  });
   return { installedPath: destPath };
 }
 
@@ -612,13 +598,6 @@ async function installPreparedViaPc(
     if (existsSync(destPath)) unlinkSync(destPath);
     await copyFile(zipPath, destPath);
     copiedToHd = true;
-    onProgress({
-      entryId,
-      label,
-      downloadedBytes: fileSize,
-      totalBytes: expectedSize || fileSize,
-      status: "done",
-    });
     return { installedPath: destPath };
   } finally {
     if (copiedToHd) {

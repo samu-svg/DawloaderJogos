@@ -58,6 +58,11 @@ const api = {
   setInstallMode: (mode: InstallMode): Promise<InstallMode> =>
     ipcRenderer.invoke("set-install-mode", mode),
   cancelDownload: (): Promise<void> => ipcRenderer.invoke("cancel-download"),
+  clearEntryInstallFiles: (
+    rootDir: string,
+    entries: { id: string; destination: string }[],
+  ): Promise<void> =>
+    ipcRenderer.invoke("clear-entry-install-files", { rootDir, entries }),
   listHdLibrary: (rootDir: string, hints?: HdLibraryHint[]): Promise<HdLibraryItem[]> =>
     ipcRenderer.invoke("list-hd-library", { rootDir, hints }),
   rememberHdLabels: (rootDir: string, hints: HdLibraryHint[]): Promise<void> =>

@@ -96,6 +96,11 @@ export async function runPipelinedDownloads(
     signal?: AbortSignal;
     installMode?: InstallMode;
     onProgress: (progress: DownloadProgress) => void;
+    /** Called as soon as each entry finishes installing (before the batch ends). */
+    onEntryComplete?: (
+      item: PipelineEntry,
+      result: PipelineResult,
+    ) => Promise<void>;
   },
 ): Promise<PipelineResult[]> {
   const results: (PipelineResult | undefined)[] = new Array(items.length);
@@ -117,11 +122,23 @@ export async function runPipelinedDownloads(
           options.onProgress,
           options.signal,
         );
-        results[index] = {
+        const result: PipelineResult = {
           entryId: item.entry.id,
           ok: true,
           installedPath: installed.installedPath,
         };
+        if (options.onEntryComplete) {
+          await options.onEntryComplete(item, result);
+        }
+        options.onProgress({
+          entryId: item.entry.id,
+          label: item.entry.label,
+          downloadedBytes: item.entry.sizeBytes,
+          totalBytes: item.entry.sizeBytes,
+          status: "done",
+          target: prepared.target,
+        });
+        results[index] = result;
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "Erro na instalação.";
