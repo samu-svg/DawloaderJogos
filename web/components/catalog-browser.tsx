@@ -336,7 +336,7 @@ export function CatalogBrowser({
             para enviar a seleção ao app.
           </p>
 
-          <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <ul className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
             {sortedGames.map((game) => (
               <li key={game.id} className="space-y-2">
                 <GameStoreCard

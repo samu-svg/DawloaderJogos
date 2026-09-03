@@ -81,7 +81,7 @@ export function OpenMontaHDButton({
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-background/90 px-4 py-4 backdrop-blur-md sm:px-6">
-      <div className="mx-auto w-full max-w-6xl space-y-3">
+      <div className="content-narrow mx-auto w-full space-y-3">
         {error && (
           <p className="rounded-2xl border border-red-900/50 bg-red-950/40 px-4 py-2.5 text-sm text-red-300">
             {error}

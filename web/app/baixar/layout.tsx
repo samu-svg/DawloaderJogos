@@ -20,11 +20,8 @@ export default async function BaixarLayout({
   return (
     <>
       <SiteHeader email={user.email} showPainelLink={isAdmin} hasAccess />
-      <main className="hero-glow relative flex-1">
-        <div className="pointer-events-none absolute inset-0 grid-lines opacity-40" />
-        <div className="relative mx-auto w-full max-w-6xl px-6 py-10 sm:py-12">
-          {children}
-        </div>
+      <main className="content-narrow flex-1 px-6 py-8">
+        {children}
       </main>
     </>
   );

@@ -134,7 +134,7 @@ export function GameStoreCard({
     </>
   );
 
-  const className = `card-glow block w-full overflow-hidden rounded-2xl border bg-surface text-center ${
+  const className = `card-glow block w-full overflow-hidden rounded-xl border bg-surface text-center ${
     selected
       ? "border-accent ring-1 ring-accent"
       : "border-border"
