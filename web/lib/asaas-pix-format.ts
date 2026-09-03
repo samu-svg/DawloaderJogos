@@ -33,6 +33,10 @@ export function pixCheckoutPath(paymentId: string): string {
   return `/assinar/pix?payment=${encodeURIComponent(paymentId)}`;
 }
 
+export function pixPlanPath(planId: "1m" | "2m" | "3m"): string {
+  return `/assinar/pix?plan=${planId}`;
+}
+
 export function pixQrImageSrc(encodedImage: string): string {
   const value = encodedImage.replace(/\s+/g, "");
   if (value.startsWith("data:")) return value;

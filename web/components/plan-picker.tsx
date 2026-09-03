@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
-import { formatCpfCnpj, isValidCpfCnpj } from "@/lib/cpf-cnpj";
+import { pixPlanPath } from "@/lib/asaas-pix-format";
 import type { PlanId } from "@/lib/stripe-plans";
 import { STRIPE_PLANS } from "@/lib/stripe-plans";
 
@@ -18,15 +19,11 @@ async function readCheckoutResponse(response: Response): Promise<{ url?: string;
   }
 }
 
-async function startCheckout(
-  plan: PlanId,
-  endpoint: "/api/stripe/checkout" | "/api/asaas/checkout",
-  extra?: { cpfCnpj?: string },
-) {
+async function startCheckout(plan: PlanId, endpoint: "/api/stripe/checkout") {
   const response = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ plan, ...extra }),
+    body: JSON.stringify({ plan }),
   });
   const data = await readCheckoutResponse(response);
 
@@ -35,6 +32,15 @@ async function startCheckout(
   }
 
   window.location.href = data.url;
+}
+
+function priceValue(priceLabel: string): number {
+  const normalized = priceLabel.replace(/[^\d,]/g, "").replace(",", ".");
+  return Number.parseFloat(normalized);
+}
+
+function formatBrl(value: number): string {
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
 export function PlanPicker({
@@ -46,23 +52,14 @@ export function PlanPicker({
 }) {
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [cpfCnpj, setCpfCnpj] = useState("");
-  const pixEnabled = pixPlans.length > 0;
+  const monthlyBase = priceValue(STRIPE_PLANS[0].priceLabel);
 
-  async function handleCheckout(plan: PlanId, method: "card" | "pix") {
-    const key = `${plan}-${method}`;
+  async function handleCardCheckout(plan: PlanId) {
+    const key = `${plan}-card`;
     setLoadingKey(key);
     setError(null);
 
     try {
-      if (method === "pix") {
-        if (!isValidCpfCnpj(cpfCnpj)) {
-          throw new Error("Informe um CPF ou CNPJ válido para pagar com PIX.");
-        }
-        await startCheckout(plan, "/api/asaas/checkout", { cpfCnpj });
-        return;
-      }
-
       await startCheckout(plan, "/api/stripe/checkout");
     } catch (caught) {
       setError(
@@ -73,80 +70,101 @@ export function PlanPicker({
   }
 
   return (
-    <div className="space-y-4">
-      {pixEnabled && (
-        <label className="block space-y-1.5">
-          <span className="text-sm font-medium text-zinc-300">
-            CPF ou CNPJ para o PIX
-          </span>
-          <input
-            type="text"
-            inputMode="numeric"
-            autoComplete="off"
-            placeholder="000.000.000-00"
-            value={cpfCnpj}
-            onChange={(event) => setCpfCnpj(formatCpfCnpj(event.target.value))}
-            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-white outline-none focus:border-accent focus:ring-1 focus:ring-accent"
-          />
-        </label>
-      )}
+    <div className="space-y-6">
+      <div className="grid gap-4 pt-3 lg:grid-cols-3">
+        {STRIPE_PLANS.map((plan) => {
+          const cardEnabled = cardPlans.includes(plan.id);
+          const pixForPlan = pixPlans.includes(plan.id);
+          if (!cardEnabled && !pixForPlan) return null;
 
-      {STRIPE_PLANS.map((plan) => {
-        const cardEnabled = cardPlans.includes(plan.id);
-        const pixForPlan = pixPlans.includes(plan.id);
+          const total = priceValue(plan.priceLabel);
+          const monthly = total / plan.months;
+          const saves = plan.months > 1 && monthlyBase * plan.months - total;
+          const featured = plan.id === "2m";
 
-        if (!cardEnabled && !pixForPlan) return null;
-
-        return (
-          <article
-            key={plan.id}
-            className="rounded-2xl border border-border/80 bg-surface/60 p-5"
-          >
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="text-lg font-semibold text-white">{plan.title}</p>
-                <p className="mt-1 text-2xl font-bold text-white">{plan.priceLabel}</p>
-              </div>
-            </div>
-
-            <div
-              className={`mt-4 grid gap-2 ${cardEnabled && pixForPlan ? "sm:grid-cols-2" : ""}`}
+          return (
+            <article
+              key={plan.id}
+              className={`relative flex flex-col rounded-[28px] border p-6 ${
+                featured
+                  ? "border-accent/50 bg-gradient-to-b from-violet-600/20 via-surface to-surface shadow-[0_24px_80px_rgba(109,40,217,0.18)]"
+                  : "border-border/80 bg-surface/80"
+              }`}
             >
-              {cardEnabled && (
-                <button
-                  type="button"
-                  disabled={loadingKey !== null}
-                  onClick={() => void handleCheckout(plan.id, "card")}
-                  className="rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-white transition hover:bg-accent-hover disabled:opacity-60"
-                >
-                  {loadingKey === `${plan.id}-card`
-                    ? "Redirecionando..."
-                    : `Cartão · ${plan.cardCadence}`}
-                </button>
+              {featured && (
+                <p className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full border border-accent/40 bg-accent px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-white">
+                  Recomendado
+                </p>
               )}
-              {pixForPlan && (
-                <button
-                  type="button"
-                  disabled={loadingKey !== null}
-                  onClick={() => void handleCheckout(plan.id, "pix")}
-                  className="rounded-xl border border-teal-400/40 bg-teal-500/10 px-4 py-3 text-sm font-semibold text-teal-100 transition hover:border-teal-300/70 hover:bg-teal-500/20 hover:text-white disabled:opacity-60"
-                >
-                  {loadingKey === `${plan.id}-pix`
-                    ? "Gerando PIX..."
-                    : `PIX · ${plan.title} à vista`}
-                </button>
+
+              <p className="text-sm font-semibold text-zinc-300">{plan.title}</p>
+              <p className="mt-3 text-4xl font-bold tracking-tight text-white">
+                {plan.priceLabel}
+              </p>
+              <p className="mt-2 text-sm text-zinc-500">
+                {plan.months === 1
+                  ? "Acesso por 30 dias"
+                  : monthly < monthlyBase
+                    ? `${formatBrl(monthly)}/mês · ${plan.months} meses`
+                    : `${plan.months} meses de acesso`}
+              </p>
+              {saves && saves > 0.5 ? (
+                <p className="mt-2 text-xs font-medium text-teal-300">
+                  Economize {formatBrl(saves)} em relação a {plan.months} meses avulsos
+                </p>
+              ) : (
+                <p className="mt-2 text-xs text-zinc-600">
+                  PIX à vista ou cartão {plan.cardCadence}
+                </p>
               )}
-            </div>
-          </article>
-        );
-      })}
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
+              <div className="mt-6 flex flex-1 flex-col gap-2">
+                {pixForPlan && (
+                  <Link
+                    href={pixPlanPath(plan.id)}
+                    className={`rounded-2xl px-4 py-3 text-center text-sm font-semibold transition ${
+                      featured
+                        ? "bg-teal-500 text-teal-950 shadow-lg shadow-teal-500/20 hover:bg-teal-400"
+                        : "border border-teal-400/40 bg-teal-500/10 text-teal-100 hover:border-teal-300/70 hover:bg-teal-500/20 hover:text-white"
+                    }`}
+                  >
+                    Pagar com PIX
+                  </Link>
+                )}
+                {cardEnabled && (
+                  <button
+                    type="button"
+                    disabled={loadingKey !== null}
+                    onClick={() => void handleCardCheckout(plan.id)}
+                    className={`rounded-2xl px-4 py-3 text-sm font-semibold transition disabled:opacity-60 ${
+                      featured && !pixForPlan
+                        ? "bg-accent text-white hover:bg-accent-hover"
+                        : "border border-border text-zinc-200 hover:border-zinc-500 hover:text-white"
+                    }`}
+                  >
+                    {loadingKey === `${plan.id}-card`
+                      ? "Redirecionando..."
+                      : `Cartão · ${plan.cardCadence}`}
+                  </button>
+                )}
+              </div>
+            </article>
+          );
+        })}
+      </div>
 
-      <p className="text-xs leading-5 text-zinc-500">
-        Cartão renova automaticamente no fim de cada período. PIX libera o acesso
-        pelo tempo do plano, sem renovação automática.
-      </p>
+      {error && <p className="text-center text-sm text-red-400">{error}</p>}
+
+      <div className="grid gap-3 text-center text-xs leading-5 text-zinc-500 sm:grid-cols-2">
+        <p className="rounded-2xl border border-border/70 bg-background/40 px-4 py-3">
+          <strong className="font-medium text-zinc-300">Cartão:</strong> renovação
+          automática no fim do período. Cancele quando quiser.
+        </p>
+        <p className="rounded-2xl border border-border/70 bg-background/40 px-4 py-3">
+          <strong className="font-medium text-zinc-300">PIX:</strong> pagamento à
+          vista, sem renovação. O acesso vale pelo tempo do plano.
+        </p>
+      </div>
     </div>
   );
 }

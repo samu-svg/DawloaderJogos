@@ -7,6 +7,7 @@ import {
   isAsaasPaymentId,
   parseAsaasDateTime,
   pixCheckoutPath,
+  pixPlanPath,
   pixQrImageSrc,
 } from "./asaas-pix-format.ts";
 
@@ -28,6 +29,8 @@ test("status pago e expirado", () => {
 
 test("caminho do checkout PIX", () => {
   assert.equal(pixCheckoutPath("pay_abc"), "/assinar/pix?payment=pay_abc");
+  assert.equal(pixPlanPath("1m"), "/assinar/pix?plan=1m");
+  assert.equal(pixPlanPath("3m"), "/assinar/pix?plan=3m");
 });
 
 test("imagem do QR Code", () => {

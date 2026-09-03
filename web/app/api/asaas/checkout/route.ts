@@ -25,7 +25,7 @@ type CheckoutBody = {
 function asaasUserError(error: unknown): string | null {
   const message = error instanceof Error ? error.message : "";
   if (/cpf|cnpj/i.test(message)) {
-    return "Informe um CPF ou CNPJ válido para pagar com PIX.";
+    return "Informe um CPF válido para gerar o PIX.";
   }
   return null;
 }
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
   const cpfCnpj = digitsOnly(body.cpfCnpj ?? "");
   if (!isValidCpfCnpj(cpfCnpj)) {
     return NextResponse.json(
-      { error: "Informe um CPF ou CNPJ válido para pagar com PIX." },
+      { error: "Informe um CPF válido para gerar o PIX." },
       { status: 400 },
     );
   }

@@ -2,15 +2,32 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   formatCountdown,
   parseAsaasDateTime,
+  pixPlanPath,
   pixQrImageSrc,
   type PixCheckoutView,
 } from "@/lib/asaas-pix-format";
+import { formatCpfCnpj, isValidCpfCnpj } from "@/lib/cpf-cnpj";
 
 const POLL_MS = 3000;
+
+const FORM_STEPS = [
+  {
+    title: "Informe o CPF",
+    text: "Usamos só para emitir a cobrança PIX.",
+  },
+  {
+    title: "Gere o código",
+    text: "O QR Code e o copia e cola aparecem nesta tela.",
+  },
+  {
+    title: "Pague no banco",
+    text: "O acesso é liberado automaticamente após a confirmação.",
+  },
+] as const;
 
 const STEPS = [
   {
@@ -123,27 +140,40 @@ function useCountdown(expirationDate: string | null) {
   }, [expirationDate, now]);
 }
 
-export function PixCheckout({ initial }: { initial: PixCheckoutView }) {
+export function PixCheckout({
+  initial,
+  plan,
+}: {
+  initial?: PixCheckoutView | null;
+  plan: { id: PixCheckoutView["planId"]; title: string; priceLabel: string };
+}) {
   const router = useRouter();
   const payloadRef = useRef<HTMLTextAreaElement>(null);
-  const [view, setView] = useState(initial);
+  const [view, setView] = useState(initial ?? null);
+  const [cpf, setCpf] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
-  const remaining = useCountdown(view.qr?.expirationDate ?? null);
-  const expired = view.expired || remaining === 0;
+  const remaining = useCountdown(view?.qr?.expirationDate ?? null);
+  const expired = Boolean(view?.expired || remaining === 0);
+  const planTitle = view?.planTitle ?? plan.title;
+  const priceLabel = view?.priceLabel ?? plan.priceLabel;
+  const planId = view?.planId ?? plan.id;
 
   const refresh = useCallback(async () => {
+    if (!view?.paymentId) return;
     const response = await fetch(`/api/asaas/pix/${encodeURIComponent(view.paymentId)}`, {
       cache: "no-store",
     });
     if (!response.ok) return;
     const next = (await response.json()) as PixCheckoutView;
     setView(next);
-  }, [view.paymentId]);
+  }, [view?.paymentId]);
 
   useEffect(() => {
-    if (view.paid || expired) return;
+    if (!view || view.paid || expired) return;
 
     let cancelled = false;
 
@@ -169,19 +199,55 @@ export function PixCheckout({ initial }: { initial: PixCheckoutView }) {
       window.clearInterval(id);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [expired, refresh, view.paid]);
+  }, [expired, refresh, view]);
 
   useEffect(() => {
-    if (!view.paid) return;
+    if (!view?.paid) return;
     const id = window.setTimeout(() => {
       router.push("/assinar/sucesso");
       router.refresh();
     }, 1200);
     return () => window.clearTimeout(id);
-  }, [router, view.paid]);
+  }, [router, view?.paid]);
+
+  async function handleGenerate(event: FormEvent) {
+    event.preventDefault();
+    setGenerateError(null);
+    if (!isValidCpfCnpj(cpf)) {
+      setGenerateError("Informe um CPF válido para gerar o PIX.");
+      return;
+    }
+
+    setGenerating(true);
+    try {
+      const response = await fetch("/api/asaas/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: planId, cpfCnpj: cpf }),
+      });
+      const text = await response.text();
+      let data: { url?: string; error?: string } = {};
+      if (text.trim()) {
+        try {
+          data = JSON.parse(text) as { url?: string; error?: string };
+        } catch {
+          data = {};
+        }
+      }
+      if (!response.ok || !data.url) {
+        throw new Error(data.error ?? "Não foi possível gerar o PIX.");
+      }
+      router.replace(data.url);
+    } catch (caught) {
+      setGenerateError(
+        caught instanceof Error ? caught.message : "Não foi possível gerar o PIX.",
+      );
+      setGenerating(false);
+    }
+  }
 
   async function handleCopy() {
-    const payload = view.qr?.payload;
+    const payload = view?.qr?.payload;
     const field = payloadRef.current;
     if (!payload || !field) return;
     setCopyError(null);
@@ -203,7 +269,7 @@ export function PixCheckout({ initial }: { initial: PixCheckoutView }) {
     }
   }
 
-  if (view.paid) {
+  if (view?.paid) {
     return (
       <div className="mx-auto w-full max-w-lg rounded-[28px] border border-emerald-400/25 bg-gradient-to-br from-emerald-500/15 via-surface to-surface p-8 text-center sm:p-10">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-400 text-3xl font-bold text-emerald-950">
@@ -229,8 +295,9 @@ export function PixCheckout({ initial }: { initial: PixCheckoutView }) {
               Pague com PIX
             </h1>
             <p className="mt-2 max-w-md text-sm leading-6 text-zinc-400">
-              Escaneie o QR Code ou copie o código. A confirmação é automática —
-              não feche esta página até o pagamento aparecer aqui.
+              {view
+                ? "Escaneie o QR Code ou copie o código. A confirmação é automática — não feche esta página até o pagamento aparecer aqui."
+                : "Informe o CPF para gerar o QR Code. A confirmação é automática nesta tela."}
             </p>
           </div>
           <p className="text-right">
@@ -238,93 +305,124 @@ export function PixCheckout({ initial }: { initial: PixCheckoutView }) {
               Total
             </span>
             <span className="mt-1 block text-3xl font-bold tracking-tight text-white">
-              {view.priceLabel}
+              {priceLabel}
             </span>
           </p>
         </div>
 
-        <div className="mt-7 flex flex-col">
-          <div className="order-2 flex flex-col items-center lg:order-1">
-            <div className="rounded-[24px] bg-white p-4 shadow-[0_12px_40px_rgba(13,148,136,0.18)]">
-              {view.qr?.encodedImage ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={pixQrImageSrc(view.qr.encodedImage)}
-                  alt="QR Code PIX para pagamento"
-                  width={256}
-                  height={256}
-                  className="h-52 w-52 bg-white object-contain sm:h-64 sm:w-64"
-                />
-              ) : (
-                <div className="flex h-52 w-52 items-center justify-center sm:h-64 sm:w-64">
-                  <p className="px-4 text-center text-sm text-zinc-500">
-                    Gerando QR Code…
-                  </p>
+        {view ? (
+          <>
+            <div className="mt-7 flex flex-col">
+              <div className="order-2 flex flex-col items-center lg:order-1">
+                <div className="rounded-[24px] bg-white p-4 shadow-[0_12px_40px_rgba(13,148,136,0.18)]">
+                  {view.qr?.encodedImage ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={pixQrImageSrc(view.qr.encodedImage)}
+                      alt="QR Code PIX para pagamento"
+                      width={256}
+                      height={256}
+                      className="h-52 w-52 bg-white object-contain sm:h-64 sm:w-64"
+                    />
+                  ) : (
+                    <div className="flex h-52 w-52 items-center justify-center sm:h-64 sm:w-64">
+                      <p className="px-4 text-center text-sm text-zinc-500">
+                        Gerando QR Code…
+                      </p>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            <p className="mt-3 text-xs font-medium uppercase tracking-[0.16em] text-zinc-500">
-              Aponte a câmera do app do banco
-            </p>
-          </div>
-
-          <div className="relative my-6 order-3 lg:order-2">
-            <div className="h-px bg-border" />
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-              <span className="lg:hidden">ou escaneie o QR</span>
-              <span className="hidden lg:inline">ou copie o código</span>
-            </span>
-          </div>
-
-          <div className="order-1 lg:order-3">
-            {view.qr?.payload ? (
-              <div className="space-y-3">
-                <button
-                  type="button"
-                  onClick={() => void handleCopy()}
-                  className="w-full rounded-2xl bg-teal-500 px-5 py-3.5 text-sm font-semibold text-teal-950 shadow-lg shadow-teal-500/20 transition hover:bg-teal-400"
-                >
-                  {copied ? "Código PIX copiado" : "Copiar código PIX"}
-                </button>
-                <textarea
-                  ref={payloadRef}
-                  readOnly
-                  value={view.qr.payload}
-                  rows={3}
-                  spellCheck={false}
-                  onFocus={(event) => event.currentTarget.select()}
-                  className="max-h-24 w-full resize-none overflow-auto break-all rounded-2xl border border-border bg-background/70 px-4 py-3 font-mono text-[11px] leading-5 text-zinc-400 outline-none focus:border-teal-400/50"
-                  aria-label="Código PIX copia e cola"
-                />
-                {copyError && <p className="text-sm text-teal-200">{copyError}</p>}
+                <p className="mt-3 text-xs font-medium uppercase tracking-[0.16em] text-zinc-500">
+                  Aponte a câmera do app do banco
+                </p>
               </div>
-            ) : (
-              <p className="rounded-2xl border border-border bg-background/60 px-4 py-3 text-center text-sm text-zinc-400">
-                O código PIX ainda está sendo gerado. Aguarde uns segundos.
-              </p>
-            )}
-          </div>
-        </div>
 
-        <div className="mt-6 space-y-3">
-          <StatusPill paid={false} expired={expired} />
-          {remaining !== null && remaining > 0 && !expired && (
-            <p className="text-center text-xs text-zinc-500">
-              QR Code válido por{" "}
-              <span className="font-semibold text-zinc-300">
-                {formatCountdown(remaining)}
+              <div className="relative my-6 order-3 lg:order-2">
+                <div className="h-px bg-border" />
+                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                  <span className="lg:hidden">ou escaneie o QR</span>
+                  <span className="hidden lg:inline">ou copie o código</span>
+                </span>
+              </div>
+
+              <div className="order-1 lg:order-3">
+                {view.qr?.payload ? (
+                  <div className="space-y-3">
+                    <button
+                      type="button"
+                      onClick={() => void handleCopy()}
+                      className="w-full rounded-2xl bg-teal-500 px-5 py-3.5 text-sm font-semibold text-teal-950 shadow-lg shadow-teal-500/20 transition hover:bg-teal-400"
+                    >
+                      {copied ? "Código PIX copiado" : "Copiar código PIX"}
+                    </button>
+                    <textarea
+                      ref={payloadRef}
+                      readOnly
+                      value={view.qr.payload}
+                      rows={3}
+                      spellCheck={false}
+                      onFocus={(event) => event.currentTarget.select()}
+                      className="max-h-24 w-full resize-none overflow-auto break-all rounded-2xl border border-border bg-background/70 px-4 py-3 font-mono text-[11px] leading-5 text-zinc-400 outline-none focus:border-teal-400/50"
+                      aria-label="Código PIX copia e cola"
+                    />
+                    {copyError && <p className="text-sm text-teal-200">{copyError}</p>}
+                  </div>
+                ) : (
+                  <p className="rounded-2xl border border-border bg-background/60 px-4 py-3 text-center text-sm text-zinc-400">
+                    O código PIX ainda está sendo gerado. Aguarde uns segundos.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-6 space-y-3">
+              <StatusPill paid={false} expired={expired} />
+              {remaining !== null && remaining > 0 && !expired && (
+                <p className="text-center text-xs text-zinc-500">
+                  QR Code válido por{" "}
+                  <span className="font-semibold text-zinc-300">
+                    {formatCountdown(remaining)}
+                  </span>
+                </p>
+              )}
+              <button
+                type="button"
+                disabled={checking || expired}
+                onClick={() => void handleCheckNow()}
+                className="w-full rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-zinc-300 transition hover:border-zinc-500 hover:text-white disabled:opacity-50"
+              >
+                {checking ? "Verificando…" : "Já paguei — verificar agora"}
+              </button>
+            </div>
+          </>
+        ) : (
+          <form className="mt-8 space-y-5" onSubmit={(event) => void handleGenerate(event)}>
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-zinc-200">CPF</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                placeholder="000.000.000-00"
+                value={cpf}
+                disabled={generating}
+                onChange={(event) => setCpf(formatCpfCnpj(event.target.value))}
+                className="w-full rounded-2xl border border-border bg-background px-4 py-3.5 text-lg tracking-wide text-white outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400 disabled:opacity-60"
+              />
+              <span className="block text-xs leading-5 text-zinc-500">
+                Usamos o CPF só para emitir a cobrança PIX.
               </span>
-            </p>
-          )}
-          <button
-            type="button"
-            disabled={checking || expired}
-            onClick={() => void handleCheckNow()}
-            className="w-full rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-zinc-300 transition hover:border-zinc-500 hover:text-white disabled:opacity-50"
-          >
-            {checking ? "Verificando…" : "Já paguei — verificar agora"}
-          </button>
-        </div>
+            </label>
+            {generateError && <p className="text-sm text-red-400">{generateError}</p>}
+            <button
+              type="submit"
+              disabled={generating}
+              className="w-full rounded-2xl bg-teal-500 px-5 py-3.5 text-sm font-semibold text-teal-950 shadow-lg shadow-teal-500/20 transition hover:bg-teal-400 disabled:opacity-60"
+            >
+              {generating ? "Gerando PIX…" : "Gerar PIX"}
+            </button>
+          </form>
+        )}
       </section>
 
       <aside className="space-y-4 lg:sticky lg:top-24">
@@ -335,11 +433,11 @@ export function PixCheckout({ initial }: { initial: PixCheckoutView }) {
           <dl className="mt-4 space-y-3 text-sm">
             <div className="flex items-baseline justify-between gap-4">
               <dt className="text-zinc-500">Plano</dt>
-              <dd className="font-medium text-white">{view.planTitle}</dd>
+              <dd className="font-medium text-white">{planTitle}</dd>
             </div>
             <div className="flex items-baseline justify-between gap-4">
               <dt className="text-zinc-500">Valor</dt>
-              <dd className="font-semibold text-white">{view.priceLabel}</dd>
+              <dd className="font-semibold text-white">{priceLabel}</dd>
             </div>
             <div className="flex items-baseline justify-between gap-4">
               <dt className="text-zinc-500">Forma</dt>
@@ -361,7 +459,7 @@ export function PixCheckout({ initial }: { initial: PixCheckoutView }) {
             Como pagar
           </h2>
           <ol className="mt-4 space-y-4">
-            {STEPS.map((step, index) => (
+            {(view ? STEPS : FORM_STEPS).map((step, index) => (
               <li key={step.title} className="flex gap-3">
                 <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-500/15 text-xs font-bold text-teal-300">
                   {index + 1}
@@ -379,7 +477,7 @@ export function PixCheckout({ initial }: { initial: PixCheckoutView }) {
 
         {expired ? (
           <Link
-            href="/assinar"
+            href={pixPlanPath(planId)}
             className="flex items-center justify-center rounded-2xl bg-accent px-5 py-3 text-sm font-semibold text-white transition hover:bg-accent-hover"
           >
             Gerar um novo PIX
