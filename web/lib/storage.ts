@@ -17,9 +17,9 @@ export const PART_SIZE = 64 * 1024 * 1024;
 
 const UPLOAD_URL_TTL = 3600;
 
-/** Signed download links are shareable, so the window stays short even if the env var says otherwise. */
-const DOWNLOAD_URL_TTL_DEFAULT = 1800;
-const DOWNLOAD_URL_TTL_MAX = 21600;
+/** SigV4 / R2 cap for presigned URLs is 7 days; default matches so long installs do not 403 mid-batch. */
+const DOWNLOAD_URL_TTL_DEFAULT = 604800;
+const DOWNLOAD_URL_TTL_MAX = 604800;
 
 let cachedClient: S3Client | null = null;
 
