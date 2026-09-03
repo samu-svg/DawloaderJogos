@@ -17,7 +17,9 @@ import {
   type HdLibraryIndex,
   type HdLibraryItem,
   type HdScannedItem,
+  type TitleIdMap,
 } from "../shared/hd-library";
+import { BUNDLED_XBOX360_TITLE_IDS } from "../shared/xbox360-title-ids";
 import { SPECIAL_HD_MARKERS } from "../shared/special-downloads";
 import { ensureDir } from "./ensure-dir";
 import { resolveUnderRoot } from "./paths";
@@ -98,6 +100,7 @@ export async function rememberHdLabels(
 export async function listHdLibrary(
   rootDir: string,
   hints: HdLibraryHint[] = [],
+  titleIds: TitleIdMap = {},
 ): Promise<HdLibraryItem[]> {
   const index = await readHdIndex(rootDir);
   const scanned = [
@@ -108,6 +111,7 @@ export async function listHdLibrary(
     scanned,
     index: index.items,
     hints: [...index.labels, ...hints],
+    titleIds: { ...BUNDLED_XBOX360_TITLE_IDS, ...titleIds },
   });
 
   const kept = index.items.filter((record) =>

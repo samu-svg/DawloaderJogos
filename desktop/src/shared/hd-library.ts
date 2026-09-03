@@ -41,9 +41,16 @@ export interface HdLibraryItem {
   sizeBytes: number;
   source: "index" | "scan";
   knownName: boolean;
+  titleId: string | null;
+  gameName: string | null;
+  detailName: string | null;
 }
 
+export type TitleIdMap = Record<string, string>;
+
 const HEX_ID = /^[0-9a-fA-F]{8,16}$/;
+const TITLE_ID = /^[0-9a-fA-F]{8}$/;
+const ALL_ZEROS = /^0+$/i;
 
 export function emptyHdIndex(): HdLibraryIndex {
   return {
@@ -84,18 +91,31 @@ export function inferGroup(destination: string): string {
   return "utilitario";
 }
 
-export function displayNameFromPath(destination: string): string {
+export function titleIdFromDestination(destination: string): string | null {
+  const segments = normalizeRel(destination).split("/").filter(Boolean);
+  const rest = segments.slice(1);
+  const eight = rest.find((segment) => TITLE_ID.test(segment) && !ALL_ZEROS.test(segment));
+  if (eight) return eight.toUpperCase();
+  const any = rest.find((segment) => HEX_ID.test(segment) && !ALL_ZEROS.test(segment));
+  return any ? any.toUpperCase() : null;
+}
+
+/** Último segmento que não é Title ID / perfil hex (ex.: MapPack). */
+export function folderDetailFromPath(destination: string): string | null {
   const segments = normalizeRel(destination).split("/").filter(Boolean);
   const rest = segments.slice(1);
   for (let index = rest.length - 1; index >= 0; index -= 1) {
     if (!HEX_ID.test(rest[index])) return rest[index];
   }
+  return null;
+}
 
-  // Title ID do Xbox: primeiro hex “de verdade” (pula pasta de perfil 0000…).
-  const titleId =
-    rest.find((segment) => HEX_ID.test(segment) && !/^0+$/i.test(segment)) ??
-    rest.find((segment) => HEX_ID.test(segment)) ??
-    rest[rest.length - 1];
+export function displayNameFromPath(destination: string): string {
+  const detail = folderDetailFromPath(destination);
+  if (detail) return detail;
+
+  const titleId = titleIdFromDestination(destination);
+  const segments = normalizeRel(destination).split("/").filter(Boolean);
   if (!titleId) return segments[0] ?? destination;
 
   const root = segments[0]?.toLowerCase();
@@ -103,6 +123,35 @@ export function displayNameFromPath(destination: string): string {
     return `DLC ${titleId}`;
   }
   return titleId;
+}
+
+export function resolveScanLabel(
+  destination: string,
+  titleIds: TitleIdMap = {},
+): { label: string; knownName: boolean; gameName: string | null; detailName: string | null } {
+  const titleId = titleIdFromDestination(destination);
+  const gameName = titleId ? titleIds[titleId] ?? titleIds[titleId.toLowerCase()] ?? null : null;
+  const detailName = folderDetailFromPath(destination);
+
+  if (gameName && detailName && detailName.toLowerCase() !== gameName.toLowerCase()) {
+    return {
+      label: `${gameName} — ${detailName}`,
+      knownName: true,
+      gameName,
+      detailName,
+    };
+  }
+  if (gameName) {
+    return { label: gameName, knownName: true, gameName, detailName };
+  }
+
+  const label = displayNameFromPath(destination);
+  return {
+    label,
+    knownName: !isCodeOnlyDisplayName(label),
+    gameName: null,
+    detailName,
+  };
 }
 
 /** Label que ainda é só Title ID / DLC+hex — UI mostra tag "código". */
@@ -297,9 +346,11 @@ export function mergeHdLibrary(input: {
   scanned: HdScannedItem[];
   index: HdInstalledRecord[];
   hints: HdLibraryHint[];
+  titleIds?: TitleIdMap;
 }): HdLibraryItem[] {
   const usedScans = new Set<number>();
   const items: HdLibraryItem[] = [];
+  const titleIds = normalizeTitleIdMap(input.titleIds);
 
   for (const record of input.index) {
     const scanIndex = input.scanned.findIndex((item) =>
@@ -308,14 +359,16 @@ export function mergeHdLibrary(input: {
     if (scanIndex === -1) continue;
     usedScans.add(scanIndex);
     const scanned = input.scanned[scanIndex];
+    const destination = pickListedDestination(record.destination, scanned.destination);
     items.push({
       id: record.id,
       label: record.label,
-      destination: pickListedDestination(record.destination, scanned.destination),
+      destination,
       group: record.group || inferGroup(record.destination),
       sizeBytes: scanned.sizeBytes || record.sizeBytes || 0,
       source: "index",
       knownName: true,
+      ...namesForDestination(destination, record.label, titleIds, true),
     });
   }
 
@@ -323,7 +376,8 @@ export function mergeHdLibrary(input: {
     if (usedScans.has(index)) continue;
     const scanned = input.scanned[index];
     const hint = matchHint(scanned.destination, input.hints);
-    const label = hint?.label ?? displayNameFromPath(scanned.destination);
+    const resolved = resolveScanLabel(scanned.destination, titleIds);
+    const label = hint?.label ?? resolved.label;
     items.push({
       id: hint?.id ?? `scan:${destinationKey(scanned.destination)}`,
       label,
@@ -331,13 +385,56 @@ export function mergeHdLibrary(input: {
       group: hint?.group || inferGroup(scanned.destination),
       sizeBytes: scanned.sizeBytes,
       source: "scan",
-      knownName: Boolean(hint) || !isCodeOnlyDisplayName(label),
+      knownName: Boolean(hint) || resolved.knownName,
+      ...namesForDestination(
+        scanned.destination,
+        label,
+        titleIds,
+        Boolean(hint) || resolved.knownName,
+      ),
     });
   }
 
-  return items.sort((a, b) =>
-    a.label.localeCompare(b.label, "pt-BR", { sensitivity: "base" }),
-  );
+  return items.sort(compareLibraryItems);
+}
+
+function normalizeTitleIdMap(titleIds: TitleIdMap | undefined): TitleIdMap {
+  const next: TitleIdMap = {};
+  if (!titleIds) return next;
+  for (const [id, name] of Object.entries(titleIds)) {
+    if (!id || !name.trim()) continue;
+    next[id.toUpperCase()] = name.trim();
+  }
+  return next;
+}
+
+function namesForDestination(
+  destination: string,
+  label: string,
+  titleIds: TitleIdMap,
+  knownName: boolean,
+): Pick<HdLibraryItem, "titleId" | "gameName" | "detailName"> {
+  const titleId = titleIdFromDestination(destination);
+  const mapped = titleId ? titleIds[titleId] ?? null : null;
+  const detailName = folderDetailFromPath(destination);
+  let gameName = mapped;
+  if (!gameName && inferGroup(destination) === "jogo" && knownName && !isCodeOnlyDisplayName(label)) {
+    gameName = label;
+  }
+  if (!gameName && label.includes(" — ")) {
+    gameName = label.split(" — ")[0]?.trim() || null;
+  }
+  return { titleId, gameName, detailName };
+}
+
+function compareLibraryItems(a: HdLibraryItem, b: HdLibraryItem): number {
+  const groupA = a.gameName || a.label;
+  const groupB = b.gameName || b.label;
+  const byGroup = groupA.localeCompare(groupB, "pt-BR", { sensitivity: "base" });
+  if (byGroup !== 0) return byGroup;
+  const byLabel = a.label.localeCompare(b.label, "pt-BR", { sensitivity: "base" });
+  if (byLabel !== 0) return byLabel;
+  return a.destination.localeCompare(b.destination, "en", { sensitivity: "base" });
 }
 
 function pickListedDestination(recordDest: string, scanDest: string): string {

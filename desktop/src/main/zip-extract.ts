@@ -199,6 +199,7 @@ export async function extractZipToContentRoot(
   zipPath: string,
   installDir?: string,
   extractParent?: string,
+  signal?: AbortSignal,
 ): Promise<{
   contentRoot: string;
   tempDir: string;
@@ -206,9 +207,11 @@ export async function extractZipToContentRoot(
   const tempDir = await createExtractTempDir(extractParent);
   const root = path.resolve(tempDir);
   try {
+    if (signal?.aborted) throw new Error("Pausado");
     await extract(zipPath, {
       dir: root,
       onEntry(entry) {
+        if (signal?.aborted) throw new Error("Pausado");
         assertZipEntryPath(root, entry.fileName);
         if (isZipSymlinkEntry(entry)) {
           throw new Error("O zip contém um atalho (symlink), que não é aceito.");

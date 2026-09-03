@@ -12,6 +12,8 @@ import {
   maxConcurrentExtracts,
   notEnoughPcSpaceMessage,
   orderDownloadQueue,
+  peakConcurrentBytes,
+  peakPcStagingBytes,
   resolveDownloadTarget,
   resolveKnownSize,
   sizesNeedingPcStaging,
@@ -129,4 +131,14 @@ test("orderDownloadQueue preserva a ordem relativa dentro de cada grupo", () => 
     sorted.map((item) => item.id),
     ["hd-first", "hd-second", "pc-first"],
   );
+});
+
+test("peakConcurrentBytes soma no máximo N extrações do modo", () => {
+  const sizes = [100, 80, 50, 10];
+  assert.equal(peakConcurrentBytes(sizes, "economico"), 100);
+  assert.equal(peakConcurrentBytes(sizes, "equilibrado"), 180);
+  assert.equal(peakConcurrentBytes(sizes, "rapido"), 240);
+  const large = FAT32_MAX_FILE_BYTES + 1;
+  assert.equal(peakPcStagingBytes([100, large, large], "equilibrado"), large * 2);
+  assert.equal(peakPcStagingBytes([100, large], "rapido"), large);
 });

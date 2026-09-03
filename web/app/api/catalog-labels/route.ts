@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { enforceRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { createPublicReaderClient } from "@/lib/supabase/server";
 import { logError } from "@/lib/logger";
+import { mergeCatalogTitleIds, xbox360TitleIdMap } from "@/lib/xbox360-title-ids";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +26,7 @@ export async function GET(request: Request) {
     const portfolioIds = (portfolios ?? []).map((row) => row.id);
     if (portfolioIds.length === 0) {
       return NextResponse.json(
-        { labels: [] },
+        { labels: [], titleIds: xbox360TitleIdMap() },
         { headers: { "cache-control": "public, max-age=60" } },
       );
     }
@@ -47,8 +48,10 @@ export async function GET(request: Request) {
         group: row.group_name ?? undefined,
       }));
 
+    const titleIds = mergeCatalogTitleIds(xbox360TitleIdMap(), labels);
+
     return NextResponse.json(
-      { labels },
+      { labels, titleIds },
       { headers: { "cache-control": "public, max-age=300, stale-while-revalidate=600" } },
     );
   } catch (error) {

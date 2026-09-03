@@ -72,6 +72,25 @@ export function largestPcStagingBytes(sizes: number[]): number {
   return largestEntryBytes(sizesNeedingPcStaging(sizes));
 }
 
+/** Soma dos N maiores pacotes (N = extrações simultâneas do modo). */
+export function peakConcurrentBytes(sizes: number[], mode: InstallMode): number {
+  const cap = maxConcurrentExtracts(mode);
+  return [...sizes]
+    .filter((size) => size > 0)
+    .sort((a, b) => b - a)
+    .slice(0, cap)
+    .reduce((sum, size) => sum + size, 0);
+}
+
+export function peakPcStagingBytes(sizes: number[], mode: InstallMode): number {
+  return peakConcurrentBytes(sizesNeedingPcStaging(sizes), mode);
+}
+
+export function peakHdInstallBytes(sizes: number[], mode: InstallMode): number {
+  const hdSizes = sizes.filter((size) => size > 0 && !isOverFat32Limit(size));
+  return peakConcurrentBytes(hdSizes, mode);
+}
+
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   const units = ["KB", "MB", "GB", "TB"];
@@ -89,24 +108,43 @@ export function formatSizeLabel(bytes: number): string {
 }
 
 /** Aviso na tela de instalação conforme a seleção. */
-export function installSpaceNotice(sizes: number[]): string {
+export function installSpaceNotice(
+  sizes: number[],
+  mode: InstallMode = DEFAULT_INSTALL_MODE,
+): string {
   const pcNeeded = largestPcStagingBytes(sizes);
+  const pcPeak = peakPcStagingBytes(sizes, mode);
+  const hdPeak = peakHdInstallBytes(sizes, mode);
   const hdOnly = sizes.length > 0 && pcNeeded === 0;
+  const extracts = maxConcurrentExtracts(mode);
+  const modeHint =
+    mode === "economico"
+      ? " Modo Pouco espaço: 1 descompactação por vez."
+      : mode === "equilibrado"
+        ? " Modo Equilibrado (padrão): até 2 descompactações ao mesmo tempo."
+        : " Modo Rápido: até 5 descompactações em paralelo — o próximo download espera se já houver 5.";
 
   if (hdOnly || sizes.length === 0) {
+    const hdHint =
+      hdPeak > 0
+        ? ` No HD, reserve cerca de ${formatBytes(hdPeak)} livres para as extrações simultâneas.`
+        : "";
     return (
       `Jogos até ${FAT32_LIMIT_LABEL} são baixados e extraídos direto no HD ` +
-      `(formato FAT32 do Xbox 360). Não usam o armazenamento do PC.`
+      `(formato FAT32 do Xbox 360). Não usam o armazenamento do PC.${modeHint}${hdHint}`
     );
   }
 
-  const sizeLabel = formatBytes(pcNeeded);
+  const sizeLabel = formatBytes(pcPeak > 0 ? pcPeak : pcNeeded);
   return (
     `Jogos até ${FAT32_LIMIT_LABEL} instalam direto no HD. ` +
     `Pacotes acima de ${FAT32_LIMIT_LABEL} não cabem num único arquivo FAT32 do Xbox 360: ` +
     `são processados no PC e depois copiados para o HD. ` +
-    `Deixe pelo menos ${sizeLabel} livres no computador (o maior jogo acima de ${FAT32_LIMIT_LABEL}). ` +
-    `Os arquivos temporários do PC são apagados ao terminar.`
+    `Deixe pelo menos ${sizeLabel} livres no computador` +
+    (extracts > 1
+      ? ` (pico de até ${extracts} extrações ao mesmo tempo). `
+      : ` (o maior jogo acima de ${FAT32_LIMIT_LABEL}). `) +
+    `Os arquivos temporários do PC são apagados ao terminar.${modeHint}`
   );
 }
 
@@ -115,6 +153,14 @@ export function notEnoughPcSpaceMessage(needed: number, free: number): string {
     `Espaço insuficiente no PC para processar jogos acima de ${FAT32_LIMIT_LABEL}. ` +
     `Livre: ${formatBytes(free)}. Necessário pelo menos ${formatBytes(needed)}. ` +
     `Libere espaço no disco do Windows e tente de novo.`
+  );
+}
+
+export function notEnoughHdSpaceMessage(needed: number, free: number): string {
+  return (
+    `Espaço insuficiente no HD. Livre: ${formatBytes(free)}. ` +
+    `Necessário pelo menos ${formatBytes(needed)} para baixar e descompactar. ` +
+    `Libere espaço no HD e tente de novo.`
   );
 }
 

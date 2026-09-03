@@ -547,29 +547,66 @@ function init() {
       .reduce((max, size) => Math.max(max, size), 0);
   }
 
-  function installSpaceNotice(sizes) {
-    const pcNeeded = largestPcStagingBytes(sizes);
-    const mode = installModeSelect instanceof HTMLSelectElement
+  function currentInstallMode() {
+    return installModeSelect instanceof HTMLSelectElement
       ? installModeSelect.value
       : "equilibrado";
+  }
+
+  function peakConcurrentBytes(sizes, mode) {
+    const cap = mode === "economico" ? 1 : mode === "rapido" ? 5 : 2;
+    return [...sizes]
+      .filter((size) => size > 0)
+      .sort((a, b) => b - a)
+      .slice(0, cap)
+      .reduce((sum, size) => sum + size, 0);
+  }
+
+  function peakPcStagingBytes(sizes, mode) {
+    return peakConcurrentBytes(
+      sizes.filter((size) => size > FAT32_MAX_FILE_BYTES),
+      mode,
+    );
+  }
+
+  function peakHdInstallBytes(sizes, mode) {
+    return peakConcurrentBytes(
+      sizes.filter((size) => size > 0 && size <= FAT32_MAX_FILE_BYTES),
+      mode,
+    );
+  }
+
+  function installSpaceNotice(sizes) {
+    const pcNeeded = largestPcStagingBytes(sizes);
+    const mode = currentInstallMode();
+    const pcPeak = peakPcStagingBytes(sizes, mode);
+    const hdPeak = peakHdInstallBytes(sizes, mode);
+    const extracts = mode === "economico" ? 1 : mode === "rapido" ? 5 : 2;
     const modeHint =
       mode === "economico"
-        ? " No modo Pouco espaço, só um jogo descompacta por vez — ideal se o PC tem pouco disco livre."
+        ? " Modo Pouco espaço: 1 descompactação por vez."
         : mode === "equilibrado"
-          ? " No modo Equilibrado (padrão), até 2 jogos descompactam ao mesmo tempo."
-          : " No modo Rápido, até 5 jogos descompactam em paralelo antes do próximo download — usa mais espaço temporário.";
+          ? " Modo Equilibrado (padrão): até 2 descompactações ao mesmo tempo."
+          : " Modo Rápido: até 5 descompactações em paralelo — o próximo download espera se já houver 5.";
     if (sizes.length === 0 || pcNeeded === 0) {
+      const hdHint =
+        hdPeak > 0
+          ? ` No HD, reserve cerca de ${formatBytes(hdPeak)} livres para as extrações.`
+          : "";
       return (
         `Jogos até ${FAT32_LIMIT_LABEL} são baixados e extraídos direto no HD ` +
-        `(formato FAT32 do Xbox 360). Não usam o armazenamento do PC.${modeHint}`
+        `(formato FAT32 do Xbox 360). Não usam o armazenamento do PC.${modeHint}${hdHint}`
       );
     }
-    const sizeLabel = formatBytes(pcNeeded);
+    const sizeLabel = formatBytes(pcPeak > 0 ? pcPeak : pcNeeded);
     return (
       `Jogos até ${FAT32_LIMIT_LABEL} instalam direto no HD. ` +
       `Pacotes acima de ${FAT32_LIMIT_LABEL} não cabem num único arquivo FAT32 do Xbox 360: ` +
       `são processados no PC e depois copiados para o HD. ` +
-      `Deixe pelo menos ${sizeLabel} livres no computador (o maior jogo acima de ${FAT32_LIMIT_LABEL}). ` +
+      `Deixe pelo menos ${sizeLabel} livres no computador` +
+      (extracts > 1
+        ? ` (pico de até ${extracts} extrações ao mesmo tempo). `
+        : ` (o maior jogo acima de ${FAT32_LIMIT_LABEL}). `) +
       `Os arquivos temporários do PC são apagados ao terminar.${modeHint}`
     );
   }
@@ -893,10 +930,35 @@ function init() {
 
     libraryMeta.textContent = empty
       ? "Nenhum jogo encontrado em Games ou Content."
-      : `${items.length} item(ns) neste HD. DLC em Content aparece com o nome, não só o código.`;
+      : `${items.length} item(ns) neste HD. DLC aparece com o nome do jogo, não só o código.`;
 
+    const groupCounts = new Map();
     for (const item of items) {
+      const key = libraryGroupKey(item);
+      if (!key) continue;
+      groupCounts.set(key, (groupCounts.get(key) ?? 0) + 1);
+    }
+
+    let lastGroup = null;
+    for (const item of items) {
+      const groupKey = libraryGroupKey(item);
+      const grouped = Boolean(groupKey && (groupCounts.get(groupKey) ?? 0) > 1);
+
+      if (grouped && groupKey !== lastGroup) {
+        const header = document.createElement("tr");
+        header.className = "library-group-row";
+        const cell = document.createElement("td");
+        cell.colSpan = 5;
+        cell.textContent = groupKey;
+        header.appendChild(cell);
+        libraryBody.appendChild(header);
+        lastGroup = groupKey;
+      } else if (!grouped) {
+        lastGroup = null;
+      }
+
       const row = document.createElement("tr");
+      if (grouped) row.className = "library-child-row";
 
       const nameCell = document.createElement("td");
       nameCell.className = "col-game";
@@ -904,7 +966,7 @@ function init() {
       const nameWrap = document.createElement("div");
       nameWrap.className = "item-name";
       const name = document.createElement("strong");
-      name.textContent = item.label;
+      name.textContent = grouped ? libraryChildLabel(item, groupKey) : item.label;
       if (!item.knownName) {
         const tag = document.createElement("span");
         tag.className = "code-tag";
@@ -947,14 +1009,34 @@ function init() {
     }
   }
 
+  function libraryGroupKey(item) {
+    const name = typeof item.gameName === "string" ? item.gameName.trim() : "";
+    return name || null;
+  }
+
+  function libraryChildLabel(item, groupKey) {
+    if (item.detailName && item.detailName !== groupKey) return item.detailName;
+    const prefix = `${groupKey} — `;
+    if (item.label.startsWith(prefix)) return item.label.slice(prefix.length);
+    if (item.label !== groupKey) return item.label;
+    return item.group === "conteudo" ? "Conteúdo" : item.label;
+  }
+
   async function loadCatalogLabelHints() {
     try {
       const baseUrl =
         /** @type {HTMLInputElement} */ (baseUrlInput).value.trim() || getSiteUrl();
-      const labels = await window.montahd.fetchCatalogLabels(baseUrl);
-      return Array.isArray(labels) ? labels : [];
+      const data = await window.montahd.fetchCatalogLabels(baseUrl);
+      if (Array.isArray(data)) {
+        return { labels: data, titleIds: {} };
+      }
+      return {
+        labels: Array.isArray(data?.labels) ? data.labels : [],
+        titleIds:
+          data?.titleIds && typeof data.titleIds === "object" ? data.titleIds : {},
+      };
     } catch {
-      return [];
+      return { labels: [], titleIds: {} };
     }
   }
 
@@ -971,11 +1053,15 @@ function init() {
     await persistCatalogHints();
 
     try {
-      const catalogLabels = await loadCatalogLabelHints();
-      const hints = [...catalogLabels, ...catalogHints()];
-      const items = await window.montahd.listHdLibrary(selectedRoot, hints);
-      if (catalogLabels.length > 0) {
-        await window.montahd.rememberHdLabels(selectedRoot, catalogLabels).catch(() => undefined);
+      const catalog = await loadCatalogLabelHints();
+      const hints = [...catalog.labels, ...catalogHints()];
+      const items = await window.montahd.listHdLibrary(
+        selectedRoot,
+        hints,
+        catalog.titleIds,
+      );
+      if (catalog.labels.length > 0) {
+        await window.montahd.rememberHdLabels(selectedRoot, catalog.labels).catch(() => undefined);
       }
       renderLibrary(items);
       setSummary(
@@ -1358,6 +1444,18 @@ function init() {
     return !confirmModal.classList.contains("hidden");
   }
 
+  function syncWelcomeHd() {
+    const welcomeHd = document.getElementById("welcome-hd");
+    if (!welcomeHd) return;
+    if (selectedRoot) {
+      welcomeHd.textContent = `HD atual: ${selectedRoot}`;
+      welcomeHd.classList.remove("hidden");
+    } else {
+      welcomeHd.textContent = "";
+      welcomeHd.classList.add("hidden");
+    }
+  }
+
   function applySelectedRoot(folder) {
     selectedRoot = folder;
     hdWasAvailable = true;
@@ -1365,6 +1463,7 @@ function init() {
     rootPath.classList.remove("muted");
     rootPathCard.classList.add("ready");
     syncLibraryPath();
+    syncWelcomeHd();
     if (autoResumeArmed) void tryAutoResumeDownloads();
   }
 
@@ -1461,6 +1560,7 @@ function init() {
     } catch {
       // sem HD lembrado
     }
+    syncWelcomeHd();
   })();
 
   window.montahd.onCatalogLaunch((launch) => {
@@ -1744,7 +1844,8 @@ function init() {
     if (!selectedRoot || toDownload.length === 0) return;
 
     const sizes = toDownload.map((entry) => entry.sizeBytes || 0);
-    const pcNeeded = largestPcStagingBytes(sizes);
+    const mode = currentInstallMode();
+    const pcNeeded = peakPcStagingBytes(sizes, mode) || largestPcStagingBytes(sizes);
     if (pcNeeded > 0) {
       try {
         const disk = await window.montahd.getPcDiskSpace();
@@ -1752,7 +1853,7 @@ function init() {
           setSummary(
             `Espaço insuficiente no PC para jogos acima de ${FAT32_LIMIT_LABEL}. ` +
               `Livre: ${formatBytes(disk.freeBytes)}. ` +
-              `Necessário pelo menos ${formatBytes(pcNeeded)} (maior pacote acima de ${FAT32_LIMIT_LABEL}). ` +
+              `Necessário pelo menos ${formatBytes(pcNeeded)} (pico das extrações). ` +
               `Libere espaço no computador e tente de novo.`,
             "error",
           );
@@ -1760,6 +1861,23 @@ function init() {
         }
       } catch {
         // o processo principal também confere o espaço
+      }
+    }
+    const hdNeeded = peakHdInstallBytes(sizes, mode);
+    if (hdNeeded > 0 && selectedRoot) {
+      try {
+        const hdDisk = await window.montahd.getHdDiskSpace(selectedRoot);
+        if (hdDisk.freeBytes < hdNeeded) {
+          setSummary(
+            `Espaço insuficiente no HD. Livre: ${formatBytes(hdDisk.freeBytes)}. ` +
+              `Necessário pelo menos ${formatBytes(hdNeeded)} para baixar e descompactar. ` +
+              `Libere espaço no HD e tente de novo.`,
+            "error",
+          );
+          return;
+        }
+      } catch {
+        // o processo principal também confere
       }
     }
 
@@ -2022,7 +2140,24 @@ function init() {
       }
 
       if (autoOverwrite.length > 0) {
-        resetEntryIds.push(...autoOverwrite.map((state) => state.entryId));
+        const replacePack = await showConfirmModal(
+          autoOverwrite.length === 1
+            ? `«${autoOverwrite[0].label}» já está na raiz deste HD. Continuar substitui as pastas e arquivos atuais.`
+            : `${autoOverwrite.length} utilitários já estão na raiz deste HD. Continuar substitui o que existir.`,
+          autoOverwrite.map((state) => `• ${state.label}`).join("\n"),
+          {
+            title: "Substituir na raiz do HD",
+            okLabel: "Substituir",
+            cancelLabel: "Manter o atual",
+            danger: true,
+          },
+        );
+        if (replacePack) {
+          resetEntryIds.push(...autoOverwrite.map((state) => state.entryId));
+        } else {
+          const skip = new Set(autoOverwrite.map((state) => state.entryId));
+          toDownload = toDownload.filter((entry) => !skip.has(entry.id));
+        }
       }
       const leftoverOverwrite = leftover.filter((state) =>
         priorityOverwriteIds.has(state.entryId),
@@ -2123,6 +2258,17 @@ function init() {
   });
 
   cancelBtn.addEventListener("click", async () => {
+    const confirmed = await showConfirmModal(
+      "Cancelar todos os downloads em andamento? O que já foi baixado neste lote pode ficar pela metade.",
+      "",
+      {
+        title: "Cancelar todos",
+        okLabel: "Cancelar downloads",
+        cancelLabel: "Voltar",
+        danger: true,
+      },
+    );
+    if (!confirmed) return;
     if (hdWasAvailable !== false) {
       autoResumeArmed = false;
       pendingAutoResumeIds = null;
@@ -2306,7 +2452,7 @@ function init() {
       setProgress(
         event.entryId,
         Math.max(pct, 90),
-        `PC → HD ${formatBytes(event.downloadedBytes)} / ${formatBytes(event.totalBytes)}`,
+        `Copiando para o HD ${formatBytes(event.downloadedBytes)} / ${formatBytes(event.totalBytes)}`,
       );
     } else if (event.status === "installing") {
       clearDownloadSpeed(event.entryId);
@@ -2411,6 +2557,25 @@ function init() {
     queuedEntryIds.clear();
     void refreshInstallTags();
   });
+
+  const updateBanner = document.getElementById("update-banner");
+  const updateBannerText = document.getElementById("update-banner-text");
+  const updateBannerBtn = document.getElementById("update-banner-btn");
+  if (updateBanner && updateBannerText && updateBannerBtn) {
+    window.montahd.onAppUpdate((event) => {
+      updateBanner.classList.remove("hidden");
+      if (event.status === "ready") {
+        updateBannerText.textContent = `Versão ${event.version} pronta — reinicie para atualizar.`;
+        updateBannerBtn.classList.remove("hidden");
+      } else {
+        updateBannerText.textContent = `Nova versão ${event.version} disponível. Baixando…`;
+        updateBannerBtn.classList.add("hidden");
+      }
+    });
+    updateBannerBtn.addEventListener("click", () => {
+      void window.montahd.installAppUpdate();
+    });
+  }
 }
 
 if (document.readyState === "loading") {

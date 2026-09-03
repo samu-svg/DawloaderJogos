@@ -315,6 +315,8 @@ async function extractAndPlace(
   signal: AbortSignal | undefined,
   copyStatus: "installing" | "copying",
 ): Promise<string> {
+  if (signal?.aborted) throw new Error("Pausado");
+
   const hdInstallDir = installDirFor(destPath);
 
   onProgress({
@@ -329,6 +331,7 @@ async function extractAndPlace(
     zipPath,
     hdInstallDir,
     extractParent,
+    signal,
   );
 
   try {
@@ -479,6 +482,8 @@ async function installPreparedToHdRoot(
     target,
   } = prepared;
 
+  if (signal?.aborted) throw new Error("Pausado");
+
   const archiveName = path.basename(destPath);
   const archiveDest = path.join(hdRoot, archiveName);
   const extractParent =
@@ -500,11 +505,11 @@ async function installPreparedToHdRoot(
   let tempDir: string;
 
   if (isRar) {
-    const extracted = await extractRarToContentRoot(zipPath, extractParent);
+    const extracted = await extractRarToContentRoot(zipPath, extractParent, signal);
     contentRoot = extracted.contentRoot;
     tempDir = extracted.tempDir;
   } else if (isZip) {
-    const extracted = await extractZipToContentRoot(zipPath, undefined, extractParent);
+    const extracted = await extractZipToContentRoot(zipPath, undefined, extractParent, signal);
     contentRoot = extracted.contentRoot;
     tempDir = extracted.tempDir;
   } else {

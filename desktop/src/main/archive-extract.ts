@@ -46,19 +46,40 @@ function resolve7zExecutable(): string {
   );
 }
 
-async function run7zExtract(archivePath: string, destDir: string): Promise<void> {
+async function run7zExtract(
+  archivePath: string,
+  destDir: string,
+  signal?: AbortSignal,
+): Promise<void> {
   const executable = resolve7zExecutable();
   await new Promise<void>((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new Error("Pausado"));
+      return;
+    }
     const proc = spawn(executable, ["x", archivePath, `-o${destDir}`, "-y"], {
       windowsHide: true,
       stdio: ["ignore", "ignore", "pipe"],
     });
     let stderr = "";
+    const onAbort = () => {
+      proc.kill();
+      reject(new Error("Pausado"));
+    };
+    signal?.addEventListener("abort", onAbort, { once: true });
     proc.stderr?.on("data", (chunk: Buffer) => {
       stderr += chunk.toString();
     });
-    proc.on("error", reject);
+    proc.on("error", (error) => {
+      signal?.removeEventListener("abort", onAbort);
+      reject(error);
+    });
     proc.on("close", (code) => {
+      signal?.removeEventListener("abort", onAbort);
+      if (signal?.aborted) {
+        reject(new Error("Pausado"));
+        return;
+      }
       if (code === 0) resolve();
       else reject(new Error(stderr.trim() || `Extração falhou (código ${code ?? "?"}).`));
     });
@@ -76,10 +97,11 @@ async function createExtractTempDir(extractParent?: string): Promise<string> {
 export async function extractRarToContentRoot(
   rarPath: string,
   extractParent?: string,
+  signal?: AbortSignal,
 ): Promise<{ contentRoot: string; tempDir: string }> {
   const tempDir = await createExtractTempDir(extractParent);
   try {
-    await run7zExtract(rarPath, tempDir);
+    await run7zExtract(rarPath, tempDir, signal);
     const contentRoot = await detectContentRoot(tempDir);
     return { contentRoot, tempDir };
   } catch (error) {

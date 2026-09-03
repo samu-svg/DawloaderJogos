@@ -94,6 +94,35 @@ body::before {
   text-transform: uppercase;
 }
 
+.update-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 24px;
+  background: var(--accent-muted);
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.update-banner.hidden {
+  display: none;
+}
+
+.welcome-hd {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 0.85rem;
+  word-break: break-all;
+}
+
+.welcome-hd.hidden {
+  display: none;
+}
+
 .content {
   flex: 1;
   min-height: 0;
@@ -690,13 +719,23 @@ tbody tr:hover td {
   white-space: nowrap;
 }
 
-.code-tag {
-  margin-left: 6px;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #fbbf24;
+.library-group-row td {
+  padding: 10px 12px 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  border-bottom: none;
+}
+
+.library-child-row .item-name strong {
+  padding-left: 14px;
+}
+
+.library-child-row .item-name strong::before {
+  content: "↳ ";
+  color: var(--muted);
+  font-weight: 500;
 }
 
 .dest-sub {

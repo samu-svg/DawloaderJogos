@@ -5,12 +5,15 @@ import {
   destinationsRelated,
   displayNameFromPath,
   emptyParentsToRemove,
+  folderDetailFromPath,
   inferGroup,
   installedDestinationFromManifest,
   isCodeOnlyDisplayName,
   deleteTargetFromManifest,
   matchHint,
   mergeHdLibrary,
+  resolveScanLabel,
+  titleIdFromDestination,
   removeInstalled,
   shouldTreatAsInstallUnit,
   upsertInstalled,
@@ -66,6 +69,24 @@ test("displayNameFromPath prefere nome legivel ao title id", () => {
   assert.equal(displayNameFromPath("Games/Halo 3"), "Halo 3");
   assert.equal(isCodeOnlyDisplayName("DLC 4D5307E6"), true);
   assert.equal(isCodeOnlyDisplayName("MapPack"), false);
+  assert.equal(titleIdFromDestination("Content/0000000000000000/415608FC"), "415608FC");
+  assert.equal(folderDetailFromPath("Content/4D5307E6/MapPack"), "MapPack");
+});
+
+test("resolveScanLabel usa Title ID para nome do jogo", () => {
+  const titleIds = { "4D5307E6": "Halo 3", "415608FC": "Call of Duty: Ghosts" };
+  const pack = resolveScanLabel("Content/4D5307E6/MapPack", titleIds);
+  assert.equal(pack.label, "Halo 3 — MapPack");
+  assert.equal(pack.knownName, true);
+  assert.equal(pack.gameName, "Halo 3");
+
+  const god = resolveScanLabel("Content/0000000000000000/415608FC", titleIds);
+  assert.equal(god.label, "Call of Duty: Ghosts");
+  assert.equal(god.knownName, true);
+
+  const unknown = resolveScanLabel("Content/AAAAAAAA", {});
+  assert.equal(unknown.label, "DLC AAAAAAAA");
+  assert.equal(unknown.knownName, false);
 });
 
 test("matchHint aceita destino com zip e prefixo", () => {
@@ -138,6 +159,20 @@ test("mergeHdLibrary usa indice, depois dica do catalogo", () => {
   });
   assert.equal(namedFolder[0]?.label, "MapPack");
   assert.equal(namedFolder[0]?.knownName, true);
+
+  const byTitleId = mergeHdLibrary({
+    scanned: [
+      { destination: "Content/4D5307E6", sizeBytes: 10 },
+      { destination: "Content/4D5307E6/MapPack", sizeBytes: 1 },
+    ],
+    index: [],
+    hints: [],
+    titleIds: { "4D5307E6": "Halo 3" },
+  });
+  assert.equal(byTitleId[0]?.gameName, "Halo 3");
+  assert.equal(byTitleId[0]?.knownName, true);
+  assert.ok(byTitleId.some((item) => item.label === "Halo 3"));
+  assert.ok(byTitleId.some((item) => item.label === "Halo 3 — MapPack"));
 });
 
 test("destinationsRelated ignora extensao e barra invertida", () => {

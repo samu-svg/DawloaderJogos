@@ -53,6 +53,17 @@ const api = {
     ipcRenderer.invoke("inspect-install-state", { rootDir, entries }),
   getPcDiskSpace: (): Promise<{ freeBytes: number; path: string }> =>
     ipcRenderer.invoke("get-pc-disk-space"),
+  getHdDiskSpace: (rootDir: string): Promise<{ freeBytes: number; path: string }> =>
+    ipcRenderer.invoke("get-hd-disk-space", rootDir),
+  installAppUpdate: (): Promise<void> => ipcRenderer.invoke("install-app-update"),
+  onAppUpdate: (callback: (event: { status: "available" | "ready"; version: string }) => void) => {
+    const listener = (
+      _: Electron.IpcRendererEvent,
+      payload: { status: "available" | "ready"; version: string },
+    ) => callback(payload);
+    ipcRenderer.on("app-update", listener);
+    return () => ipcRenderer.removeListener("app-update", listener);
+  },
   getInstallMode: (): Promise<InstallMode> =>
     ipcRenderer.invoke("get-install-mode"),
   setInstallMode: (mode: InstallMode): Promise<InstallMode> =>
@@ -70,9 +81,15 @@ const api = {
     entries: { id: string; destination: string }[],
   ): Promise<void> =>
     ipcRenderer.invoke("clear-entry-install-files", { rootDir, entries }),
-  listHdLibrary: (rootDir: string, hints?: HdLibraryHint[]): Promise<HdLibraryItem[]> =>
-    ipcRenderer.invoke("list-hd-library", { rootDir, hints }),
-  fetchCatalogLabels: (baseUrl: string): Promise<HdLibraryHint[]> =>
+  listHdLibrary: (
+    rootDir: string,
+    hints?: HdLibraryHint[],
+    titleIds?: Record<string, string>,
+  ): Promise<HdLibraryItem[]> =>
+    ipcRenderer.invoke("list-hd-library", { rootDir, hints, titleIds }),
+  fetchCatalogLabels: (
+    baseUrl: string,
+  ): Promise<{ labels: HdLibraryHint[]; titleIds: Record<string, string> }> =>
     ipcRenderer.invoke("fetch-catalog-labels", { baseUrl }),
   rememberHdLabels: (rootDir: string, hints: HdLibraryHint[]): Promise<void> =>
     ipcRenderer.invoke("remember-hd-labels", { rootDir, hints }),

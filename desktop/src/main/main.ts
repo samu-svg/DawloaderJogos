@@ -61,13 +61,16 @@ import {
   type InstallMode,
   isValidInstallMode,
   largestPcStagingBytes,
+  notEnoughHdSpaceMessage,
   notEnoughPcSpaceMessage,
+  peakHdInstallBytes,
+  peakPcStagingBytes,
 } from "../shared/pc-space";
 import { loadInstallMode, saveInstallMode } from "./install-mode-store";
 import { ensureStagingRoot, getFreeBytes } from "./staging";
 import { openExternalUrl } from "./open-external";
 import { fetchSameOrigin } from "./safe-fetch";
-import { startAutoUpdate } from "./auto-update";
+import { installDownloadedUpdate, startAutoUpdate } from "./auto-update";
 import { debugLog, initDebugLog } from "./debug-log";
 
 initDebugLog(app.getPath("userData"));
@@ -353,7 +356,7 @@ if (gotSingleInstanceLock) {
     if (deepLink) handleDeepLink(deepLink);
 
     createWindow();
-    startAutoUpdate();
+    startAutoUpdate(() => mainWindow);
 
     app.on("activate", () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -394,6 +397,21 @@ ipcMain.handle("get-pc-disk-space", async (event) => {
   const stagingRoot = stagingRootPath();
   const freeBytes = await getFreeBytes(stagingRoot);
   return { freeBytes, path: stagingRoot };
+});
+
+ipcMain.handle("get-hd-disk-space", async (event, rootDir: unknown) => {
+  assertTrustedSender(event);
+  if (typeof rootDir !== "string" || !rootDir.trim()) {
+    throw new Error("Pasta do HD inválida.");
+  }
+  const root = assertAuthorizedRoot(rootDir);
+  const freeBytes = await getFreeBytes(root);
+  return { freeBytes, path: root };
+});
+
+ipcMain.handle("install-app-update", (event) => {
+  assertTrustedSender(event);
+  installDownloadedUpdate();
 });
 
 ipcMain.handle("get-install-mode", (event) => {
@@ -559,16 +577,27 @@ ipcMain.handle(
     }
     const data = (await response.json()) as {
       labels?: HdLibraryHint[];
+      titleIds?: Record<string, string>;
     };
-    return Array.isArray(data.labels) ? data.labels : [];
+    return {
+      labels: Array.isArray(data.labels) ? data.labels : [],
+      titleIds:
+        data.titleIds && typeof data.titleIds === "object" && !Array.isArray(data.titleIds)
+          ? data.titleIds
+          : {},
+    };
   },
 );
 
 ipcMain.handle(
   "list-hd-library",
-  async (event, payload: { rootDir: string; hints?: HdLibraryHint[] }) => {
+  async (event, payload: { rootDir: string; hints?: HdLibraryHint[]; titleIds?: Record<string, string> }) => {
     assertTrustedSender(event);
-    return listHdLibrary(assertAuthorizedRoot(payload.rootDir), payload.hints ?? []);
+    return listHdLibrary(
+      assertAuthorizedRoot(payload.rootDir),
+      payload.hints ?? [],
+      payload.titleIds ?? {},
+    );
   },
 );
 
@@ -684,12 +713,36 @@ ipcMain.handle(
       (entry) => !results.some((item) => item.entryId === entry.id),
     );
 
-    const needed = largestPcStagingBytes(entriesToDownload.map((entry) => entry.sizeBytes));
+    const installMode = loadInstallMode(app.getPath("userData"));
+    const sizes = entriesToDownload.map((entry) => entry.sizeBytes);
+    const needed = peakPcStagingBytes(sizes, installMode) || largestPcStagingBytes(sizes);
     if (needed > 0) {
       await ensureStagingRoot(stagingRoot);
       const freeBytes = await getFreeBytes(stagingRoot);
       if (freeBytes < needed) {
         const message = notEnoughPcSpaceMessage(needed, freeBytes);
+        for (const entry of entriesToDownload) {
+          send("download-progress", {
+            entryId: entry.id,
+            label: entry.label,
+            downloadedBytes: 0,
+            totalBytes: entry.sizeBytes,
+            status: "error",
+            error: message,
+          } satisfies DownloadProgress);
+          results.push({ entryId: entry.id, ok: false, error: message });
+        }
+        endDownloadSession();
+        send("download-complete", { results });
+        return { results };
+      }
+    }
+
+    const hdNeeded = peakHdInstallBytes(sizes, installMode);
+    if (hdNeeded > 0) {
+      const hdFree = await getFreeBytes(rootDir);
+      if (hdFree < hdNeeded) {
+        const message = notEnoughHdSpaceMessage(hdNeeded, hdFree);
         for (const entry of entriesToDownload) {
           send("download-progress", {
             entryId: entry.id,
@@ -732,7 +785,6 @@ ipcMain.handle(
       pipelineItems.push({ entry, destPath: resolved.fullPath });
     }
 
-    const installMode = loadInstallMode(app.getPath("userData"));
     const pipelineResults = await runPipelinedDownloads(sortPipelineEntries(pipelineItems), {
       hdRoot: rootDir,
       stagingRoot,
