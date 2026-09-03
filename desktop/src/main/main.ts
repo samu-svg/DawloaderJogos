@@ -10,6 +10,7 @@ import {
   requireAllowedCatalogOrigin,
 } from "../shared/catalog-launch";
 import {
+  destinationForPriorityRootInstall,
   isSpecialInstallSlug,
   packSlugFromInstallSlug,
 } from "../shared/special-downloads";
@@ -25,6 +26,11 @@ import { assertAuthorizedRoot, rememberAuthorizedRoot } from "./authorized-roots
 import { loadLastHdRoot, saveLastHdRoot } from "./last-hd-root";
 import { preloadPath, rendererPath } from "./app-paths";
 import { registerProtocolClient } from "./register-protocol";
+import {
+  beginDownloadSession,
+  endDownloadSession,
+  getActiveDownloadSession,
+} from "./download-control";
 import { type DownloadProgress } from "./download";
 import {
   installedRelativePath,
@@ -75,7 +81,6 @@ function stagingRootPath(): string {
 }
 
 let mainWindow: BrowserWindow | null = null;
-let abortController: AbortController | null = null;
 let pendingCatalogLaunch: CatalogLaunch | null = null;
 /** Só entrega o deep link depois que o renderer registrou o listener. */
 let rendererReady = false;
@@ -482,8 +487,39 @@ ipcMain.on("renderer-log", (event, message: unknown) => {
 
 ipcMain.handle("cancel-download", (event) => {
   assertTrustedSender(event);
-  abortController?.abort();
-  abortController = null;
+  getActiveDownloadSession()?.cancelAll();
+  endDownloadSession();
+});
+
+ipcMain.handle("pause-download-entry", (event, entryId: unknown) => {
+  assertTrustedSender(event);
+  if (typeof entryId !== "string" || !entryId.trim()) {
+    throw new Error("Jogo inválido.");
+  }
+  getActiveDownloadSession()?.pauseEntry(entryId.trim());
+});
+
+ipcMain.handle("pause-all-downloads", (event) => {
+  assertTrustedSender(event);
+  getActiveDownloadSession()?.pauseAll();
+});
+
+ipcMain.handle("cancel-download-entry", (event, entryId: unknown) => {
+  assertTrustedSender(event);
+  if (typeof entryId !== "string" || !entryId.trim()) {
+    throw new Error("Jogo inválido.");
+  }
+  getActiveDownloadSession()?.cancelEntry(entryId.trim());
+});
+
+ipcMain.handle("resume-download-entry", (event, entryId: unknown) => {
+  assertTrustedSender(event);
+  if (typeof entryId !== "string" || !entryId.trim()) {
+    throw new Error("Jogo inválido.");
+  }
+  const session = getActiveDownloadSession();
+  if (!session) return { ok: false };
+  return { ok: session.requeue(entryId.trim()) };
 });
 
 ipcMain.handle(
@@ -583,11 +619,10 @@ ipcMain.handle(
   ) => {
     assertTrustedSender(event);
     const rootDir = assertAuthorizedRoot(payload.rootDir);
-    abortController?.abort();
-    abortController = new AbortController();
-    const signal = abortController.signal;
+    endDownloadSession();
+    const session = beginDownloadSession();
 
-    const results: { entryId: string; ok: boolean; error?: string }[] = [];
+    const results: { entryId: string; ok: boolean; error?: string; paused?: boolean }[] = [];
     const stagingRoot = stagingRootPath();
 
     try {
@@ -612,7 +647,7 @@ ipcMain.handle(
     }
 
     if (requestedEntries.length === 0) {
-      abortController = null;
+      endDownloadSession();
       send("download-complete", { results });
       return { results };
     }
@@ -625,7 +660,7 @@ ipcMain.handle(
       try {
         await clearEntryInstallFiles({
           rootDir,
-          destination: entry.destination,
+          destination: destinationForPriorityRootInstall(entry.id, entry.destination),
           entryId: entry.id,
           stagingRoot,
         });
@@ -666,7 +701,7 @@ ipcMain.handle(
           } satisfies DownloadProgress);
           results.push({ entryId: entry.id, ok: false, error: message });
         }
-        abortController = null;
+        endDownloadSession();
         send("download-complete", { results });
         return { results };
       }
@@ -674,9 +709,13 @@ ipcMain.handle(
 
     const pipelineItems: PipelineEntry[] = [];
     for (const entry of entriesToDownload) {
-      if (signal.aborted) break;
+      if (session.isCancelled(entry.id)) {
+        results.push({ entryId: entry.id, ok: false, error: "Cancelado." });
+        continue;
+      }
 
-      const resolved = resolveUnderRoot(rootDir, entry.destination);
+      const destination = destinationForPriorityRootInstall(entry.id, entry.destination);
+      const resolved = resolveUnderRoot(rootDir, destination);
       if (!resolved.ok) {
         send("download-progress", {
           entryId: entry.id,
@@ -697,7 +736,7 @@ ipcMain.handle(
     const pipelineResults = await runPipelinedDownloads(sortPipelineEntries(pipelineItems), {
       hdRoot: rootDir,
       stagingRoot,
-      signal,
+      session,
       installMode,
       onProgress: (progress) => send("download-progress", progress),
       onEntryComplete: async (item, result) => {
@@ -720,18 +759,19 @@ ipcMain.handle(
           entryId: result.entryId,
           ok: false,
           error: result.error,
+          paused: result.paused,
         });
         continue;
       }
       results.push({ entryId: result.entryId, ok: true });
     }
 
-    abortController = null;
+    endDownloadSession();
     send("download-complete", { results });
     return { results };
     } catch (error) {
       const message = formatFsError(error);
-      abortController = null;
+      endDownloadSession();
       const ids = new Set(results.map((item) => item.entryId));
       for (const raw of payload.entries ?? []) {
         const entryId = typeof raw.id === "string" ? raw.id : "";

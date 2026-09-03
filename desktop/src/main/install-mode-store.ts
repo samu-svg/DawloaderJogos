@@ -1,9 +1,13 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { type InstallMode, isValidInstallMode } from "../shared/pc-space";
+import {
+  DEFAULT_INSTALL_MODE,
+  type InstallMode,
+  isValidInstallMode,
+} from "../shared/pc-space";
 
 const FILE_NAME = "install-mode.json";
-const DEFAULT_MODE: InstallMode = "economico";
+const DEFAULT_MODE: InstallMode = DEFAULT_INSTALL_MODE;
 
 function filePath(userData: string): string {
   return path.join(userData, FILE_NAME);

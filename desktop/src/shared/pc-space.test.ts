@@ -103,7 +103,7 @@ test("orderDownloadQueue coloca jogos HD antes dos que passam pelo PC", () => {
 test("maxConcurrentExtracts retorna limites corretos por modo", () => {
   assert.equal(maxConcurrentExtracts("economico"), 1);
   assert.equal(maxConcurrentExtracts("equilibrado"), 2);
-  assert.equal(maxConcurrentExtracts("rapido"), Infinity);
+  assert.equal(maxConcurrentExtracts("rapido"), 5);
 });
 
 test("isValidInstallMode aceita os 3 modos e rejeita o resto", () => {

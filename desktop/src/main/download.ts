@@ -17,7 +17,14 @@ import {
 } from "../shared/pc-space";
 import { copyDirectory } from "./copy-dir";
 import { ensureDir, ensureDirSync } from "./ensure-dir";
+import { deleteHdItem } from "./hd-library";
 import { removeStagingEntry, stagingEntryDir } from "./staging";
+import { extractRarToContentRoot, isRarFile } from "./archive-extract";
+import {
+  hdMarkersForEntry,
+  isDeliverableArchiveDestination,
+  isPriorityRootInstall,
+} from "../shared/special-downloads";
 import {
   extractZipToContentRoot,
   findContentInstallTrees,
@@ -218,6 +225,9 @@ export async function installPreparedEntry(
   onProgress: (progress: DownloadProgress) => void,
   signal?: AbortSignal,
 ): Promise<{ installedPath: string }> {
+  if (isPriorityRootInstall(prepared.entryId)) {
+    return installPreparedToHdRoot(prepared, onProgress, signal);
+  }
   const report = (progress: DownloadProgress) =>
     onProgress({ ...progress, target: prepared.target });
   if (prepared.target === "pc") {
@@ -438,6 +448,111 @@ async function prepareOnHd(options: {
     stagingDir: null,
     expectedSha256,
   };
+}
+
+async function removeRootMarkersBeforeInstall(
+  hdRoot: string,
+  entryId: string,
+): Promise<void> {
+  for (const marker of hdMarkersForEntry(entryId)) {
+    if (isDeliverableArchiveDestination(marker)) continue;
+    await deleteHdItem(hdRoot, marker).catch(() => undefined);
+  }
+}
+
+/** Utilitários na raiz do HD: extrai o pacote e copia tudo para a raiz (substituindo). */
+async function installPreparedToHdRoot(
+  prepared: PreparedDownload,
+  onProgress: (progress: DownloadProgress) => void,
+  signal?: AbortSignal,
+): Promise<{ installedPath: string }> {
+  const {
+    entryId,
+    label,
+    destPath,
+    hdRoot,
+    expectedSize,
+    fileSize,
+    zipPath,
+    isZip,
+    stagingDir,
+    target,
+  } = prepared;
+
+  const archiveName = path.basename(destPath);
+  const archiveDest = path.join(hdRoot, archiveName);
+  const extractParent =
+    target === "pc" && stagingDir
+      ? stagingDir
+      : path.join(hdRoot, HD_EXTRACT_DIR);
+
+  onProgress({
+    entryId,
+    label,
+    downloadedBytes: fileSize,
+    totalBytes: expectedSize || fileSize,
+    status: "extracting",
+    target,
+  });
+
+  const isRar = await isRarFile(zipPath);
+  let contentRoot: string;
+  let tempDir: string;
+
+  if (isRar) {
+    const extracted = await extractRarToContentRoot(zipPath, extractParent);
+    contentRoot = extracted.contentRoot;
+    tempDir = extracted.tempDir;
+  } else if (isZip) {
+    const extracted = await extractZipToContentRoot(zipPath, undefined, extractParent);
+    contentRoot = extracted.contentRoot;
+    tempDir = extracted.tempDir;
+  } else {
+    throw new Error("Pacote na raiz do HD deve ser .zip ou .rar.");
+  }
+
+  try {
+    await removeRootMarkersBeforeInstall(hdRoot, entryId);
+
+    onProgress({
+      entryId,
+      label,
+      downloadedBytes: 0,
+      totalBytes: fileSize,
+      status: target === "pc" ? "copying" : "installing",
+      target,
+    });
+
+    await copyDirectory(
+      contentRoot,
+      hdRoot,
+      (copied, total) => {
+        onProgress({
+          entryId,
+          label,
+          downloadedBytes: copied,
+          totalBytes: total,
+          status: target === "pc" ? "copying" : "installing",
+          target,
+        });
+      },
+      signal,
+    );
+
+    await ensureDir(hdRoot);
+    if (existsSync(archiveDest)) unlinkSync(archiveDest);
+    await copyFile(zipPath, archiveDest);
+    await removeZipDownloadArtifacts(destPath);
+    if (stagingDir) {
+      await removeStagingEntry(stagingDir);
+    } else {
+      await unlink(zipPath).catch(() => undefined);
+    }
+
+    return { installedPath: archiveDest };
+  } finally {
+    await removeTempDir(tempDir);
+  }
 }
 
 async function installPreparedOnHd(

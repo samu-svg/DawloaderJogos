@@ -28,5 +28,39 @@ export function isDeliverableArchiveDestination(destination: string): boolean {
   return /\.(rar|7z)$/i.test(base);
 }
 
+/** Instala primeiro na fila e grava na raiz do HD (não Games/Content). */
+export const PRIORITY_ROOT_INSTALL_IDS = new Set(["abadavatar"]);
+
+export function isPriorityRootInstall(entryId: string): boolean {
+  return PRIORITY_ROOT_INSTALL_IDS.has(entryId);
+}
+
+/** Só o nome do arquivo, sem Games/ nem Content/. */
+export function rootInstallFileName(destination: string): string {
+  const segments = destination.replace(/\\/g, "/").split("/").filter(Boolean);
+  return segments[segments.length - 1] ?? destination.trim();
+}
+
+export function destinationForPriorityRootInstall(
+  entryId: string,
+  destination: string,
+): string {
+  if (!isPriorityRootInstall(entryId)) return destination;
+  return rootInstallFileName(destination);
+}
+
+export function orderPriorityRootInstallFirst<T>(
+  items: T[],
+  idOf: (item: T) => string,
+): T[] {
+  const priority: T[] = [];
+  const rest: T[] = [];
+  for (const item of items) {
+    if (isPriorityRootInstall(idOf(item))) priority.push(item);
+    else rest.push(item);
+  }
+  return [...priority, ...rest];
+}
+
 /** IDs de utilitários que o app pula automaticamente se já estiverem no HD. */
-export const AUTO_SKIP_UTILITY_IDS = new Set(["abadavatar"]);
+export const AUTO_SKIP_UTILITY_IDS = new Set<string>();

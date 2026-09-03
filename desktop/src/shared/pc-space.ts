@@ -2,16 +2,20 @@
  * Controls how aggressively the pipeline overlaps downloads and extractions.
  * - economico: 1 extract at a time; next download waits until extract finishes.
  * - equilibrado: up to 2 concurrent extracts; downloads continue if space allows.
- * - rapido: unlimited concurrent extracts (original behaviour).
+ * - rapido: up to 5 concurrent extracts before the next download starts.
  */
 export type InstallMode = "economico" | "equilibrado" | "rapido";
 
 export const INSTALL_MODES: readonly InstallMode[] = ["economico", "equilibrado", "rapido"];
 
+export const DEFAULT_INSTALL_MODE: InstallMode = "equilibrado";
+
+export const RAPIDO_MAX_CONCURRENT_EXTRACTS = 5;
+
 export const INSTALL_MODE_LABELS: Record<InstallMode, string> = {
-  economico: "Econômico — menos espaço no disco",
-  equilibrado: "Equilibrado",
-  rapido: "Rápido — usa mais espaço temporário",
+  economico: "Pouco espaço — 1 descompactação por vez",
+  equilibrado: "Equilibrado (padrão) — até 2 descompactações",
+  rapido: "Rápido — até 5 descompactações em paralelo",
 };
 
 export function maxConcurrentExtracts(mode: InstallMode): number {
@@ -21,7 +25,7 @@ export function maxConcurrentExtracts(mode: InstallMode): number {
     case "equilibrado":
       return 2;
     case "rapido":
-      return Infinity;
+      return RAPIDO_MAX_CONCURRENT_EXTRACTS;
   }
 }
 

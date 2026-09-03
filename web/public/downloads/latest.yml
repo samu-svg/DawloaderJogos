@@ -1,8 +1,8 @@
-version: 0.6.21
+version: 0.6.22
 files:
-  - url: MontaHD-0.6.21-setup.exe
-    sha512: dUhJ+oZ4xPsjBGjGcE7Mccr2ohqNEAFL07Qs3TNSa6seNMCSXpxRIqZi9F+GeXSJqAlgr91k4FmhNstfHdyL4g==
-    size: 92909283
-path: MontaHD-0.6.21-setup.exe
-sha512: dUhJ+oZ4xPsjBGjGcE7Mccr2ohqNEAFL07Qs3TNSa6seNMCSXpxRIqZi9F+GeXSJqAlgr91k4FmhNstfHdyL4g==
-releaseDate: '2026-09-03T17:54:50.738Z'
+  - url: MontaHD-0.6.22-setup.exe
+    sha512: n8U7wT77KRrvnV8lb10FrwhJW98UZqLt/fgtht0WlHrx5y7CoDG4piQdJMSC1hD0V+O0fS2ScjY6sxp2j6O6BQ==
+    size: 97064742
+path: MontaHD-0.6.22-setup.exe
+sha512: n8U7wT77KRrvnV8lb10FrwhJW98UZqLt/fgtht0WlHrx5y7CoDG4piQdJMSC1hD0V+O0fS2ScjY6sxp2j6O6BQ==
+releaseDate: '2026-09-03T18:59:04.865Z'

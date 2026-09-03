@@ -215,9 +215,15 @@ function init() {
   /** @type {string[]} */
   let pausedEntryIds = [];
   /** @type {boolean} */
+  let downloadSessionActive = false;
+  /** @type {boolean} */
   let catalogLaunchInFlight = false;
   /** @type {Map<string, { fill: HTMLElement, label: HTMLElement }>} */
   const progressCells = new Map();
+  /** @type {Map<string, { pause: HTMLButtonElement, resume: HTMLButtonElement, cancel: HTMLButtonElement, remove: HTMLButtonElement }>} */
+  const entryActionCells = new Map();
+  /** @type {Set<string>} */
+  const queuedEntryIds = new Set();
   /** @type {Map<string, string>} */
   const activeEntryPhases = new Map();
   /** @type {Map<string, { bytes: number, at: number, mbps: number }>} */
@@ -478,6 +484,7 @@ function init() {
     cell.label.className = "progress-label";
     if (state === "done") cell.label.classList.add("done");
     if (state === "error") cell.label.classList.add("error");
+    if (state === "paused") cell.label.classList.add("paused");
   }
 
   function getDestinationInput(entryId) {
@@ -501,23 +508,33 @@ function init() {
       manifest.entries.filter((entry) => selectedIds.has(entry.id)),
     ).map((entry) => {
       const input = getDestinationInput(entry.id);
-      const destination = input?.value.trim() || entry.destination;
+      const destination = PRIORITY_ROOT_INSTALL_IDS.has(entry.id)
+        ? rootInstallFileName(input?.value.trim() || entry.destination)
+        : input?.value.trim() || entry.destination;
       return { ...entry, destination };
     });
   }
 
   const FAT32_MAX_FILE_BYTES = 4 * 1024 * 1024 * 1024 - 1;
   const FAT32_LIMIT_LABEL = "4 GB";
+  const PRIORITY_ROOT_INSTALL_IDS = new Set(["abadavatar"]);
 
-  /** Direto no HD no topo; preserva a ordem relativa. O primeiro da lista começa primeiro. */
+  function rootInstallFileName(destination) {
+    const segments = String(destination || "").replace(/\\/g, "/").split("/").filter(Boolean);
+    return segments[segments.length - 1] || destination;
+  }
+
+  /** AbadAvatar primeiro; depois direto no HD; por último via PC. */
   function orderEntriesHdFirst(entries) {
+    const priority = [];
     const hd = [];
     const pc = [];
     for (const entry of entries) {
-      if ((entry.sizeBytes || 0) > FAT32_MAX_FILE_BYTES) pc.push(entry);
+      if (PRIORITY_ROOT_INSTALL_IDS.has(entry.id)) priority.push(entry);
+      else if ((entry.sizeBytes || 0) > FAT32_MAX_FILE_BYTES) pc.push(entry);
       else hd.push(entry);
     }
-    return [...hd, ...pc];
+    return [...priority, ...hd, ...pc];
   }
 
   function selectedSizes() {
@@ -534,13 +551,13 @@ function init() {
     const pcNeeded = largestPcStagingBytes(sizes);
     const mode = installModeSelect instanceof HTMLSelectElement
       ? installModeSelect.value
-      : "economico";
+      : "equilibrado";
     const modeHint =
       mode === "economico"
-        ? " No modo Econômico, só um jogo ocupa espaço temporário de cada vez."
+        ? " No modo Pouco espaço, só um jogo descompacta por vez — ideal se o PC tem pouco disco livre."
         : mode === "equilibrado"
-          ? " No modo Equilibrado, até 2 jogos podem descompactar ao mesmo tempo."
-          : " No modo Rápido, vários jogos descompactam em paralelo — usa mais espaço temporário.";
+          ? " No modo Equilibrado (padrão), até 2 jogos descompactam ao mesmo tempo."
+          : " No modo Rápido, até 5 jogos descompactam em paralelo antes do próximo download — usa mais espaço temporário.";
     if (sizes.length === 0 || pcNeeded === 0) {
       return (
         `Jogos até ${FAT32_LIMIT_LABEL} são baixados e extraídos direto no HD ` +
@@ -574,7 +591,7 @@ function init() {
     updateSpaceNotice();
 
     if (isPaused()) {
-      downloadBtn.title = "Download pausado — use Retomar ou Remover da lista.";
+      downloadBtn.title = "Download pausado — use Retomar todos ou Cancelar todos.";
     } else if (!selectedRoot) {
       downloadBtn.title = "Escolha primeiro a pasta de destino.";
     } else if (!hasSelection) {
@@ -593,6 +610,8 @@ function init() {
     if (manifest) manifest.entries = ordered;
     entriesBody.innerHTML = "";
     progressCells.clear();
+    entryActionCells.clear();
+    queuedEntryIds.clear();
 
     for (const entry of ordered) {
       const row = document.createElement("tr");
@@ -637,12 +656,18 @@ function init() {
       destInput.type = "text";
       destInput.className = "input-dest";
       destInput.dataset.destinationFor = entry.id;
-      destInput.value = entry.destination;
-      destInput.title = entry.destination;
-      destInput.addEventListener("change", () => {
-        destInput.title = destInput.value.trim() || entry.destination;
-        void refreshInstallTags();
-      });
+      if (PRIORITY_ROOT_INSTALL_IDS.has(entry.id)) {
+        destInput.value = rootInstallFileName(entry.destination);
+        destInput.readOnly = true;
+        destInput.title = "Este pack vai para a raiz do HD e substitui arquivos existentes.";
+      } else {
+        destInput.value = entry.destination;
+        destInput.title = entry.destination;
+        destInput.addEventListener("change", () => {
+          destInput.title = destInput.value.trim() || entry.destination;
+          void refreshInstallTags();
+        });
+      }
       destCell.appendChild(destInput);
 
       const sizeCell = document.createElement("td");
@@ -666,6 +691,36 @@ function init() {
 
       const actionCell = document.createElement("td");
       actionCell.className = "col-action";
+      const actionsWrap = document.createElement("div");
+      actionsWrap.className = "entry-actions";
+
+      const pauseEntryBtn = document.createElement("button");
+      pauseEntryBtn.type = "button";
+      pauseEntryBtn.className = "btn btn-secondary btn-small hidden";
+      pauseEntryBtn.textContent = "Pausar";
+      pauseEntryBtn.title = "Pausar este jogo";
+      pauseEntryBtn.addEventListener("click", () => {
+        void pauseSingleEntry(entry.id);
+      });
+
+      const resumeEntryBtn = document.createElement("button");
+      resumeEntryBtn.type = "button";
+      resumeEntryBtn.className = "btn btn-primary btn-small hidden";
+      resumeEntryBtn.textContent = "Retomar";
+      resumeEntryBtn.title = "Retomar este jogo";
+      resumeEntryBtn.addEventListener("click", () => {
+        void resumeSingleEntry(entry.id);
+      });
+
+      const cancelEntryBtn = document.createElement("button");
+      cancelEntryBtn.type = "button";
+      cancelEntryBtn.className = "btn btn-danger btn-small hidden";
+      cancelEntryBtn.textContent = "Cancelar";
+      cancelEntryBtn.title = "Cancelar e apagar o que já foi baixado";
+      cancelEntryBtn.addEventListener("click", () => {
+        void cancelSingleEntry(entry.id);
+      });
+
       const deleteBtn = document.createElement("button");
       deleteBtn.type = "button";
       deleteBtn.className = "btn btn-danger btn-small";
@@ -675,7 +730,15 @@ function init() {
       deleteBtn.addEventListener("click", () => {
         removeEntryFromList(entry);
       });
-      actionCell.appendChild(deleteBtn);
+
+      actionsWrap.append(pauseEntryBtn, resumeEntryBtn, cancelEntryBtn, deleteBtn);
+      actionCell.appendChild(actionsWrap);
+      entryActionCells.set(entry.id, {
+        pause: pauseEntryBtn,
+        resume: resumeEntryBtn,
+        cancel: cancelEntryBtn,
+        remove: deleteBtn,
+      });
 
       row.append(checkCell, labelCell, typeCell, destCell, sizeCell, targetCell, statusCell, actionCell);
       entriesBody.appendChild(row);
@@ -946,51 +1009,96 @@ function init() {
   }
 
   function isDownloading() {
-    return !cancelBtn.classList.contains("hidden") || !pauseBtn.classList.contains("hidden");
+    return downloadSessionActive;
+  }
+
+  function hasActiveDownloads() {
+    return activeEntryPhases.size > 0;
+  }
+
+  function hasPausedEntries() {
+    return pausedEntryIds.length > 0;
   }
 
   function isPaused() {
-    return downloadPaused && pausedEntryIds.length > 0;
+    return hasPausedEntries() && !hasActiveDownloads();
   }
 
-  function setPausedControls(paused) {
-    pauseBtn.classList.add("hidden");
-    cancelBtn.classList.add("hidden");
-    if (paused) {
+  function updateEntryActionButtons(entryId) {
+    const actions = entryActionCells.get(entryId);
+    if (!actions) return;
+
+    const cell = progressCells.get(entryId);
+    const isDone = cell?.label.classList.contains("done");
+    const isPausedEntry = pausedEntryIds.includes(entryId);
+    const isActive = activeEntryPhases.has(entryId);
+    const isQueued = queuedEntryIds.has(entryId);
+
+    actions.pause.classList.add("hidden");
+    actions.resume.classList.add("hidden");
+    actions.cancel.classList.add("hidden");
+    actions.remove.classList.remove("hidden");
+
+    if (isDone) {
+      actions.remove.classList.remove("hidden");
+      return;
+    }
+
+    if (downloadSessionActive && isActive && !isPausedEntry) {
+      actions.pause.classList.remove("hidden");
+      actions.remove.classList.add("hidden");
+      return;
+    }
+
+    if (isPausedEntry) {
+      actions.resume.classList.remove("hidden");
+      actions.cancel.classList.remove("hidden");
+      actions.remove.classList.add("hidden");
+      return;
+    }
+
+    if (downloadSessionActive && isQueued) {
+      actions.remove.classList.add("hidden");
+    }
+  }
+
+  function refreshAllEntryActionButtons() {
+    for (const entryId of entryActionCells.keys()) {
+      updateEntryActionButtons(entryId);
+    }
+  }
+
+  function setDownloadControlsForSession(active) {
+    downloadSessionActive = active;
+    if (active) {
+      pauseBtn.classList.remove("hidden");
+      cancelBtn.classList.add("hidden");
+      resumeBtn.classList.add("hidden");
+      removePausedBtn.classList.add("hidden");
+      downloadBtn.disabled = true;
+      clearListBtn.disabled = true;
+      installModeSelect.disabled = true;
+    } else if (hasPausedEntries()) {
+      pauseBtn.classList.add("hidden");
+      cancelBtn.classList.add("hidden");
       resumeBtn.classList.remove("hidden");
       removePausedBtn.classList.remove("hidden");
       downloadBtn.disabled = true;
       clearListBtn.disabled = true;
       installModeSelect.disabled = true;
     } else {
+      pauseBtn.classList.add("hidden");
+      cancelBtn.classList.add("hidden");
       resumeBtn.classList.add("hidden");
       removePausedBtn.classList.add("hidden");
       installModeSelect.disabled = false;
       updateDownloadButton();
     }
+    refreshAllEntryActionButtons();
   }
 
-  function setDownloadingControls(active) {
-    if (active) {
-      cancelBtn.classList.remove("hidden");
-      pauseBtn.classList.remove("hidden");
-      resumeBtn.classList.add("hidden");
-      removePausedBtn.classList.add("hidden");
-      downloadBtn.disabled = true;
-      clearListBtn.disabled = true;
-      installModeSelect.disabled = true;
-    } else {
-      cancelBtn.classList.add("hidden");
-      pauseBtn.classList.add("hidden");
-      if (!isPaused()) {
-        installModeSelect.disabled = false;
-        updateDownloadButton();
-      }
-    }
-  }
-
-  function markPausedProgress() {
-    for (const entryId of pausedEntryIds) {
+  function markPausedProgress(entryIds = pausedEntryIds) {
+    for (const entryId of entryIds) {
       const cell = progressCells.get(entryId);
       if (!cell) continue;
       if (cell.label.classList.contains("done")) continue;
@@ -998,7 +1106,9 @@ function init() {
         continue;
       }
       cell.label.classList.remove("error");
+      cell.label.classList.add("paused");
       cell.label.textContent = "Pausado";
+      updateEntryActionButtons(entryId);
     }
   }
 
@@ -1018,7 +1128,7 @@ function init() {
     if (isDownloading() || isPaused()) {
       setSummary(
         isPaused()
-          ? "Use Remover da lista para apagar o download pausado."
+          ? "Use Cancelar para apagar downloads pausados, ou Retomar antes de alterar a lista."
           : "Espere o download terminar antes de alterar a lista.",
         "error",
       );
@@ -1045,7 +1155,7 @@ function init() {
     if (isDownloading() || isPaused()) {
       setSummary(
         isPaused()
-          ? "Use Remover da lista para apagar o download pausado, ou Retomar antes de limpar."
+          ? "Use Cancelar para apagar downloads pausados, ou Retomar antes de limpar."
           : "Espere o download terminar antes de alterar a lista.",
         "error",
       );
@@ -1523,7 +1633,114 @@ function init() {
     void clearListEntries();
   });
 
-  async function executeDownload(toDownload, resetEntryIds) {
+  async function pauseSingleEntry(entryId) {
+    if (!downloadSessionActive || !activeEntryPhases.has(entryId)) return;
+    if (pausedEntryIds.includes(entryId)) return;
+    pausedEntryIds.push(entryId);
+    downloadPaused = true;
+    await window.montahd.pauseDownloadEntry(entryId);
+    markPausedProgress([entryId]);
+    setSummary("Jogo pausado. Retome ou cancele este item — os outros continuam.");
+    setActiveEntryPhase(entryId, null);
+    queuedEntryIds.delete(entryId);
+    if (!hasActiveDownloads() && queuedEntryIds.size === 0) {
+      setDownloadControlsForSession(false);
+    } else {
+      refreshAllEntryActionButtons();
+    }
+  }
+
+  async function resumeSingleEntry(entryId) {
+    if (!manifest || !selectedRoot) return;
+    if (!pausedEntryIds.includes(entryId)) return;
+    const entry = selectedEntriesWithDestinations().find((item) => item.id === entryId);
+    if (!entry) return;
+    const cell = progressCells.get(entryId);
+    if (cell?.label.classList.contains("done")) {
+      pausedEntryIds = pausedEntryIds.filter((id) => id !== entryId);
+      updateEntryActionButtons(entryId);
+      return;
+    }
+    pausedEntryIds = pausedEntryIds.filter((id) => id !== entryId);
+    downloadPaused = pausedEntryIds.length > 0;
+    setSummary(`Retomando «${entry.label}»…`);
+
+    if (downloadSessionActive) {
+      const resumed = await window.montahd.resumeDownloadEntry(entryId);
+      if (resumed?.ok) {
+        queuedEntryIds.add(entryId);
+        setProgress(entryId, 0, "Na fila");
+        refreshAllEntryActionButtons();
+        return;
+      }
+    }
+
+    await executeDownload([entry], [], { keepOtherPaused: true });
+  }
+
+  async function cancelSingleEntry(entryId) {
+    if (!manifest || !selectedRoot) return;
+    const entry = manifest.entries.find((item) => item.id === entryId);
+    if (!entry) return;
+
+    const confirmed = await showConfirmModal(
+      `Cancelar «${entry.label}»? O jogo sai da lista e o que já foi baixado será apagado.`,
+      entry.label,
+      {
+        title: "Cancelar download",
+        okLabel: "Apagar e remover",
+        cancelLabel: "Voltar",
+        danger: true,
+      },
+    );
+    if (!confirmed) return;
+
+    if (downloadSessionActive) {
+      await window.montahd.cancelDownloadEntry(entryId);
+    }
+
+    const destination =
+      getDestinationInput(entryId)?.value.trim() || entry.destination;
+    try {
+      await window.montahd.clearEntryInstallFiles(selectedRoot, [
+        { id: entry.id, destination },
+      ]);
+    } catch (error) {
+      setSummary(
+        error instanceof Error
+          ? unwrapIpcError(error.message)
+          : "Não foi possível apagar os arquivos baixados.",
+        "error",
+      );
+      return;
+    }
+
+    removeEntryFromManifest(entryId);
+    pausedEntryIds = pausedEntryIds.filter((id) => id !== entryId);
+    queuedEntryIds.delete(entryId);
+    lastDownloadIds = lastDownloadIds.filter((id) => id !== entryId);
+    downloadPaused = pausedEntryIds.length > 0;
+    if (!downloadSessionActive && !hasPausedEntries()) {
+      setDownloadControlsForSession(false);
+    } else {
+      refreshAllEntryActionButtons();
+    }
+    setSummary(`«${entry.label}» removido da lista. Arquivos parciais apagados.`);
+  }
+
+  function removeEntryFromManifest(entryId) {
+    if (!manifest) return;
+    const remainingChecked = new Set(
+      checkboxes()
+        .filter((input) => input.checked && input.dataset.entryId !== entryId)
+        .map((input) => input.dataset.entryId),
+    );
+    manifest.entries = manifest.entries.filter((item) => item.id !== entryId);
+    updatePortfolioMeta();
+    renderEntries(manifest.entries, { checkedIds: remainingChecked });
+  }
+
+  async function executeDownload(toDownload, resetEntryIds, options = {}) {
     if (!selectedRoot || toDownload.length === 0) return;
 
     const sizes = toDownload.map((entry) => entry.sizeBytes || 0);
@@ -1546,16 +1763,31 @@ function init() {
       }
     }
 
-    downloadPaused = false;
-    pausedEntryIds = [];
-    setDownloadingControls(true);
+    const keepOtherPaused = options.keepOtherPaused === true;
+    const resumingIds = new Set(toDownload.map((entry) => entry.id));
+    if (keepOtherPaused) {
+      pausedEntryIds = pausedEntryIds.filter((id) => !resumingIds.has(id));
+      downloadPaused = pausedEntryIds.length > 0;
+    } else {
+      downloadPaused = false;
+      pausedEntryIds = [];
+    }
+    downloadSessionActive = true;
+    setDownloadControlsForSession(true);
     clearActiveEntryPhases();
-    lastDownloadIds = toDownload.map((entry) => entry.id);
+    lastDownloadIds = keepOtherPaused
+      ? [...new Set([...lastDownloadIds, ...toDownload.map((entry) => entry.id)])]
+      : toDownload.map((entry) => entry.id);
+    queuedEntryIds.clear();
+    for (const entry of toDownload) {
+      queuedEntryIds.add(entry.id);
+    }
     setSummary("Download em andamento…");
 
     for (const entry of toDownload) {
       setProgress(entry.id, 0, "Na fila");
     }
+    refreshAllEntryActionButtons();
 
     const idsToReset = [...new Set(resetEntryIds)].filter((id) =>
       toDownload.some((entry) => entry.id === id),
@@ -1565,9 +1797,25 @@ function init() {
       const result = await window.montahd.startDownload(selectedRoot, toDownload, {
         resetEntryIds: idsToReset,
       });
+
+      const pausedResults = result.results.filter((item) => item.paused);
+      if (pausedResults.length > 0) {
+        pausedEntryIds = [
+          ...new Set([
+            ...pausedEntryIds,
+            ...pausedResults.map((item) => item.entryId),
+          ]),
+        ];
+        downloadPaused = true;
+        markPausedProgress(pausedResults.map((item) => item.entryId));
+        setSummary("Download pausado. Retome ou cancele quando quiser.");
+        void refreshInstallTags();
+        return;
+      }
+
       if (downloadPaused) {
         markPausedProgress();
-        setSummary("Download pausado. Retome ou remova da lista.");
+        setSummary("Download pausado. Retome ou cancele quando quiser.");
         void refreshInstallTags();
         return;
       }
@@ -1605,12 +1853,14 @@ function init() {
       }
     } finally {
       clearActiveEntryPhases();
-      if (downloadPaused) {
-        setPausedControls(true);
+      queuedEntryIds.clear();
+      downloadSessionActive = false;
+      if (hasPausedEntries()) {
+        setDownloadControlsForSession(false);
         markPausedProgress();
       } else {
-        setDownloadingControls(false);
-        setPausedControls(false);
+        setDownloadControlsForSession(false);
+        downloadPaused = false;
       }
       void refreshInstallTags();
     }
@@ -1735,13 +1985,13 @@ function init() {
 
     try {
       const states = await window.montahd.inspectInstallState(selectedRoot, entries);
-      const utilitySkipIds = new Set(["abadavatar"]);
+      const priorityOverwriteIds = new Set(["abadavatar"]);
       const installed = states.filter((state) => state.kind === "installed");
-      const autoSkipInstalled = installed.filter((state) =>
-        utilitySkipIds.has(state.entryId),
+      const autoOverwrite = installed.filter((state) =>
+        priorityOverwriteIds.has(state.entryId),
       );
       const promptInstalled = installed.filter(
-        (state) => !utilitySkipIds.has(state.entryId),
+        (state) => !priorityOverwriteIds.has(state.entryId),
       );
       const resumable = states.filter(
         (state) => state.kind === "incomplete" && state.canResume,
@@ -1771,9 +2021,14 @@ function init() {
         }
       }
 
-      if (autoSkipInstalled.length > 0) {
-        const skip = new Set(autoSkipInstalled.map((state) => state.entryId));
-        toDownload = toDownload.filter((entry) => !skip.has(entry.id));
+      if (autoOverwrite.length > 0) {
+        resetEntryIds.push(...autoOverwrite.map((state) => state.entryId));
+      }
+      const leftoverOverwrite = leftover.filter((state) =>
+        priorityOverwriteIds.has(state.entryId),
+      );
+      if (leftoverOverwrite.length > 0) {
+        resetEntryIds.push(...leftoverOverwrite.map((state) => state.entryId));
       }
 
       if (resumable.length > 0) {
@@ -1815,7 +2070,8 @@ function init() {
 
       if (leftover.length > 0) {
         const still = leftover.filter((state) =>
-          toDownload.some((entry) => entry.id === state.entryId),
+          toDownload.some((entry) => entry.id === state.entryId) &&
+          !priorityOverwriteIds.has(state.entryId),
         );
         if (still.length > 0) {
           const restart = await showConfirmModal(
@@ -1867,31 +2123,43 @@ function init() {
   });
 
   cancelBtn.addEventListener("click", async () => {
-    downloadPaused = false;
-    pausedEntryIds = [];
     if (hdWasAvailable !== false) {
       autoResumeArmed = false;
       pendingAutoResumeIds = null;
     }
     await window.montahd.cancelDownload();
     clearActiveEntryPhases();
+    queuedEntryIds.clear();
+    downloadSessionActive = false;
+    downloadPaused = false;
+    pausedEntryIds = [];
     setSummary(
       hdWasAvailable === false
         ? "HD desconectado. Reconecte o cabo USB — o download retoma sozinho."
         : "Download cancelado.",
       "error",
     );
-    setDownloadingControls(false);
-    setPausedControls(false);
+    setDownloadControlsForSession(false);
   });
 
   pauseBtn.addEventListener("click", async () => {
     downloadPaused = true;
-    pausedEntryIds = [...lastDownloadIds];
     autoResumeArmed = false;
     pendingAutoResumeIds = null;
-    setSummary("Pausando…");
-    await window.montahd.cancelDownload();
+    const activeIds = [...activeEntryPhases.keys()];
+    pausedEntryIds = [
+      ...new Set([...pausedEntryIds, ...activeIds, ...queuedEntryIds]),
+    ];
+    setSummary("Parando todos…");
+    await window.montahd.pauseAllDownloads();
+    for (const entryId of activeIds) {
+      setActiveEntryPhase(entryId, null);
+    }
+    queuedEntryIds.clear();
+    markPausedProgress();
+    if (!hasActiveDownloads()) {
+      setDownloadControlsForSession(false);
+    }
   });
 
   resumeBtn.addEventListener("click", async () => {
@@ -1906,19 +2174,18 @@ function init() {
     if (toResume.length === 0) {
       downloadPaused = false;
       pausedEntryIds = [];
-      setPausedControls(false);
+      setDownloadControlsForSession(false);
       setSummary("Nada para retomar — os jogos já estavam concluídos.");
       return;
     }
     downloadPaused = false;
-    setPausedControls(false);
+    pausedEntryIds = [];
     setSummary("Retomando download…");
     await executeDownload(toResume, []);
   });
 
   removePausedBtn.addEventListener("click", async () => {
     if (!manifest || !selectedRoot || pausedEntryIds.length === 0) return;
-    if (isDownloading()) return;
 
     const paused = new Set(pausedEntryIds);
     const toRemove = selectedEntriesWithDestinations().filter((entry) => {
@@ -1930,8 +2197,8 @@ function init() {
     if (toRemove.length === 0) {
       downloadPaused = false;
       pausedEntryIds = [];
-      setPausedControls(false);
-      setSummary("Nada para remover — os jogos pausados já estavam concluídos.");
+      setDownloadControlsForSession(false);
+      setSummary("Nada para cancelar — os jogos pausados já estavam concluídos.");
       return;
     }
 
@@ -1941,16 +2208,22 @@ function init() {
       .join("\n");
     const extra = toRemove.length > 12 ? `\n… e mais ${toRemove.length - 12}` : "";
     const confirmed = await showConfirmModal(
-      `Remover ${toRemove.length} jogo(s) da lista e apagar o que já foi baixado?`,
+      `Cancelar ${toRemove.length} download(s) pausado(s)? Os jogos saem da lista e o que já foi baixado será apagado.`,
       `${preview}${extra}`,
       {
-        title: "Remover da lista",
+        title: "Cancelar pausados",
         okLabel: "Apagar e remover",
         cancelLabel: "Voltar",
         danger: true,
       },
     );
     if (!confirmed) return;
+
+    for (const entry of toRemove) {
+      if (downloadSessionActive) {
+        await window.montahd.cancelDownloadEntry(entry.id);
+      }
+    }
 
     try {
       await window.montahd.clearEntryInstallFiles(
@@ -1980,13 +2253,13 @@ function init() {
     downloadPaused = false;
     pausedEntryIds = [];
     lastDownloadIds = [];
-    setPausedControls(false);
+    setDownloadControlsForSession(false);
     updatePortfolioMeta();
     renderEntries(manifest.entries, { checkedIds: remainingChecked });
     setSummary(
       manifest.entries.length === 0
         ? "Lista vazia. Os arquivos baixados foram apagados."
-        : `${toRemove.length} jogo(s) removidos da lista e arquivos baixados apagados.`,
+        : `${toRemove.length} download(s) cancelados. Arquivos parciais apagados.`,
     );
   });
 
@@ -2001,7 +2274,9 @@ function init() {
     lastProgressStatus.set(event.entryId, event.status);
 
     if (event.status === "downloading") {
+      queuedEntryIds.delete(event.entryId);
       setActiveEntryPhase(event.entryId, "downloading");
+      updateEntryActionButtons(event.entryId);
       const pct =
         event.totalBytes > 0 ? (event.downloadedBytes / event.totalBytes) * 100 : 0;
       const where = event.target === "pc" ? "no PC" : "no HD";
@@ -2046,8 +2321,10 @@ function init() {
     } else if (event.status === "done") {
       clearDownloadSpeed(event.entryId);
       setActiveEntryPhase(event.entryId, null);
+      queuedEntryIds.delete(event.entryId);
       lastProgressStatus.delete(event.entryId);
       setProgress(event.entryId, 100, "Concluído", "done");
+      updateEntryActionButtons(event.entryId);
       const tag = [...entriesBody.querySelectorAll("[data-install-tag]")].find(
         (el) => el.dataset.installTag === event.entryId,
       );
@@ -2056,8 +2333,17 @@ function init() {
     } else if (event.status === "error") {
       clearDownloadSpeed(event.entryId);
       setActiveEntryPhase(event.entryId, null);
+      queuedEntryIds.delete(event.entryId);
       lastProgressStatus.delete(event.entryId);
       const errText = formatProgressError(event.error ?? "Erro");
+      if (/^pausado$/i.test(errText)) {
+        if (!pausedEntryIds.includes(event.entryId)) {
+          pausedEntryIds.push(event.entryId);
+        }
+        setProgress(event.entryId, 100, "Pausado", "paused");
+        updateEntryActionButtons(event.entryId);
+        return;
+      }
       setProgress(event.entryId, 100, errText, "error");
       if (/espaço insuficiente|enospc/i.test(errText)) {
         setSummary(errText, "error");
@@ -2079,10 +2365,18 @@ function init() {
   });
 
   window.montahd.onDownloadComplete(({ results }) => {
-    if (downloadPaused) {
-      markPausedProgress();
-      setPausedControls(true);
-      setSummary("Download pausado. Retome ou remova da lista.");
+    const pausedResults = results.filter((item) => item.paused);
+    if (downloadPaused || pausedResults.length > 0) {
+      pausedEntryIds = [
+        ...new Set([
+          ...pausedEntryIds,
+          ...pausedResults.map((item) => item.entryId),
+        ]),
+      ];
+      downloadPaused = pausedEntryIds.length > 0;
+      markPausedProgress(pausedResults.map((item) => item.entryId));
+      setDownloadControlsForSession(false);
+      setSummary("Download pausado. Retome ou cancele quando quiser.");
       void refreshInstallTags();
       return;
     }
@@ -2111,10 +2405,10 @@ function init() {
         okCount === results.length ? "ok" : "error",
       );
     }
-    setDownloadingControls(false);
-    setPausedControls(false);
+    downloadSessionActive = false;
+    setDownloadControlsForSession(false);
     clearActiveEntryPhases();
-    updateDownloadButton();
+    queuedEntryIds.clear();
     void refreshInstallTags();
   });
 }

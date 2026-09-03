@@ -613,7 +613,13 @@ tbody tr:hover td {
 }
 
 .col-action {
-  width: 92px;
+  width: 148px;
+}
+
+.col-action .entry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .col-action .btn {
@@ -839,6 +845,10 @@ tbody tr:hover td {
 
 .progress-label.error {
   color: var(--danger);
+}
+
+.progress-label.paused {
+  color: #fbbf24;
 }
 
 .status-bar {

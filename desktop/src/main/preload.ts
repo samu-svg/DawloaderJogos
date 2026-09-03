@@ -58,6 +58,13 @@ const api = {
   setInstallMode: (mode: InstallMode): Promise<InstallMode> =>
     ipcRenderer.invoke("set-install-mode", mode),
   cancelDownload: (): Promise<void> => ipcRenderer.invoke("cancel-download"),
+  pauseDownloadEntry: (entryId: string): Promise<void> =>
+    ipcRenderer.invoke("pause-download-entry", entryId),
+  pauseAllDownloads: (): Promise<void> => ipcRenderer.invoke("pause-all-downloads"),
+  cancelDownloadEntry: (entryId: string): Promise<void> =>
+    ipcRenderer.invoke("cancel-download-entry", entryId),
+  resumeDownloadEntry: (entryId: string): Promise<{ ok: boolean }> =>
+    ipcRenderer.invoke("resume-download-entry", entryId),
   clearEntryInstallFiles: (
     rootDir: string,
     entries: { id: string; destination: string }[],
@@ -88,12 +95,14 @@ const api = {
   },
   onDownloadComplete: (
     callback: (payload: {
-      results: { entryId: string; ok: boolean; error?: string }[];
+      results: { entryId: string; ok: boolean; error?: string; paused?: boolean }[];
     }) => void,
   ) => {
     const listener = (
       _: Electron.IpcRendererEvent,
-      payload: { results: { entryId: string; ok: boolean; error?: string }[] },
+      payload: {
+        results: { entryId: string; ok: boolean; error?: string; paused?: boolean }[];
+      },
     ) => callback(payload);
     ipcRenderer.on("download-complete", listener);
     return () => ipcRenderer.removeListener("download-complete", listener);

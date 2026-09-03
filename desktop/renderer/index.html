@@ -149,9 +149,9 @@
               Velocidade da instalação
             </label>
             <select id="install-mode" class="install-mode-select">
-              <option value="economico">Econômico — menos espaço no disco</option>
-              <option value="equilibrado">Equilibrado</option>
-              <option value="rapido">Rápido — usa mais espaço temporário</option>
+              <option value="equilibrado" selected>Equilibrado (padrão) — até 2 descompactações</option>
+              <option value="economico">Pouco espaço — 1 descompactação por vez</option>
+              <option value="rapido">Rápido — até 5 descompactações em paralelo</option>
             </select>
           </div>
           <p class="space-notice space-notice-info" id="space-notice" role="status">
@@ -200,16 +200,16 @@
               Limpar
             </button>
             <button id="pause-btn" class="btn btn-secondary hidden" type="button">
-              Pausar
+              Parar todos
             </button>
             <button id="resume-btn" class="btn btn-primary hidden" type="button">
-              Retomar
+              Retomar todos
             </button>
             <button id="remove-paused-btn" class="btn btn-danger hidden" type="button">
-              Remover da lista
+              Cancelar todos
             </button>
             <button id="cancel-btn" class="btn btn-danger hidden" type="button">
-              Cancelar
+              Cancelar todos
             </button>
           </div>
         </section>
