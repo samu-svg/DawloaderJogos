@@ -6,8 +6,10 @@ import {
   hasSpaceForPrefetch,
   installSpaceNotice,
   isOverFat32Limit,
+  isValidInstallMode,
   largestEntryBytes,
   largestPcStagingBytes,
+  maxConcurrentExtracts,
   notEnoughPcSpaceMessage,
   orderDownloadQueue,
   resolveDownloadTarget,
@@ -96,6 +98,21 @@ test("orderDownloadQueue coloca jogos HD antes dos que passam pelo PC", () => {
     sorted.map((item) => item.id),
     ["hd-small", "hd-tiny", "pc-big", "pc-huge"],
   );
+});
+
+test("maxConcurrentExtracts retorna limites corretos por modo", () => {
+  assert.equal(maxConcurrentExtracts("economico"), 1);
+  assert.equal(maxConcurrentExtracts("equilibrado"), 2);
+  assert.equal(maxConcurrentExtracts("rapido"), Infinity);
+});
+
+test("isValidInstallMode aceita os 3 modos e rejeita o resto", () => {
+  assert.equal(isValidInstallMode("economico"), true);
+  assert.equal(isValidInstallMode("equilibrado"), true);
+  assert.equal(isValidInstallMode("rapido"), true);
+  assert.equal(isValidInstallMode("turbo"), false);
+  assert.equal(isValidInstallMode(null), false);
+  assert.equal(isValidInstallMode(42), false);
 });
 
 test("orderDownloadQueue preserva a ordem relativa dentro de cada grupo", () => {

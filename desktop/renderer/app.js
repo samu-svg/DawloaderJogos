@@ -124,6 +124,7 @@ function init() {
   const libraryEmpty = document.getElementById("library-empty");
   const libraryTableShell = document.getElementById("library-table-shell");
   const libraryBody = document.getElementById("library-body");
+  const installModeSelect = document.getElementById("install-mode");
 
   if (
     !baseUrlInput ||
@@ -172,7 +173,8 @@ function init() {
     !libraryPath ||
     !libraryEmpty ||
     !libraryTableShell ||
-    !libraryBody
+    !libraryBody ||
+    !installModeSelect
   ) {
     document.body.innerHTML =
       '<div style="padding:24px;font-family:Segoe UI,sans-serif;color:#f4f4f5;background:#08080f">' +
@@ -208,6 +210,19 @@ function init() {
   const activeEntryPhases = new Map();
   /** @type {Map<string, { bytes: number, at: number, mbps: number }>} */
   const downloadSpeedSamples = new Map();
+
+  void window.montahd.getInstallMode().then((mode) => {
+    if (installModeSelect instanceof HTMLSelectElement) {
+      installModeSelect.value = mode;
+    }
+  }).catch(() => undefined);
+
+  if (installModeSelect instanceof HTMLSelectElement) {
+    installModeSelect.addEventListener("change", () => {
+      void window.montahd.setInstallMode(installModeSelect.value).catch(() => undefined);
+      updateSpaceNotice();
+    });
+  }
 
   function setActiveEntryPhase(entryId, phase) {
     if (!entryId) return;
@@ -505,10 +520,19 @@ function init() {
 
   function installSpaceNotice(sizes) {
     const pcNeeded = largestPcStagingBytes(sizes);
+    const mode = installModeSelect instanceof HTMLSelectElement
+      ? installModeSelect.value
+      : "economico";
+    const modeHint =
+      mode === "economico"
+        ? " No modo Econômico, só um jogo ocupa espaço temporário de cada vez."
+        : mode === "equilibrado"
+          ? " No modo Equilibrado, até 2 jogos podem descompactar ao mesmo tempo."
+          : " No modo Rápido, vários jogos descompactam em paralelo — usa mais espaço temporário.";
     if (sizes.length === 0 || pcNeeded === 0) {
       return (
         `Jogos até ${FAT32_LIMIT_LABEL} são baixados e extraídos direto no HD ` +
-        `(formato FAT32 do Xbox 360). Não usam o armazenamento do PC.`
+        `(formato FAT32 do Xbox 360). Não usam o armazenamento do PC.${modeHint}`
       );
     }
     const sizeLabel = formatBytes(pcNeeded);
@@ -517,7 +541,7 @@ function init() {
       `Pacotes acima de ${FAT32_LIMIT_LABEL} não cabem num único arquivo FAT32 do Xbox 360: ` +
       `são processados no PC e depois copiados para o HD. ` +
       `Deixe pelo menos ${sizeLabel} livres no computador (o maior jogo acima de ${FAT32_LIMIT_LABEL}). ` +
-      `Os arquivos temporários do PC são apagados ao terminar.`
+      `Os arquivos temporários do PC são apagados ao terminar.${modeHint}`
     );
   }
 
@@ -1419,6 +1443,7 @@ function init() {
     downloadBtn.disabled = true;
     cancelBtn.classList.remove("hidden");
     clearListBtn.disabled = true;
+    installModeSelect.disabled = true;
     clearActiveEntryPhases();
     lastDownloadIds = toDownload.map((entry) => entry.id);
     setSummary("Download em andamento…");
@@ -1465,6 +1490,7 @@ function init() {
     } finally {
       downloadBtn.disabled = false;
       cancelBtn.classList.add("hidden");
+      installModeSelect.disabled = false;
       clearActiveEntryPhases();
       updateDownloadButton();
       void refreshInstallTags();

@@ -3,6 +3,7 @@ import type { CatalogLaunch } from "../shared/catalog-launch";
 import type { HdLibraryHint, HdLibraryItem } from "../shared/hd-library";
 import type { EntryInstallState } from "../shared/install-state";
 import type { Manifest } from "../shared/manifest";
+import type { InstallMode } from "../shared/pc-space";
 import type { RequestedEntry } from "../shared/trusted-entries";
 
 export interface DownloadProgressEvent {
@@ -52,6 +53,10 @@ const api = {
     ipcRenderer.invoke("inspect-install-state", { rootDir, entries }),
   getPcDiskSpace: (): Promise<{ freeBytes: number; path: string }> =>
     ipcRenderer.invoke("get-pc-disk-space"),
+  getInstallMode: (): Promise<InstallMode> =>
+    ipcRenderer.invoke("get-install-mode"),
+  setInstallMode: (mode: InstallMode): Promise<InstallMode> =>
+    ipcRenderer.invoke("set-install-mode", mode),
   cancelDownload: (): Promise<void> => ipcRenderer.invoke("cancel-download"),
   listHdLibrary: (rootDir: string, hints?: HdLibraryHint[]): Promise<HdLibraryItem[]> =>
     ipcRenderer.invoke("list-hd-library", { rootDir, hints }),

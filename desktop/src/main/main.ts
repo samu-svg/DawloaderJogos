@@ -51,7 +51,13 @@ import {
 } from "../shared/trusted-entries";
 import type { HdLibraryHint } from "../shared/hd-library";
 import { formatFsError } from "../shared/fs-errors";
-import { largestPcStagingBytes, notEnoughPcSpaceMessage } from "../shared/pc-space";
+import {
+  type InstallMode,
+  isValidInstallMode,
+  largestPcStagingBytes,
+  notEnoughPcSpaceMessage,
+} from "../shared/pc-space";
+import { loadInstallMode, saveInstallMode } from "./install-mode-store";
 import { ensureStagingRoot, getFreeBytes } from "./staging";
 import { openExternalUrl } from "./open-external";
 import { fetchSameOrigin } from "./safe-fetch";
@@ -385,6 +391,18 @@ ipcMain.handle("get-pc-disk-space", async (event) => {
   return { freeBytes, path: stagingRoot };
 });
 
+ipcMain.handle("get-install-mode", (event) => {
+  assertTrustedSender(event);
+  return loadInstallMode(app.getPath("userData"));
+});
+
+ipcMain.handle("set-install-mode", (event, mode: unknown) => {
+  assertTrustedSender(event);
+  if (!isValidInstallMode(mode)) throw new Error("Modo inválido.");
+  saveInstallMode(app.getPath("userData"), mode);
+  return mode;
+});
+
 ipcMain.handle("select-folder", async (event) => {
   assertTrustedSender(event);
   const result = await dialog.showOpenDialog(mainWindow!, {
@@ -633,10 +651,12 @@ ipcMain.handle(
       pipelineItems.push({ entry, destPath: resolved.fullPath });
     }
 
+    const installMode = loadInstallMode(app.getPath("userData"));
     const pipelineResults = await runPipelinedDownloads(sortPipelineEntries(pipelineItems), {
       hdRoot: rootDir,
       stagingRoot,
       signal,
+      installMode,
       onProgress: (progress) => send("download-progress", progress),
     });
 

@@ -2,7 +2,9 @@ import path from "node:path";
 import { formatFsError } from "../shared/fs-errors";
 import type { ResolvedManifestEntry } from "../shared/manifest";
 import {
+  type InstallMode,
   hasSpaceForPrefetch,
+  maxConcurrentExtracts,
   orderDownloadQueue,
   resolveDownloadTarget,
 } from "../shared/pc-space";
@@ -81,9 +83,10 @@ function failResult(
 }
 
 /**
- * Um download por vez (rede). Extração/cópia em paralelo.
- * Ao terminar um download, o próximo começa na hora se houver espaço —
- * mesmo com extrações anteriores ainda em andamento.
+ * Um download por vez (rede). Extração/cópia limitada pelo installMode.
+ * - economico: 1 extract; próximo download espera o extract terminar.
+ * - equilibrado: até 2 extracts concorrentes.
+ * - rapido: sem limite (comportamento original).
  */
 export async function runPipelinedDownloads(
   items: PipelineEntry[],
@@ -91,11 +94,13 @@ export async function runPipelinedDownloads(
     hdRoot: string;
     stagingRoot: string;
     signal?: AbortSignal;
+    installMode?: InstallMode;
     onProgress: (progress: DownloadProgress) => void;
   },
 ): Promise<PipelineResult[]> {
   const results: (PipelineResult | undefined)[] = new Array(items.length);
   const extracts = new Set<Promise<void>>();
+  const maxExtracts = maxConcurrentExtracts(options.installMode ?? "economico");
   let nextIndex = 0;
 
   const waitForAnyExtract = async () => {
@@ -168,6 +173,11 @@ export async function runPipelinedDownloads(
     }
 
     if (!hasSpace && extracts.size > 0) {
+      await waitForAnyExtract();
+      continue;
+    }
+
+    if (extracts.size >= maxExtracts) {
       await waitForAnyExtract();
       continue;
     }

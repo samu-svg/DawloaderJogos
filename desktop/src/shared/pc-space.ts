@@ -1,3 +1,34 @@
+/**
+ * Controls how aggressively the pipeline overlaps downloads and extractions.
+ * - economico: 1 extract at a time; next download waits until extract finishes.
+ * - equilibrado: up to 2 concurrent extracts; downloads continue if space allows.
+ * - rapido: unlimited concurrent extracts (original behaviour).
+ */
+export type InstallMode = "economico" | "equilibrado" | "rapido";
+
+export const INSTALL_MODES: readonly InstallMode[] = ["economico", "equilibrado", "rapido"];
+
+export const INSTALL_MODE_LABELS: Record<InstallMode, string> = {
+  economico: "Econômico — menos espaço no disco",
+  equilibrado: "Equilibrado",
+  rapido: "Rápido — usa mais espaço temporário",
+};
+
+export function maxConcurrentExtracts(mode: InstallMode): number {
+  switch (mode) {
+    case "economico":
+      return 1;
+    case "equilibrado":
+      return 2;
+    case "rapido":
+      return Infinity;
+  }
+}
+
+export function isValidInstallMode(value: unknown): value is InstallMode {
+  return typeof value === "string" && INSTALL_MODES.includes(value as InstallMode);
+}
+
 /** Limite de um arquivo no FAT32 (HD formatado pelo Xbox 360). */
 export const FAT32_MAX_FILE_BYTES = 4 * 1024 * 1024 * 1024 - 1;
 
