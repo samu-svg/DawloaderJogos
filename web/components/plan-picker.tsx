@@ -34,11 +34,6 @@ async function startCheckout(plan: PlanId, endpoint: "/api/stripe/checkout") {
   window.location.href = data.url;
 }
 
-function priceValue(priceLabel: string): number {
-  const normalized = priceLabel.replace(/[^\d,]/g, "").replace(",", ".");
-  return Number.parseFloat(normalized);
-}
-
 function formatBrl(value: number): string {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
@@ -52,7 +47,7 @@ export function PlanPicker({
 }) {
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const monthlyBase = priceValue(STRIPE_PLANS[0].priceLabel);
+  const monthlyBase = STRIPE_PLANS[0].priceCents / 100;
 
   async function handleCardCheckout(plan: PlanId) {
     const key = `${plan}-card`;
@@ -77,7 +72,7 @@ export function PlanPicker({
           const pixForPlan = pixPlans.includes(plan.id);
           if (!cardEnabled && !pixForPlan) return null;
 
-          const total = priceValue(plan.priceLabel);
+          const total = plan.priceCents / 100;
           const monthly = total / plan.months;
           const featured = plan.id === "2m";
 

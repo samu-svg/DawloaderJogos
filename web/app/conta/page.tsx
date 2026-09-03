@@ -29,6 +29,9 @@ export default async function ContaPage({
           <PasswordChangeForm expired={expired} />
         </div>
         <p className="mt-6 flex flex-wrap items-center justify-center gap-4 text-center text-xs text-zinc-600">
+          <Link href="/conta/assinatura" className="hover:text-zinc-400">
+            Meu plano
+          </Link>
           <Link href="/suporte" className="hover:text-zinc-400">
             Suporte
           </Link>

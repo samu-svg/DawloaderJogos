@@ -2,6 +2,7 @@ import {
   getAsaasPayment,
   getAsaasPixQrCode,
   parseAsaasExternalReference,
+  paymentValueMatchesPlan,
   type AsaasPayment,
 } from "@/lib/asaas";
 import {
@@ -12,7 +13,8 @@ import {
   type PixCheckoutView,
   type PixQrView,
 } from "@/lib/asaas-pix-format";
-import { upsertPrepaidAccessFromAsaasPayment } from "@/lib/asaas-subscription-sync";
+import { logWarn } from "@/lib/logger";
+import { asaasCustomerRef, grantPrepaidAccess } from "@/lib/prepaid-access";
 import { getPlan } from "@/lib/stripe-plans";
 
 function toQrView(paymentQr: {
@@ -50,13 +52,27 @@ export async function loadOwnedPixCheckout(
   const paid = asaasPaymentIsPaid(payment.status);
   let expired = asaasPaymentIsExpired(payment.status);
 
+  // Conciliação: rede de segurança para quando o webhook falha ou atrasa.
+  // Inofensiva ao reabrir um checkout antigo, porque o razão é idempotente
+  // por pagamento — reabrir a página não credita mês nenhum de novo.
   if (paid) {
-    await upsertPrepaidAccessFromAsaasPayment(
-      userId,
-      payment.customer,
-      plan.months,
-      payment.id,
-    );
+    if (paymentValueMatchesPlan(payment.value, parsed.planId)) {
+      await grantPrepaidAccess({
+        userId,
+        provider: "asaas",
+        paymentId: payment.id,
+        planId: parsed.planId,
+        amountCents: plan.priceCents,
+        customerRef: asaasCustomerRef(payment.customer),
+      });
+    } else {
+      logWarn("Asaas: conciliação ignorada por valor divergente", {
+        paymentId: payment.id,
+        planId: parsed.planId,
+        paidValue: payment.value,
+        expectedCents: plan.priceCents,
+      });
+    }
   }
 
   let qr: PixQrView | null = null;

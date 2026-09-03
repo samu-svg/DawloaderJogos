@@ -5,51 +5,60 @@ export type PlanDefinition = {
   id: PlanId;
   months: number;
   title: string;
+  /** Fonte da verdade do preço. Nunca derive valor de `priceLabel`. */
+  priceCents: number;
   priceLabel: string;
   /** Texto curto para cartão recorrente */
   cardCadence: string;
 };
 
+export function formatBrlFromCents(cents: number): string {
+  if (!Number.isInteger(cents) || cents < 0) {
+    throw new Error(`Valor em centavos inválido: ${cents}`);
+  }
+  const reais = Math.trunc(cents / 100);
+  const centavos = String(cents % 100).padStart(2, "0");
+  return `R$ ${reais.toLocaleString("pt-BR")},${centavos}`;
+}
+
+function definePlan(
+  input: Omit<PlanDefinition, "priceLabel">,
+): PlanDefinition {
+  return { ...input, priceLabel: formatBrlFromCents(input.priceCents) };
+}
+
 export const STRIPE_PLANS: readonly PlanDefinition[] = [
-  {
+  definePlan({
     id: "1m",
     months: 1,
     title: "1 mês",
-    priceLabel: "R$ 49,90",
+    priceCents: 4990,
     cardCadence: "por mês",
-  },
-  {
+  }),
+  definePlan({
     id: "2m",
     months: 2,
     title: "2 meses",
-    priceLabel: "R$ 89,90",
+    priceCents: 8990,
     cardCadence: "a cada 2 meses",
-  },
-  {
+  }),
+  definePlan({
     id: "3m",
     months: 3,
     title: "3 meses",
-    priceLabel: "R$ 159,90",
+    priceCents: 15990,
     cardCadence: "a cada 3 meses",
-  },
+  }),
 ] as const;
 
-const PRICE_ENV_KEYS: Record<
-  PlanId,
-  Record<PaymentMethod, string>
-> = {
-  "1m": {
-    card: "STRIPE_PRICE_1M_SUB",
-    pix: "STRIPE_PRICE_1M_PIX",
-  },
-  "2m": {
-    card: "STRIPE_PRICE_2M_SUB",
-    pix: "STRIPE_PRICE_2M_PIX",
-  },
-  "3m": {
-    card: "STRIPE_PRICE_3M_SUB",
-    pix: "STRIPE_PRICE_3M_PIX",
-  },
+/**
+ * Só existe price de cartão. Cartão é sempre assinatura no Stripe e PIX é
+ * sempre Asaas, então o Stripe não tem preço de PIX para consultar.
+ */
+const CARD_PRICE_ENV_KEYS: Record<PlanId, string> = {
+  "1m": "STRIPE_PRICE_1M_SUB",
+  "2m": "STRIPE_PRICE_2M_SUB",
+  "3m": "STRIPE_PRICE_3M_SUB",
 };
 
 export function isPlanId(value: string): value is PlanId {
@@ -66,22 +75,28 @@ export function getPlan(planId: PlanId): PlanDefinition {
   return plan;
 }
 
-export function stripePriceIdFor(planId: PlanId, method: PaymentMethod): string | null {
-  const envKey = PRICE_ENV_KEYS[planId][method];
-  const priceId = process.env[envKey]?.trim();
+export function stripePriceIdFor(planId: PlanId): string | null {
+  const priceId = process.env[CARD_PRICE_ENV_KEYS[planId]]?.trim();
   if (priceId) return priceId;
 
   // Compatibilidade: STRIPE_PRICE_ID antigo = assinatura de 1 mês no cartão
-  if (planId === "1m" && method === "card") {
+  if (planId === "1m") {
     return process.env.STRIPE_PRICE_ID?.trim() || null;
   }
 
   return null;
 }
 
+/** Catálogo de prices aceitos, para o webhook detectar config errada. */
+export function knownCardPriceIds(): string[] {
+  return STRIPE_PLANS.map((plan) => stripePriceIdFor(plan.id)).filter(
+    (id): id is string => Boolean(id),
+  );
+}
+
 export function stripePlansConfigured(): boolean {
   if (!process.env.STRIPE_SECRET_KEY?.trim()) return false;
-  return STRIPE_PLANS.some((plan) => stripePriceIdFor(plan.id, "card"));
+  return STRIPE_PLANS.some((plan) => stripePriceIdFor(plan.id));
 }
 
 export function lowestPlanPriceLabel(): string {

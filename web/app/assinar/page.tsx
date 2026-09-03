@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { ManageSubscriptionButton } from "@/components/subscribe-checkout-button";
 import { PlanPicker } from "@/components/plan-picker";
 import { SiteHeader } from "@/components/site-header";
 import { asaasPixAvailablePlans } from "@/lib/asaas";
@@ -64,7 +63,7 @@ export default async function AssinarPage({ searchParams }: PageProps) {
   const subscription = enabled ? await getUserSubscription(user.id) : null;
   const active = subscriptionIsActive(subscription);
   const cardPlans = STRIPE_PLANS.filter((plan) =>
-    stripePriceIdFor(plan.id, "card"),
+    stripePriceIdFor(plan.id),
   ).map((plan) => plan.id);
   const pixPlans = asaasPixAvailablePlans();
   const paymentsAvailable = cardPlans.length > 0 || pixPlans.length > 0;
@@ -130,7 +129,12 @@ export default async function AssinarPage({ searchParams }: PageProps) {
                   >
                     Abrir meu acervo
                   </Link>
-                  {stripeManaged && <ManageSubscriptionButton />}
+                  <Link
+                    href="/conta/assinatura"
+                    className="rounded-xl border border-border px-5 py-3 text-sm text-zinc-300 transition hover:border-zinc-600 hover:text-white"
+                  >
+                    {stripeManaged ? "Gerenciar ou cancelar" : "Meu plano"}
+                  </Link>
                 </div>
               </section>
             ) : (

@@ -1,4 +1,14 @@
+import {
+  paymentValueMatchesCents,
+  webhookTokenMatches,
+} from "@/lib/asaas-webhook-events";
 import { getPlan, type PlanId, STRIPE_PLANS } from "@/lib/stripe-plans";
+
+export {
+  asaasEventAction,
+  parseAsaasExternalReference,
+  type AsaasEventAction,
+} from "@/lib/asaas-webhook-events";
 
 const SANDBOX_BASE = "https://api-sandbox.asaas.com/v3";
 const PRODUCTION_BASE = "https://api.asaas.com/v3";
@@ -51,15 +61,19 @@ export function asaasWebhookToken(): string | null {
   return process.env.ASAAS_WEBHOOK_TOKEN?.trim() || null;
 }
 
+export function asaasWebhookTokenMatches(received: string | null): boolean {
+  return webhookTokenMatches(received, asaasWebhookToken());
+}
+
 export function planPixAmount(planId: PlanId): number {
-  const plan = getPlan(planId);
-  const digits = plan.priceLabel.replace(/[^\d,]/g, "");
-  const normalized = digits.replace(",", ".");
-  const value = Number.parseFloat(normalized);
-  if (!Number.isFinite(value) || value <= 0) {
-    throw new Error(`Valor PIX inválido para o plano ${planId}.`);
-  }
-  return value;
+  return getPlan(planId).priceCents / 100;
+}
+
+export function paymentValueMatchesPlan(
+  value: number | null | undefined,
+  planId: PlanId,
+): boolean {
+  return paymentValueMatchesCents(value, getPlan(planId).priceCents);
 }
 
 export function asaasPixAvailablePlans(): PlanId[] {
@@ -70,18 +84,6 @@ export function asaasPixAvailablePlans(): PlanId[] {
 export function asaasPixEnabled(): boolean {
   if (process.env.ASAAS_PIX_ENABLED === "false") return false;
   return Boolean(asaasApiKey());
-}
-
-export function parseAsaasExternalReference(
-  reference: string | null | undefined,
-): { userId: string; planId: PlanId } | null {
-  if (!reference?.trim()) return null;
-
-  const [userId, planId] = reference.split(":");
-  if (!userId || !planId) return null;
-  if (planId !== "1m" && planId !== "2m" && planId !== "3m") return null;
-
-  return { userId, planId };
 }
 
 export function buildAsaasExternalReference(userId: string, planId: PlanId): string {

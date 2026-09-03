@@ -204,6 +204,49 @@ export type Database = {
         };
         Relationships: [];
       };
+      payment_grants: {
+        Row: {
+          id: string;
+          user_id: string;
+          provider: "asaas" | "stripe";
+          payment_id: string;
+          plan_id: string;
+          months: number;
+          amount_cents: number;
+          status: "granted" | "revoked";
+          period_start: string;
+          period_end: string;
+          revoked_at: string | null;
+          revoked_reason: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          provider: "asaas" | "stripe";
+          payment_id: string;
+          plan_id: string;
+          months: number;
+          amount_cents: number;
+          status?: "granted" | "revoked";
+          period_start: string;
+          period_end: string;
+          revoked_at?: string | null;
+          revoked_reason?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          status?: "granted" | "revoked";
+          period_start?: string;
+          period_end?: string;
+          revoked_at?: string | null;
+          revoked_reason?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       support_messages: {
         Row: {
           id: string;
@@ -234,7 +277,42 @@ export type Database = {
       };
     };
     Views: { [_ in never]: never };
-    Functions: { [_ in never]: never };
+    Functions: {
+      grant_prepaid_access: {
+        Args: {
+          p_user_id: string;
+          p_provider: string;
+          p_payment_id: string;
+          p_plan_id: string;
+          p_months: number;
+          p_amount_cents: number;
+          p_customer_ref: string | null;
+        };
+        Returns: { new_period_end: string | null; was_created: boolean }[];
+      };
+      revoke_prepaid_access: {
+        Args: {
+          p_provider: string;
+          p_payment_id: string;
+          p_reason: string;
+        };
+        Returns: { new_period_end: string | null; was_revoked: boolean }[];
+      };
+      sync_prepaid_subscription: {
+        Args: { p_user_id: string; p_customer_ref: string | null };
+        Returns: string | null;
+      };
+      sync_card_subscription: {
+        Args: {
+          p_user_id: string;
+          p_customer_id: string;
+          p_subscription_id: string | null;
+          p_status: string;
+          p_period_end: string | null;
+        };
+        Returns: string | null;
+      };
+    };
     Enums: { source_kind: "hosted" | "external" };
     CompositeTypes: { [_ in never]: never };
   };
@@ -245,4 +323,5 @@ export type EntryRow = Database["public"]["Tables"]["entries"]["Row"];
 export type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 export type SupportTicketRow = Database["public"]["Tables"]["support_tickets"]["Row"];
 export type SupportMessageRow = Database["public"]["Tables"]["support_messages"]["Row"];
+export type PaymentGrantRow = Database["public"]["Tables"]["payment_grants"]["Row"];
 export type SourceKind = Database["public"]["Enums"]["source_kind"];

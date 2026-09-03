@@ -10,8 +10,6 @@ import {
   isPaymentMethod,
   isPlanId,
   stripePriceIdFor,
-  type PaymentMethod,
-  type PlanId,
 } from "@/lib/stripe-plans";
 import { logError } from "@/lib/logger";
 import { getStripe, subscriptionsEnabled } from "@/lib/stripe";
@@ -77,7 +75,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const priceId = stripePriceIdFor(planId, method);
+  const priceId = stripePriceIdFor(planId);
   if (!priceId) {
     return NextResponse.json(
       { error: "Este plano ainda não está disponível. Tente outro." },
@@ -132,9 +130,6 @@ export async function POST(request: Request) {
     const sessionParams = buildCheckoutSession({
       customerId,
       priceId,
-      planId,
-      method,
-      planMonths: plan.months,
       siteUrl,
       userId: user.id,
       userMeta,
@@ -179,37 +174,22 @@ export async function POST(request: Request) {
   }
 }
 
+/** Sempre assinatura: cartão é só Stripe recorrente, PIX é só Asaas. */
 function buildCheckoutSession(input: {
   customerId: string;
   priceId: string;
-  planId: PlanId;
-  method: PaymentMethod;
-  planMonths: number;
   siteUrl: string;
   userId: string;
   userMeta: Record<string, string>;
 }): Parameters<ReturnType<typeof getStripe>["checkout"]["sessions"]["create"]>[0] {
-  const base = {
+  return {
     customer: input.customerId,
-    locale: "pt-BR" as const,
+    locale: "pt-BR",
     line_items: [{ price: input.priceId, quantity: 1 }],
     success_url: `${input.siteUrl}/assinar/sucesso?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${input.siteUrl}/assinar?cancelado=1`,
     client_reference_id: input.userId,
     metadata: input.userMeta,
-  };
-
-  if (input.method === "pix") {
-    return {
-      ...base,
-      mode: "payment",
-      payment_method_types: ["pix"],
-      payment_intent_data: { metadata: input.userMeta },
-    };
-  }
-
-  return {
-    ...base,
     mode: "subscription",
     subscription_data: { metadata: input.userMeta },
   };
