@@ -79,7 +79,6 @@ export function PlanPicker({
 
           const total = priceValue(plan.priceLabel);
           const monthly = total / plan.months;
-          const saves = plan.months > 1 && monthlyBase * plan.months - total;
           const featured = plan.id === "2m";
 
           return (
@@ -108,15 +107,9 @@ export function PlanPicker({
                     ? `${formatBrl(monthly)}/mês · ${plan.months} meses`
                     : `${plan.months} meses de acesso`}
               </p>
-              {saves && saves > 0.5 ? (
-                <p className="mt-2 text-xs font-medium text-teal-300">
-                  Economize {formatBrl(saves)} em relação a {plan.months} meses avulsos
-                </p>
-              ) : (
-                <p className="mt-2 text-xs text-zinc-600">
-                  PIX à vista ou cartão {plan.cardCadence}
-                </p>
-              )}
+              <p className="mt-2 text-xs text-zinc-600">
+                PIX à vista ou cartão {plan.cardCadence}
+              </p>
 
               <div className="mt-6 flex flex-1 flex-col gap-2">
                 {pixForPlan && (
