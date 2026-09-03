@@ -12,11 +12,21 @@ import { getApiUser } from "@/lib/auth";
 import { logError } from "@/lib/logger";
 import { passwordIsExpired } from "@/lib/password-policy";
 import { enforceRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
+import { digitsOnly, isValidCpfCnpj } from "@/lib/cpf-cnpj";
 import { getPlan, isPlanId } from "@/lib/stripe-plans";
 
 type CheckoutBody = {
   plan?: string;
+  cpfCnpj?: string;
 };
+
+function asaasUserError(error: unknown): string | null {
+  const message = error instanceof Error ? error.message : "";
+  if (/cpf|cnpj/i.test(message)) {
+    return "Informe um CPF ou CNPJ válido para pagar com PIX.";
+  }
+  return null;
+}
 
 export async function POST(request: Request) {
   const limited = await enforceRateLimit(request, "asaas-checkout", RATE_LIMITS.tight);
@@ -62,11 +72,19 @@ export async function POST(request: Request) {
   }
 
   const plan = getPlan(planId);
+  const cpfCnpj = digitsOnly(body.cpfCnpj ?? "");
+  if (!isValidCpfCnpj(cpfCnpj)) {
+    return NextResponse.json(
+      { error: "Informe um CPF ou CNPJ válido para pagar com PIX." },
+      { status: 400 },
+    );
+  }
 
   try {
     const customer = await ensureAsaasCustomer({
       name: user.email.split("@")[0] || "Cliente MontaHD",
       email: user.email,
+      cpfCnpj,
     });
 
     const payment = await createAsaasPixPayment({
@@ -99,6 +117,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
+          asaasUserError(error) ??
           "Não foi possível iniciar o pagamento PIX. Tente outro plano ou forma de pagamento, ou tente de novo em instantes.",
       },
       { status: 502 },

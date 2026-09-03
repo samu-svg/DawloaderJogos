@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { formatCpfCnpj, isValidCpfCnpj } from "@/lib/cpf-cnpj";
 import type { PlanId } from "@/lib/stripe-plans";
 import { STRIPE_PLANS } from "@/lib/stripe-plans";
 
@@ -17,11 +18,15 @@ async function readCheckoutResponse(response: Response): Promise<{ url?: string;
   }
 }
 
-async function startCheckout(plan: PlanId, endpoint: "/api/stripe/checkout" | "/api/asaas/checkout") {
+async function startCheckout(
+  plan: PlanId,
+  endpoint: "/api/stripe/checkout" | "/api/asaas/checkout",
+  extra?: { cpfCnpj?: string },
+) {
   const response = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ plan }),
+    body: JSON.stringify({ plan, ...extra }),
   });
   const data = await readCheckoutResponse(response);
 
@@ -41,6 +46,8 @@ export function PlanPicker({
 }) {
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [cpfCnpj, setCpfCnpj] = useState("");
+  const pixEnabled = pixPlans.length > 0;
 
   async function handleCheckout(plan: PlanId, method: "card" | "pix") {
     const key = `${plan}-${method}`;
@@ -48,10 +55,15 @@ export function PlanPicker({
     setError(null);
 
     try {
-      await startCheckout(
-        plan,
-        method === "pix" ? "/api/asaas/checkout" : "/api/stripe/checkout",
-      );
+      if (method === "pix") {
+        if (!isValidCpfCnpj(cpfCnpj)) {
+          throw new Error("Informe um CPF ou CNPJ válido para pagar com PIX.");
+        }
+        await startCheckout(plan, "/api/asaas/checkout", { cpfCnpj });
+        return;
+      }
+
+      await startCheckout(plan, "/api/stripe/checkout");
     } catch (caught) {
       setError(
         caught instanceof Error ? caught.message : "Erro ao abrir checkout.",
@@ -62,11 +74,28 @@ export function PlanPicker({
 
   return (
     <div className="space-y-4">
+      {pixEnabled && (
+        <label className="block space-y-1.5">
+          <span className="text-sm font-medium text-zinc-300">
+            CPF ou CNPJ para o PIX
+          </span>
+          <input
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            placeholder="000.000.000-00"
+            value={cpfCnpj}
+            onChange={(event) => setCpfCnpj(formatCpfCnpj(event.target.value))}
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-white outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+          />
+        </label>
+      )}
+
       {STRIPE_PLANS.map((plan) => {
         const cardEnabled = cardPlans.includes(plan.id);
-        const pixEnabled = pixPlans.includes(plan.id);
+        const pixForPlan = pixPlans.includes(plan.id);
 
-        if (!cardEnabled && !pixEnabled) return null;
+        if (!cardEnabled && !pixForPlan) return null;
 
         return (
           <article
@@ -81,7 +110,7 @@ export function PlanPicker({
             </div>
 
             <div
-              className={`mt-4 grid gap-2 ${cardEnabled && pixEnabled ? "sm:grid-cols-2" : ""}`}
+              className={`mt-4 grid gap-2 ${cardEnabled && pixForPlan ? "sm:grid-cols-2" : ""}`}
             >
               {cardEnabled && (
                 <button
@@ -95,7 +124,7 @@ export function PlanPicker({
                     : `Cartão · ${plan.cardCadence}`}
                 </button>
               )}
-              {pixEnabled && (
+              {pixForPlan && (
                 <button
                   type="button"
                   disabled={loadingKey !== null}

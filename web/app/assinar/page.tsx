@@ -5,7 +5,7 @@ import { PlanPicker } from "@/components/plan-picker";
 import { SiteHeader } from "@/components/site-header";
 import { asaasPixAvailablePlans } from "@/lib/asaas";
 import { requireAppUser } from "@/lib/auth";
-import { canAccessPainel, hasSubscriptionBypass } from "@/lib/rbac";
+import { canAccessPainel } from "@/lib/rbac";
 import { safeInternalPath } from "@/lib/safe-redirect";
 import { subscriptionsEnabled } from "@/lib/stripe";
 import {
@@ -29,6 +29,8 @@ const INCLUDED = [
 type PageProps = {
   searchParams: Promise<{ cancelado?: string; next?: string }>;
 };
+
+export const dynamic = "force-dynamic";
 
 export default async function AssinarPage({ searchParams }: PageProps) {
   const user = await requireAppUser();
@@ -77,12 +79,7 @@ export default async function AssinarPage({ searchParams }: PageProps) {
               Pagamentos ainda não estão ativos neste ambiente. O acervo
               permanece aberto para testes.
             </p>
-          ) : hasSubscriptionBypass(user.role) ? (
-            <p className="text-sm leading-6 text-zinc-400">
-              Sua conta de administrador já tem acesso completo ao app e ao
-              acervo.
-            </p>
-          ) : active ? (
+          ) : active && user.role !== "admin" ? (
             <div className="space-y-5">
               <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
                 Plano ativo — app e acervo disponíveis neste período.
@@ -112,6 +109,12 @@ export default async function AssinarPage({ searchParams }: PageProps) {
             </div>
           ) : (
             <div className="space-y-6">
+              {user.role === "admin" && (
+                <p className="rounded-xl border border-border bg-surface px-4 py-3 text-sm text-zinc-300">
+                  Conta de administrador: o acervo já está liberado. Os botões
+                  abaixo servem para testar o checkout.
+                </p>
+              )}
               {cancelado === "1" && (
                 <p className="rounded-xl border border-border bg-surface px-4 py-3 text-sm text-zinc-300">
                   Pagamento cancelado no checkout. Você pode tentar de novo quando quiser.

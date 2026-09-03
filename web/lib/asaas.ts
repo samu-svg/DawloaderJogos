@@ -37,7 +37,7 @@ export function asaasApiBaseUrl(): string {
   if (sandbox === "false") return PRODUCTION_BASE;
 
   const key = asaasApiKey();
-  if (key?.startsWith("$aact_")) return SANDBOX_BASE;
+  if (key?.startsWith("$aact_hmlg_")) return SANDBOX_BASE;
   return PRODUCTION_BASE;
 }
 
@@ -94,6 +94,7 @@ async function asaasRequest<T>(
   const headers = new Headers(init.headers);
   headers.set("access_token", key);
   headers.set("Accept", "application/json");
+  headers.set("User-Agent", "MontaHD/0.6.23 (https://montahd.vercel.app)");
   if (init.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
@@ -144,12 +145,33 @@ export async function findAsaasCustomerByEmail(
 export async function createAsaasCustomer(input: {
   name: string;
   email: string;
+  cpfCnpj: string;
 }): Promise<AsaasCustomer> {
   return asaasRequest<AsaasCustomer>("/customers", {
     method: "POST",
     body: JSON.stringify({
       name: input.name,
       email: input.email,
+      cpfCnpj: input.cpfCnpj,
+      notificationDisabled: true,
+    }),
+  });
+}
+
+export async function updateAsaasCustomer(
+  customerId: string,
+  input: {
+    name: string;
+    email: string;
+    cpfCnpj: string;
+  },
+): Promise<AsaasCustomer> {
+  return asaasRequest<AsaasCustomer>(`/customers/${customerId}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      name: input.name,
+      email: input.email,
+      cpfCnpj: input.cpfCnpj,
       notificationDisabled: true,
     }),
   });
@@ -158,9 +180,10 @@ export async function createAsaasCustomer(input: {
 export async function ensureAsaasCustomer(input: {
   name: string;
   email: string;
+  cpfCnpj: string;
 }): Promise<AsaasCustomer> {
   const existing = await findAsaasCustomerByEmail(input.email);
-  if (existing) return existing;
+  if (existing) return updateAsaasCustomer(existing.id, input);
   return createAsaasCustomer(input);
 }
 
@@ -185,9 +208,7 @@ export async function createAsaasPixPayment(input: {
 }
 
 export function asaasDueDateToday(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+  }).format(new Date());
 }
