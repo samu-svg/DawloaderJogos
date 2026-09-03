@@ -206,6 +206,8 @@ function init() {
   const progressCells = new Map();
   /** @type {Map<string, string>} */
   const activeEntryPhases = new Map();
+  /** @type {Map<string, { bytes: number, at: number, mbps: number }>} */
+  const downloadSpeedSamples = new Map();
 
   function setActiveEntryPhase(entryId, phase) {
     if (!entryId) return;
@@ -215,6 +217,7 @@ function init() {
 
   function clearActiveEntryPhases() {
     activeEntryPhases.clear();
+    downloadSpeedSamples.clear();
   }
 
   function installTagForState(state, entryId) {
@@ -346,6 +349,54 @@ function init() {
       unit += 1;
     }
     return `${value.toFixed(value >= 100 ? 0 : 1)} ${units[unit]}`;
+  }
+
+  function formatMbps(mbps) {
+    if (!Number.isFinite(mbps) || mbps <= 0) return null;
+    if (mbps >= 100) return `${Math.round(mbps)} Mbps`;
+    if (mbps >= 10) return `${mbps.toFixed(1)} Mbps`;
+    return `${mbps.toFixed(2)} Mbps`;
+  }
+
+  function measureDownloadMbps(entryId, downloadedBytes) {
+    const now = performance.now();
+    const prev = downloadSpeedSamples.get(entryId);
+    if (!prev) {
+      downloadSpeedSamples.set(entryId, {
+        bytes: downloadedBytes,
+        at: now,
+        mbps: 0,
+      });
+      return null;
+    }
+
+    const elapsedSec = (now - prev.at) / 1000;
+    if (elapsedSec < 0.25) {
+      return prev.mbps > 0 ? prev.mbps : null;
+    }
+
+    const deltaBytes = downloadedBytes - prev.bytes;
+    if (deltaBytes < 0) {
+      downloadSpeedSamples.set(entryId, {
+        bytes: downloadedBytes,
+        at: now,
+        mbps: 0,
+      });
+      return null;
+    }
+
+    const instantMbps = (deltaBytes * 8) / (elapsedSec * 1_000_000);
+    const mbps = prev.mbps > 0 ? prev.mbps * 0.65 + instantMbps * 0.35 : instantMbps;
+    downloadSpeedSamples.set(entryId, {
+      bytes: downloadedBytes,
+      at: now,
+      mbps,
+    });
+    return mbps;
+  }
+
+  function clearDownloadSpeed(entryId) {
+    downloadSpeedSamples.delete(entryId);
   }
 
   function groupLabel(group) {
@@ -1703,19 +1754,26 @@ function init() {
       const pct =
         event.totalBytes > 0 ? (event.downloadedBytes / event.totalBytes) * 100 : 0;
       const where = event.target === "pc" ? "no PC" : "no HD";
+      const speedLabel = formatMbps(
+        measureDownloadMbps(event.entryId, event.downloadedBytes),
+      );
+      const progressText = `${where} ${formatBytes(event.downloadedBytes)} / ${formatBytes(event.totalBytes)}`;
       setProgress(
         event.entryId,
         pct,
-        `${where} ${formatBytes(event.downloadedBytes)} / ${formatBytes(event.totalBytes)}`,
+        speedLabel ? `${progressText} · ${speedLabel}` : progressText,
       );
     } else if (event.status === "verifying") {
+      clearDownloadSpeed(event.entryId);
       setActiveEntryPhase(event.entryId, "verifying");
       setProgress(event.entryId, 92, "Verificando integridade…");
     } else if (event.status === "extracting") {
+      clearDownloadSpeed(event.entryId);
       setActiveEntryPhase(event.entryId, "extracting");
       const where = event.target === "pc" ? "no PC" : "no HD";
       setProgress(event.entryId, 96, `Descompactando ${where}…`);
     } else if (event.status === "copying") {
+      clearDownloadSpeed(event.entryId);
       setActiveEntryPhase(event.entryId, "copying");
       const pct =
         event.totalBytes > 0 ? (event.downloadedBytes / event.totalBytes) * 100 : 0;
@@ -1725,6 +1783,7 @@ function init() {
         `PC → HD ${formatBytes(event.downloadedBytes)} / ${formatBytes(event.totalBytes)}`,
       );
     } else if (event.status === "installing") {
+      clearDownloadSpeed(event.entryId);
       setActiveEntryPhase(event.entryId, "installing");
       const pct =
         event.totalBytes > 0 ? (event.downloadedBytes / event.totalBytes) * 100 : 0;
@@ -1734,10 +1793,12 @@ function init() {
         `Instalando no HD ${formatBytes(event.downloadedBytes)} / ${formatBytes(event.totalBytes)}`,
       );
     } else if (event.status === "done") {
+      clearDownloadSpeed(event.entryId);
       setActiveEntryPhase(event.entryId, null);
       lastProgressStatus.delete(event.entryId);
       setProgress(event.entryId, 100, "Concluído", "done");
     } else if (event.status === "error") {
+      clearDownloadSpeed(event.entryId);
       setActiveEntryPhase(event.entryId, null);
       lastProgressStatus.delete(event.entryId);
       const errText = formatProgressError(event.error ?? "Erro");
