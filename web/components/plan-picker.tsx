@@ -129,10 +129,10 @@ export function PlanPicker({
                   type="button"
                   disabled={loadingKey !== null}
                   onClick={() => void handleCheckout(plan.id, "pix")}
-                  className="rounded-xl border border-border px-4 py-3 text-sm font-semibold text-zinc-200 transition hover:border-zinc-500 hover:text-white disabled:opacity-60"
+                  className="rounded-xl border border-teal-400/40 bg-teal-500/10 px-4 py-3 text-sm font-semibold text-teal-100 transition hover:border-teal-300/70 hover:bg-teal-500/20 hover:text-white disabled:opacity-60"
                 >
                   {loadingKey === `${plan.id}-pix`
-                    ? "Redirecionando..."
+                    ? "Gerando PIX..."
                     : `PIX · ${plan.title} à vista`}
                 </button>
               )}

@@ -7,7 +7,9 @@ import {
   createAsaasPixPayment,
   ensureAsaasCustomer,
   planPixAmount,
+  waitForAsaasPixQrCode,
 } from "@/lib/asaas";
+import { pixCheckoutPath } from "@/lib/asaas-pix-format";
 import { getApiUser } from "@/lib/auth";
 import { logError } from "@/lib/logger";
 import { passwordIsExpired } from "@/lib/password-policy";
@@ -95,10 +97,11 @@ export async function POST(request: Request) {
       description: `MontaHD — ${plan.title}`,
     });
 
-    if (!payment.invoiceUrl) {
+    const qr = await waitForAsaasPixQrCode(payment.id);
+    if (!qr.encodedImage?.trim() || !qr.payload?.trim()) {
       return NextResponse.json(
-        { error: "Não foi possível iniciar o pagamento PIX." },
-        { status: 500 },
+        { error: "Não foi possível gerar o QR Code PIX." },
+        { status: 502 },
       );
     }
 
@@ -111,7 +114,7 @@ export async function POST(request: Request) {
       metadata: { plan: planId, method: "pix" },
     });
 
-    return NextResponse.json({ url: payment.invoiceUrl });
+    return NextResponse.json({ url: pixCheckoutPath(payment.id) });
   } catch (error) {
     logError("Asaas checkout failed", error, { plan: planId, userId: user.id });
     return NextResponse.json(

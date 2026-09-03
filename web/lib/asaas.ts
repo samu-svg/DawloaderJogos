@@ -13,6 +13,12 @@ export type AsaasPayment = {
   externalReference?: string | null;
 };
 
+export type AsaasPixQrCode = {
+  encodedImage?: string | null;
+  payload?: string | null;
+  expirationDate?: string | null;
+};
+
 export type AsaasCustomer = {
   id: string;
   email?: string | null;
@@ -205,6 +211,40 @@ export async function createAsaasPixPayment(input: {
       description: input.description,
     }),
   });
+}
+
+export async function getAsaasPayment(paymentId: string): Promise<AsaasPayment> {
+  return asaasRequest<AsaasPayment>(`/payments/${paymentId}`);
+}
+
+export async function getAsaasPixQrCode(paymentId: string): Promise<AsaasPixQrCode> {
+  return asaasRequest<AsaasPixQrCode>(`/payments/${paymentId}/pixQrCode`);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export async function waitForAsaasPixQrCode(
+  paymentId: string,
+  attempts = 4,
+): Promise<AsaasPixQrCode> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      const qr = await getAsaasPixQrCode(paymentId);
+      if (qr.encodedImage?.trim() && qr.payload?.trim()) return qr;
+      lastError = new Error("QR Code PIX ainda não está pronto.");
+    } catch (error) {
+      lastError = error;
+    }
+    if (attempt < attempts - 1) {
+      await sleep(350 * (attempt + 1));
+    }
+  }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Não foi possível gerar o QR Code PIX.");
 }
 
 export function asaasDueDateToday(): string {
