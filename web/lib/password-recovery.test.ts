@@ -4,6 +4,8 @@ import {
   isPasswordRecoveryCallback,
   isPasswordRecoveryPath,
   isWellFormedEmail,
+  isWellFormedRecoveryOtp,
+  normalizeRecoveryOtp,
   parseAuthCallbackHash,
   safeEqual,
 } from "./password-recovery.ts";
@@ -11,7 +13,7 @@ import {
 test("reconhece o fluxo de redefinição", () => {
   assert.equal(isPasswordRecoveryPath("/redefinir-senha"), true);
   assert.equal(isPasswordRecoveryPath("/api/auth/reset-password"), true);
-  assert.equal(isPasswordRecoveryPath("/api/auth/recovery-lock"), true);
+  assert.equal(isPasswordRecoveryPath("/api/auth/verify-recovery"), true);
   assert.equal(isPasswordRecoveryPath("/baixar"), false);
 });
 
@@ -42,6 +44,12 @@ test("lê tokens do hash do e-mail de recuperação", () => {
     accessToken: null,
     refreshToken: null,
   });
+});
+
+test("código de recuperação", () => {
+  assert.equal(normalizeRecoveryOtp("12 3456"), "123456");
+  assert.equal(isWellFormedRecoveryOtp("123456"), true);
+  assert.equal(isWellFormedRecoveryOtp("12"), false);
 });
 
 test("e-mail bem formado", () => {

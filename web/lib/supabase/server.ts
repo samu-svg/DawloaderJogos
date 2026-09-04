@@ -63,25 +63,6 @@ export async function createPublicReaderClient() {
   );
 }
 
-/**
- * Envia e-mails de recuperação sem PKCE, para o link funcionar no celular
- * (Gmail/Safari) e não só no navegador que pediu a troca.
- */
-export function createEmailLinkClient() {
-  return createSupabaseClient(
-    requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
-    requireEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
-    {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false,
-        flowType: "implicit",
-      },
-    },
-  );
-}
-
 /** Returns the signed-in user, or null. */
 export async function currentUser() {
   const supabase = await createClient();

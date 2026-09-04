@@ -4,7 +4,7 @@ export const SIGNUP_CONFIRM_MESSAGE =
   "Conta criada. Enviamos um código para seu e-mail — confirme para entrar.";
 
 export const FORGOT_PASSWORD_SENT_MESSAGE =
-  "Se este e-mail estiver cadastrado, enviaremos um link para redefinir a senha. Confira também a caixa de spam.";
+  "Se este e-mail estiver cadastrado, enviamos um código (e, se o modelo do e-mail tiver botão, um link). Confira também a caixa de spam.";
 
 export function authErrorMessage(raw: string): string {
   const lower = raw.toLowerCase();
@@ -64,8 +64,11 @@ export function authErrorMessage(raw: string): string {
     return "A senha não pode ser igual ao e-mail.";
   }
 
-  if (lower.includes("link expirado")) {
-    return "Link expirado. Solicite uma nova recuperação.";
+  if (
+    lower.includes("código inválido") ||
+    (lower.includes("token") && lower.includes("otp"))
+  ) {
+    return "Código inválido ou expirado. Peça outro e-mail.";
   }
 
   if (

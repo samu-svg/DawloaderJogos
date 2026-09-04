@@ -11,7 +11,7 @@ import {
 } from "@/lib/password-recovery";
 import { enforceRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { publicSiteOrigin } from "@/lib/site-url";
-import { createEmailLinkClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { isTrustedAuthOrigin } from "@/lib/trusted-origin";
 
 export async function POST(request: Request) {
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
   );
 
   const origin = publicSiteOrigin(request);
-  const supabase = createEmailLinkClient();
+  const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${origin}/auth/callback`,
   });

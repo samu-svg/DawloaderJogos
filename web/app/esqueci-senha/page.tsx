@@ -29,9 +29,8 @@ export default async function EsqueciSenhaPage({
             Esqueceu a senha?
           </h1>
           <p className="text-sm text-zinc-500">
-            Informe o e-mail da conta. Se ele estiver cadastrado, você receberá
-            um link. Abra o e-mail neste celular e toque no link — não precisa
-            ser o mesmo navegador do computador.
+            Informe o e-mail da conta. Enviamos um código (às vezes também um
+            botão). Se o e-mail vier sem link, use o código nesta tela.
           </p>
         </div>
         <div className="mt-8 rounded-2xl border border-border bg-surface p-6">
@@ -42,8 +41,8 @@ export default async function EsqueciSenhaPage({
           ) : null}
           {expirado === "1" ? (
             <p className="mb-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-              O link expirou, já foi usado ou não abriu neste aparelho. Peça
-              outro e-mail abaixo e abra o link neste celular.
+              O código ou o link expirou. Peça outro e-mail e use o código
+              nesta tela.
             </p>
           ) : null}
           <ForgotPasswordForm />

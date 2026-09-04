@@ -9,6 +9,7 @@ test("cadastro pede confirmação sem citar provedor", () => {
 
 test("mensagem de recuperação não revela se o e-mail existe", () => {
   assert.match(FORGOT_PASSWORD_SENT_MESSAGE, /se este e-mail estiver cadastrado/i);
+  assert.match(FORGOT_PASSWORD_SENT_MESSAGE, /código/i);
   assert.doesNotMatch(FORGOT_PASSWORD_SENT_MESSAGE, /supabase/i);
 });
 

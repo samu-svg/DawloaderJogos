@@ -26,6 +26,7 @@ export function isPasswordRecoveryPath(path: string): boolean {
     path === PASSWORD_RECOVERY_PATH ||
     path.startsWith("/api/auth/reset-password") ||
     path.startsWith("/api/auth/recovery-lock") ||
+    path.startsWith("/api/auth/verify-recovery") ||
     path.startsWith("/auth/callback")
   );
 }
@@ -52,6 +53,14 @@ export function parseAuthCallbackHash(hash: string): {
     accessToken: params.get("access_token"),
     refreshToken: params.get("refresh_token"),
   };
+}
+
+export function normalizeRecoveryOtp(raw: string): string {
+  return raw.replace(/\s+/g, "").trim();
+}
+
+export function isWellFormedRecoveryOtp(token: string): boolean {
+  return /^[a-zA-Z0-9]{6,12}$/.test(token);
 }
 
 export function isWellFormedEmail(email: string): boolean {
