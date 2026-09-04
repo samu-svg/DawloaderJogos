@@ -63,7 +63,7 @@ export function formatFsError(error: unknown): string {
     if (/mkdir ['"]?[a-zA-Z]:\\?['"]?/i.test(message)) {
       return (
         "O Windows recusou gravar na raiz do disco (ex.: D:\\). " +
-        "Baixe a versão nova no site (montahd.vercel.app) e instale por cima desta."
+        "Baixe a versão nova no site (montahds.app) e instale por cima desta."
       );
     }
     return "Sem permissão para gravar na pasta escolhida. Escolha outra pasta ou execute o app como administrador.";

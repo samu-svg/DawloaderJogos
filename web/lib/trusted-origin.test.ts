@@ -3,28 +3,28 @@ import { test } from "node:test";
 import { isTrustedAuthOrigin } from "./trusted-origin.ts";
 
 test("aceita mesma origem do Host", () => {
-  const request = new Request("https://montahd.vercel.app/api/auth/login", {
+  const request = new Request("https://montahds.app/api/auth/login", {
     headers: {
-      origin: "https://montahd.vercel.app",
-      host: "montahd.vercel.app",
+      origin: "https://montahds.app",
+      host: "montahds.app",
     },
   });
   assert.equal(isTrustedAuthOrigin(request), true);
 });
 
 test("recusa origem de outro site", () => {
-  const request = new Request("https://montahd.vercel.app/api/auth/login", {
+  const request = new Request("https://montahds.app/api/auth/login", {
     headers: {
       origin: "https://evil.example",
-      host: "montahd.vercel.app",
+      host: "montahds.app",
     },
   });
   assert.equal(isTrustedAuthOrigin(request), false);
 });
 
 test("sem Origin nem Referer segue só fora de produção", () => {
-  const request = new Request("https://montahd.vercel.app/api/auth/login", {
-    headers: { host: "montahd.vercel.app" },
+  const request = new Request("https://montahds.app/api/auth/login", {
+    headers: { host: "montahds.app" },
   });
   assert.equal(isTrustedAuthOrigin(request, { requireOrigin: false }), true);
   assert.equal(isTrustedAuthOrigin(request, { requireOrigin: true }), false);

@@ -6,12 +6,20 @@ export type CatalogLaunch = {
   manifestToken: string | null;
 };
 
-export const DEFAULT_SITE_URL = "https://montahd.vercel.app";
-export const PRODUCTION_SITE_ORIGIN = "https://montahd.vercel.app";
+export const DEFAULT_SITE_URL = "https://montahds.app";
+export const PRODUCTION_SITE_ORIGIN = "https://montahds.app";
 
 export type CatalogOriginOptions = {
   allowLocalhost?: boolean;
 };
+
+/**
+ * Hosts exatos do domínio próprio. Prefixo em `.vercel.app` é namespace
+ * público: qualquer conta cria `montahd-oficial.vercel.app` e o app
+ * trataria como catálogo nosso. Preview e alias da Vercel não entram —
+ * desenvolvimento usa `allowLocalhost`.
+ */
+const TRUSTED_CATALOG_HOSTS = new Set(["montahds.app", "www.montahds.app"]);
 
 function isLocalhostHost(hostname: string): boolean {
   return (
@@ -22,17 +30,8 @@ function isLocalhostHost(hostname: string): boolean {
   );
 }
 
-/** Hosts deste projeto no Vercel (produção, alias e preview). */
 export function isTrustedCatalogHost(hostname: string): boolean {
-  const host = hostname.toLowerCase();
-  if (!host.endsWith(".vercel.app")) return false;
-  const label = host.slice(0, -".vercel.app".length);
-  return (
-    label === "montahd" ||
-    label === "dawloaderjogos" ||
-    label.startsWith("montahd-") ||
-    label.startsWith("dawloaderjogos-")
-  );
+  return TRUSTED_CATALOG_HOSTS.has(hostname.toLowerCase());
 }
 
 export function isAllowedCatalogOrigin(
@@ -41,12 +40,11 @@ export function isAllowedCatalogOrigin(
 ): boolean {
   try {
     const parsed = new URL(input);
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      return false;
+    if (isTrustedCatalogHost(parsed.hostname)) {
+      return parsed.protocol === "https:";
     }
-    if (isTrustedCatalogHost(parsed.hostname)) return true;
     if (options.allowLocalhost && isLocalhostHost(parsed.hostname)) {
-      return true;
+      return parsed.protocol === "http:" || parsed.protocol === "https:";
     }
     return false;
   } catch {
@@ -102,11 +100,9 @@ function canonicalizeCatalogBaseUrl(input: string): string {
     if (isLocalhostHost(parsed.hostname)) {
       return `${parsed.protocol}//${parsed.host}`.replace(/\/+$/, "");
     }
-    if (isTrustedCatalogHost(parsed.hostname)) {
-      if (parsed.hostname === "montahd.vercel.app") {
-        return PRODUCTION_SITE_ORIGIN;
-      }
-      return `${parsed.protocol}//${parsed.host}`.replace(/\/+$/, "");
+    const host = parsed.hostname.toLowerCase();
+    if (host === "www.montahds.app" || host === "montahds.app") {
+      return PRODUCTION_SITE_ORIGIN;
     }
   } catch {
     // ignora e devolve o valor original

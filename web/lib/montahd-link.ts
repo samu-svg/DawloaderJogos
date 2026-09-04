@@ -13,7 +13,7 @@ export function canonicalCatalogSiteUrl(siteUrl: string): string {
   } catch {
     // usa produção
   }
-  return "https://montahd.vercel.app";
+  return "https://montahds.app";
 }
 
 /**

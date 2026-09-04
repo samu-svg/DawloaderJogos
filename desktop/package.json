@@ -60,7 +60,7 @@
     },
     "publish": {
       "provider": "generic",
-      "url": "https://montahd.vercel.app/downloads"
+      "url": "https://montahds.app/downloads"
     },
     "electronFuses": {
       "runAsNode": false,

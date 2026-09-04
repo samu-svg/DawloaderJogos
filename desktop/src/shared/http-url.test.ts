@@ -25,9 +25,9 @@ test("assertHttpUrl rejeita URL sem esquema http(s)", () => {
 
 test("windowsExternalOpenCommand isola metacaracteres em argv", () => {
   const cases = [
-    "https://montahd.vercel.app/baixar?x=1&y=2|calc",
-    "https://montahd.vercel.app/path^test",
-    "https://montahd.vercel.app/`whoami`",
+    "https://montahds.app/baixar?x=1&y=2|calc",
+    "https://montahds.app/path^test",
+    "https://montahds.app/`whoami`",
   ];
 
   for (const url of cases) {
@@ -57,7 +57,7 @@ test("isBlockedDownloadHost recusa metadados e faixas privadas", () => {
 
 test("windowsCmdStartOpenCommand usa cmd.exe e recusa esquema perigoso", () => {
   const { command, args } = windowsCmdStartOpenCommand(
-    "https://montahd.vercel.app/baixar",
+    "https://montahds.app/baixar",
   );
   assert.match(command.replace(/\\/g, "/"), /\/System32\/cmd\.exe$/i);
   assert.deepEqual(args, [
@@ -66,7 +66,7 @@ test("windowsCmdStartOpenCommand usa cmd.exe e recusa esquema perigoso", () => {
     "/c",
     "start",
     "",
-    "https://montahd.vercel.app/baixar",
+    "https://montahds.app/baixar",
   ]);
   assert.throws(
     () => windowsCmdStartOpenCommand("file:///C:/Windows/notepad.exe"),

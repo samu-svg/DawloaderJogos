@@ -2,7 +2,7 @@
 /** @typedef {import('../src/shared/manifest').ResolvedManifestEntry} ResolvedManifestEntry */
 /** @typedef {import('../src/shared/install-state').EntryInstallState} EntryInstallState */
 
-const DEFAULT_SITE_URL = "https://montahd.vercel.app";
+const DEFAULT_SITE_URL = "https://montahds.app";
 const SITE_URL_STORAGE_KEY = "montahd.siteUrl";
 /** Fallback quando o Chromium bloqueia localStorage em file:// (sandbox). */
 let memorySiteUrl = null;
@@ -26,28 +26,22 @@ function writeSiteUrlStorage(url) {
 
 function isTrustedCatalogHost(hostname) {
   const host = hostname.toLowerCase();
-  if (!host.endsWith(".vercel.app")) return false;
-  const label = host.slice(0, -".vercel.app".length);
-  return (
-    label === "montahd" ||
-    label === "dawloaderjogos" ||
-    label.startsWith("montahd-") ||
-    label.startsWith("dawloaderjogos-")
-  );
+  return host === "montahds.app" || host === "www.montahds.app";
 }
 
 function isAllowedCatalogOrigin(input, allowLocalhost) {
   try {
     const parsed = new URL(input);
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
-    if (isTrustedCatalogHost(parsed.hostname)) return true;
+    if (isTrustedCatalogHost(parsed.hostname)) {
+      return parsed.protocol === "https:";
+    }
     if (
       allowLocalhost &&
       (parsed.hostname === "localhost" ||
         parsed.hostname === "127.0.0.1" ||
         parsed.hostname === "[::1]")
     ) {
-      return true;
+      return parsed.protocol === "http:" || parsed.protocol === "https:";
     }
     return false;
   } catch {
