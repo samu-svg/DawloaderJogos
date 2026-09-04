@@ -4,12 +4,14 @@ import {
   isPasswordRecoveryCallback,
   isPasswordRecoveryPath,
   isWellFormedEmail,
+  parseAuthCallbackHash,
   safeEqual,
 } from "./password-recovery.ts";
 
 test("reconhece o fluxo de redefinição", () => {
   assert.equal(isPasswordRecoveryPath("/redefinir-senha"), true);
   assert.equal(isPasswordRecoveryPath("/api/auth/reset-password"), true);
+  assert.equal(isPasswordRecoveryPath("/api/auth/recovery-lock"), true);
   assert.equal(isPasswordRecoveryPath("/baixar"), false);
 });
 
@@ -26,6 +28,20 @@ test("callback de recuperação pelo tipo ou pelo nonce do pedido", () => {
     isPasswordRecoveryCallback({ type: "signup", nonce: null }),
     false,
   );
+});
+
+test("lê tokens do hash do e-mail de recuperação", () => {
+  assert.deepEqual(
+    parseAuthCallbackHash(
+      "#access_token=aaa&refresh_token=bbb&type=recovery",
+    ),
+    { type: "recovery", accessToken: "aaa", refreshToken: "bbb" },
+  );
+  assert.deepEqual(parseAuthCallbackHash(""), {
+    type: null,
+    accessToken: null,
+    refreshToken: null,
+  });
 });
 
 test("e-mail bem formado", () => {

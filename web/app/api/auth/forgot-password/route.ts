@@ -6,13 +6,12 @@ import { FORGOT_PASSWORD_SENT_MESSAGE } from "@/lib/auth-messages";
 import { logError } from "@/lib/logger";
 import {
   PASSWORD_RECOVERY_NONCE_COOKIE,
-  PASSWORD_RECOVERY_PATH,
   isWellFormedEmail,
   passwordRecoveryCookieOptions,
 } from "@/lib/password-recovery";
 import { enforceRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { publicSiteOrigin } from "@/lib/site-url";
-import { createClient } from "@/lib/supabase/server";
+import { createEmailLinkClient } from "@/lib/supabase/server";
 import { isTrustedAuthOrigin } from "@/lib/trusted-origin";
 
 export async function POST(request: Request) {
@@ -56,9 +55,9 @@ export async function POST(request: Request) {
   );
 
   const origin = publicSiteOrigin(request);
-  const supabase = await createClient();
+  const supabase = createEmailLinkClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(PASSWORD_RECOVERY_PATH)}`,
+    redirectTo: `${origin}/auth/callback`,
   });
   if (error) {
     logError("Falha ao enviar e-mail de recuperação", error);

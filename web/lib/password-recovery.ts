@@ -25,6 +25,7 @@ export function isPasswordRecoveryPath(path: string): boolean {
   return (
     path === PASSWORD_RECOVERY_PATH ||
     path.startsWith("/api/auth/reset-password") ||
+    path.startsWith("/api/auth/recovery-lock") ||
     path.startsWith("/auth/callback")
   );
 }
@@ -34,6 +35,23 @@ export function isPasswordRecoveryCallback(input: {
   nonce: string | null;
 }): boolean {
   return input.type === "recovery" || Boolean(input.nonce);
+}
+
+export function parseAuthCallbackHash(hash: string): {
+  type: string | null;
+  accessToken: string | null;
+  refreshToken: string | null;
+} {
+  const raw = hash.startsWith("#") ? hash.slice(1) : hash;
+  if (!raw) {
+    return { type: null, accessToken: null, refreshToken: null };
+  }
+  const params = new URLSearchParams(raw);
+  return {
+    type: params.get("type"),
+    accessToken: params.get("access_token"),
+    refreshToken: params.get("refresh_token"),
+  };
 }
 
 export function isWellFormedEmail(email: string): boolean {
