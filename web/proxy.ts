@@ -1,5 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import {
+  PASSWORD_RECOVERY_COOKIE,
+  PASSWORD_RECOVERY_PATH,
+  isPasswordRecoveryPath,
+} from "@/lib/password-recovery";
 
 const protectedRoutes = ["/baixar", "/assinar", "/conta", "/painel", "/suporte"];
 
@@ -45,6 +50,12 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
+  const recovering = request.cookies.get(PASSWORD_RECOVERY_COOKIE)?.value === "1";
+  if (recovering && user && !isPasswordRecoveryPath(path)) {
+    const resetUrl = new URL(PASSWORD_RECOVERY_PATH, request.url);
+    return redirectWithCookies(resetUrl, response);
+  }
+
   const needsAuth = protectedRoutes.some((route) => path.startsWith(route));
 
   if (needsAuth && !user) {

@@ -3,6 +3,9 @@
 export const SIGNUP_CONFIRM_MESSAGE =
   "Conta criada. Enviamos um código para seu e-mail — confirme para entrar.";
 
+export const FORGOT_PASSWORD_SENT_MESSAGE =
+  "Se este e-mail estiver cadastrado, enviaremos um link para redefinir a senha. Confira também a caixa de spam.";
+
 export function authErrorMessage(raw: string): string {
   const lower = raw.toLowerCase();
 
@@ -39,6 +42,30 @@ export function authErrorMessage(raw: string): string {
     (lower.includes("12") || lower.includes("6"))
   ) {
     return "A senha precisa ter pelo menos 12 caracteres.";
+  }
+
+  if (
+    lower.includes("same as") ||
+    lower.includes("different from the old") ||
+    lower.includes("should be different")
+  ) {
+    return "A nova senha precisa ser diferente da atual.";
+  }
+
+  if (lower.includes("e-mail válido") || lower.includes("informe um e-mail")) {
+    return "Informe um e-mail válido.";
+  }
+
+  if (lower.includes("não coincidem") || lower.includes("do not match")) {
+    return "As senhas não coincidem.";
+  }
+
+  if (lower.includes("igual ao e-mail")) {
+    return "A senha não pode ser igual ao e-mail.";
+  }
+
+  if (lower.includes("link expirado")) {
+    return "Link expirado. Solicite uma nova recuperação.";
   }
 
   if (

@@ -107,6 +107,7 @@ export type Database = {
           display_name: string;
           id: string;
           password_changed_at: string;
+          password_reset_required: boolean;
           role: "admin" | "editor" | "user";
         };
         Insert: {
@@ -114,11 +115,13 @@ export type Database = {
           display_name: string;
           id: string;
           password_changed_at?: string;
+          password_reset_required?: boolean;
           role?: "admin" | "editor" | "user";
         };
         Update: {
           display_name?: string;
           password_changed_at?: string;
+          password_reset_required?: boolean;
           role?: "admin" | "editor" | "user";
         };
         Relationships: [];

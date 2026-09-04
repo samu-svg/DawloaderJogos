@@ -1,16 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Suspense } from "react";
-import { LoginForm } from "@/components/login-form";
+import { ForgotPasswordForm } from "@/components/forgot-password-form";
 import { SiteHeader } from "@/components/site-header";
 import { currentAppUser } from "@/lib/auth";
 import { PASSWORD_RECOVERY_PATH } from "@/lib/password-recovery";
 import { userHasCatalogAccess } from "@/lib/subscription";
 
-export default async function LoginPage({
+export default async function EsqueciSenhaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ redefinida?: string }>;
+  searchParams: Promise<{ erro?: string; expirado?: string }>;
 }) {
   const user = await currentAppUser();
   if (user?.mustResetPassword) redirect(PASSWORD_RECOVERY_PATH);
@@ -19,7 +18,7 @@ export default async function LoginPage({
     redirect(hasAccess ? "/baixar" : "/assinar?next=/baixar");
   }
 
-  const { redefinida } = await searchParams;
+  const { erro, expirado } = await searchParams;
 
   return (
     <>
@@ -27,25 +26,30 @@ export default async function LoginPage({
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-16">
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-semibold tracking-tight text-white">
-            Entrar
+            Esqueceu a senha?
           </h1>
           <p className="text-sm text-zinc-500">
-            Acesse seu acervo e deixe o app montar o HD.
+            Informe o e-mail da conta. Se ele estiver cadastrado, você receberá
+            um link para criar uma nova senha.
           </p>
         </div>
         <div className="mt-8 rounded-2xl border border-border bg-surface p-6">
-          {redefinida === "1" ? (
-            <p className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
-              Senha redefinida. Entre com a nova senha.
+          {erro === "1" ? (
+            <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+              Não foi possível abrir o link. Solicite uma nova recuperação.
             </p>
           ) : null}
-          <Suspense fallback={<p className="text-sm text-zinc-500">Carregando...</p>}>
-            <LoginForm />
-          </Suspense>
+          {expirado === "1" ? (
+            <p className="mb-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+              O link expirou ou já foi usado. Solicite outro pelo formulário
+              abaixo.
+            </p>
+          ) : null}
+          <ForgotPasswordForm />
         </div>
         <p className="mt-6 text-center text-xs text-zinc-600">
-          <Link href="/" className="hover:text-zinc-400">
-            ← Voltar para o acervo
+          <Link href="/login" className="hover:text-zinc-400">
+            ← Voltar ao login
           </Link>
         </p>
       </main>

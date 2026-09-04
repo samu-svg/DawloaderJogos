@@ -3,11 +3,13 @@ import { redirect } from "next/navigation";
 import { CadastroForm } from "@/components/cadastro-form";
 import { SiteHeader } from "@/components/site-header";
 import { currentAppUser } from "@/lib/auth";
+import { PASSWORD_RECOVERY_PATH } from "@/lib/password-recovery";
 import { PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
 import { userHasCatalogAccess } from "@/lib/subscription";
 
 export default async function CadastroPage() {
   const user = await currentAppUser();
+  if (user?.mustResetPassword) redirect(PASSWORD_RECOVERY_PATH);
   if (user) {
     const hasAccess = await userHasCatalogAccess(user);
     redirect(hasAccess ? "/baixar" : "/assinar?next=/baixar");

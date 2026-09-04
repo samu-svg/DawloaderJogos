@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { PASSWORD_RECOVERY_PATH } from "@/lib/password-recovery";
 import { passwordIsExpired } from "@/lib/password-policy";
 import { parseRole, type Role } from "@/lib/rbac";
 import { createClient } from "@/lib/supabase/server";
@@ -9,6 +10,7 @@ export type AppUser = {
   displayName: string;
   role: Role;
   passwordChangedAt: Date;
+  mustResetPassword: boolean;
 };
 
 function parseTimestamp(raw: string | null | undefined): Date | null {
@@ -31,6 +33,7 @@ export async function upsertUserFromAuth(input: {
     displayName,
     role: "user",
     passwordChangedAt: new Date(),
+    mustResetPassword: false,
   };
 }
 
@@ -42,11 +45,21 @@ export async function currentAppUser(): Promise<AppUser | null> {
   if (!user?.email) return null;
 
   const email = user.email.trim().toLowerCase();
-  const { data: profile } = await supabase
+  const withReset = await supabase
     .from("profiles")
-    .select("display_name, role, password_changed_at")
+    .select("display_name, role, password_changed_at, password_reset_required")
     .eq("id", user.id)
     .maybeSingle();
+
+  const profile = withReset.error
+    ? (
+        await supabase
+          .from("profiles")
+          .select("display_name, role, password_changed_at")
+          .eq("id", user.id)
+          .maybeSingle()
+      ).data
+    : withReset.data;
 
   const displayName =
     (typeof profile?.display_name === "string" && profile.display_name) ||
@@ -65,17 +78,22 @@ export async function currentAppUser(): Promise<AppUser | null> {
     displayName,
     role,
     passwordChangedAt,
+    mustResetPassword: profile?.password_reset_required === true,
   };
 }
 
 export async function requireAppUser(options?: {
   skipPasswordCheck?: boolean;
+  skipRecoveryCheck?: boolean;
   loginNext?: string;
 }): Promise<AppUser> {
   const user = await currentAppUser();
   if (!user) {
     const next = encodeURIComponent(options?.loginNext ?? "/baixar");
     redirect(`/login?next=${next}`);
+  }
+  if (user.mustResetPassword && !options?.skipRecoveryCheck) {
+    redirect(PASSWORD_RECOVERY_PATH);
   }
   if (!options?.skipPasswordCheck && passwordIsExpired(user.passwordChangedAt)) {
     redirect("/conta?rotacao=1");
@@ -89,6 +107,11 @@ export async function requireRole(...roles: Role[]): Promise<AppUser> {
   return user;
 }
 
-export async function getApiUser(): Promise<AppUser | null> {
-  return currentAppUser();
+export async function getApiUser(options?: {
+  allowRecovery?: boolean;
+}): Promise<AppUser | null> {
+  const user = await currentAppUser();
+  if (!user) return null;
+  if (user.mustResetPassword && !options?.allowRecovery) return null;
+  return user;
 }

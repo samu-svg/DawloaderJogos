@@ -2,14 +2,9 @@ import { NextResponse } from "next/server";
 import { authErrorMessage } from "@/lib/auth-messages";
 import { PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
 import { enforceRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
+import { publicSiteOrigin } from "@/lib/site-url";
 import { createClient } from "@/lib/supabase/server";
 import { isTrustedAuthOrigin } from "@/lib/trusted-origin";
-
-function requestOrigin(request: Request): string {
-  const configured = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
-  if (configured) return configured;
-  return new URL(request.url).origin;
-}
 
 export async function POST(request: Request) {
   const limited = await enforceRateLimit(request, "auth-signup", RATE_LIMITS.auth);
@@ -58,7 +53,7 @@ export async function POST(request: Request) {
     password,
     options: {
       data: { display_name: displayName },
-      emailRedirectTo: `${requestOrigin(request)}/auth/callback`,
+      emailRedirectTo: `${publicSiteOrigin(request)}/auth/callback`,
     },
   });
 
