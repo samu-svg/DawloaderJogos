@@ -23,77 +23,67 @@ export function AppHero({
     : loggedIn
       ? "/assinar"
       : "/cadastro?next=/assinar";
-  const primaryLabel = hasAccess
-    ? "Abrir meu acervo"
-    : loggedIn
-      ? "Liberar o app"
-      : "Liberar o app";
+  const primaryLabel = hasAccess ? "Abrir meu acervo" : "Ver os planos";
 
   return (
-    <section className="hero-glow relative overflow-hidden rounded-3xl border border-border">
-      <div className="grid-lines absolute inset-0 opacity-60" aria-hidden />
-      <div className="relative px-8 py-16 text-center sm:px-14 sm:py-20">
-        <span className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent-muted px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-violet-200">
-          App para Windows
-          <span className="h-1.5 w-1.5 rounded-full bg-accent-2" />
-        </span>
+    <header className="mx-auto max-w-2xl text-center">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-2">
+        App para Windows
+      </p>
+      <h1 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-5xl">
+        Ele monta o seu <span className="text-gradient">HD</span>
+      </h1>
+      <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-zinc-400 sm:text-base">
+        Você paga pelo <strong className="text-zinc-200">software MontaHD</strong>,
+        não pelos arquivos. O app baixa, verifica, descompacta e coloca cada
+        jogo na pasta certa — sem anúncios. Planos de 1, 2 ou 3 meses, no cartão
+        ou no PIX.
+      </p>
 
-        <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-bold leading-[1.1] tracking-tight sm:text-6xl">
-          <span className="text-gradient">Ele monta o seu HD</span>
-          <br />
-          enquanto você assiste.
-        </h1>
-
-        <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-zinc-300">
-          Você paga pelo <strong className="text-white">software MontaHD</strong>{" "}
-          — não pelos jogos nem pelos arquivos. O app baixa e organiza cada
-          título na pasta certa do HD, sozinho, sem anúncios. Com o pagamento
-          único do app, o acervo inteiro fica liberado para instalar.
-        </p>
-
-        <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-          <Link
-            href={primaryHref}
-            className="rounded-xl bg-accent px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-accent/25 transition hover:bg-accent-hover"
-          >
-            {primaryLabel}
-          </Link>
-          <Link
-            href="/"
-            className="rounded-xl border border-white/15 bg-white/5 px-7 py-3.5 text-sm font-medium text-zinc-200 backdrop-blur transition hover:border-white/30 hover:text-white"
-          >
-            Ver os jogos
-          </Link>
-          {!hasAccess && (
-            <span className="text-sm text-zinc-400">{planLabel}</span>
-          )}
-        </div>
-
-        <dl className="mx-auto mt-12 grid max-w-2xl grid-cols-3 gap-6 border-t border-white/10 pt-7">
-          <div>
-            <dt className="text-xs uppercase tracking-wider text-zinc-500">
-              Jogos no acervo
-            </dt>
-            <dd className="mt-1 text-2xl font-bold text-white">{gameCount}</dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wider text-zinc-500">
-              Coleções
-            </dt>
-            <dd className="mt-1 text-2xl font-bold text-white">
-              {collectionCount}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wider text-zinc-500">
-              Tamanho total
-            </dt>
-            <dd className="mt-1 text-2xl font-bold text-white">
-              {totalBytes > 0 ? formatBytes(totalBytes) : "—"}
-            </dd>
-          </div>
-        </dl>
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+        <Link
+          href={primaryHref}
+          className="rounded-2xl bg-accent px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-accent/25 transition hover:bg-accent-hover"
+        >
+          {primaryLabel}
+        </Link>
+        <Link
+          href="/"
+          className="rounded-2xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-medium text-zinc-200 transition hover:border-white/30 hover:text-white"
+        >
+          Ver o acervo
+        </Link>
       </div>
-    </section>
+      {!hasAccess && (
+        <p className="mt-4 text-sm text-zinc-500">{planLabel}</p>
+      )}
+
+      <dl className="mt-10 grid grid-cols-3 gap-3">
+        <div className="rounded-2xl border border-border/70 bg-surface/60 px-3 py-4">
+          <dt className="text-[11px] uppercase tracking-wider text-zinc-500">
+            Jogos
+          </dt>
+          <dd className="mt-1 text-xl font-bold text-white sm:text-2xl">
+            {gameCount}
+          </dd>
+        </div>
+        <div className="rounded-2xl border border-border/70 bg-surface/60 px-3 py-4">
+          <dt className="text-[11px] uppercase tracking-wider text-zinc-500">
+            Coleções
+          </dt>
+          <dd className="mt-1 text-xl font-bold text-white sm:text-2xl">
+            {collectionCount}
+          </dd>
+        </div>
+        <div className="rounded-2xl border border-border/70 bg-surface/60 px-3 py-4">
+          <dt className="text-[11px] uppercase tracking-wider text-zinc-500">
+            Acervo
+          </dt>
+          <dd className="mt-1 text-xl font-bold text-white sm:text-2xl">
+            {totalBytes > 0 ? formatBytes(totalBytes) : "—"}
+          </dd>
+        </div>
+      </dl>
+    </header>
   );
 }
