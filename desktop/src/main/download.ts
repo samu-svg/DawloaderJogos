@@ -5,7 +5,7 @@ import path from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { formatFsError } from "../shared/fs-errors";
-import { assertSafeDownloadUrl } from "../shared/http-url";
+import { assertSafeDownloadUrl } from "../shared/http-url.ts";
 import { fetchSafeRedirects } from "./safe-fetch";
 import { HD_PARTIAL_SUFFIX, STAGING_PARTIAL_NAME } from "../shared/install-state";
 import { assertHostedSha256, type ManifestEntryKind } from "../shared/manifest";

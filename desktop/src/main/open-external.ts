@@ -4,7 +4,7 @@ import {
   assertHttpUrl,
   windowsCmdStartOpenCommand,
   windowsExternalOpenCommand,
-} from "../shared/http-url";
+} from "../shared/http-url.ts";
 
 const OPEN_WAIT_MS = 2500;
 

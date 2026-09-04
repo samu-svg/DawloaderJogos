@@ -1,4 +1,4 @@
-import { assertSafeDownloadUrl } from "../shared/http-url";
+import { assertSafeDownloadUrl } from "../shared/http-url.ts";
 
 const MAX_REDIRECTS = 5;
 

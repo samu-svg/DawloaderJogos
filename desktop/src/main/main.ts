@@ -21,7 +21,7 @@ import {
   findDuplicateDestinations,
   validateDestination,
 } from "../shared/manifest";
-import { assertSafeDownloadUrl } from "../shared/http-url";
+import { assertSafeDownloadUrl } from "../shared/http-url.ts";
 import { assertAuthorizedRoot, rememberAuthorizedRoot } from "./authorized-roots";
 import { loadLastHdRoot, saveLastHdRoot } from "./last-hd-root";
 import { preloadPath, rendererPath } from "./app-paths";
