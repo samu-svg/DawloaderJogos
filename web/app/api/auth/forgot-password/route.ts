@@ -11,7 +11,12 @@ import {
 } from "@/lib/password-recovery";
 import { enforceRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { publicSiteOrigin } from "@/lib/site-url";
+import {
+  recoveryMailConfigured,
+  sendRecoveryMail,
+} from "@/lib/password-recovery-mail";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { isTrustedAuthOrigin } from "@/lib/trusted-origin";
 
 export async function POST(request: Request) {
@@ -55,12 +60,36 @@ export async function POST(request: Request) {
   );
 
   const origin = publicSiteOrigin(request);
-  const supabase = await createClient();
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback`,
-  });
-  if (error) {
-    logError("Falha ao enviar e-mail de recuperação", error);
+
+  if (recoveryMailConfigured()) {
+    const admin = createServiceRoleClient();
+    const { data, error } = await admin.auth.admin.generateLink({
+      type: "recovery",
+      email,
+      options: { redirectTo: `${origin}/auth/callback` },
+    });
+
+    if (!error && data?.properties?.email_otp && data.properties.action_link) {
+      const sent = await sendRecoveryMail({
+        to: email,
+        otp: data.properties.email_otp,
+        actionLink: data.properties.action_link,
+      });
+      if (!sent.ok) {
+        logError("Falha ao enviar e-mail de recuperação via Resend", sent.reason);
+      }
+    } else if (error) {
+      // Não revela se o e-mail existe ou não.
+      logError("generateLink recovery falhou", error);
+    }
+  } else {
+    const supabase = await createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${origin}/auth/callback`,
+    });
+    if (error) {
+      logError("Falha ao enviar e-mail de recuperação (Supabase SMTP)", error);
+    }
   }
 
   await recordAudit({
