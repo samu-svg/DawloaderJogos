@@ -6,7 +6,7 @@ export type AppUpdatePayload = {
   version: string;
 };
 
-/** Checa latest.yml em https://montahds.app/downloads (build.publish). */
+/** Checa latest.yml em https://www.montahds.app/downloads (build.publish). */
 export function startAutoUpdate(getWindow: () => BrowserWindow | null): void {
   if (!app.isPackaged) return;
 

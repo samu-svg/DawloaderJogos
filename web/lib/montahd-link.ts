@@ -13,7 +13,7 @@ export function canonicalCatalogSiteUrl(siteUrl: string): string {
   } catch {
     // usa produção
   }
-  return "https://montahds.app";
+  return "https://www.montahds.app";
 }
 
 /**

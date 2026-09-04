@@ -2,7 +2,7 @@
 /** @typedef {import('../src/shared/manifest').ResolvedManifestEntry} ResolvedManifestEntry */
 /** @typedef {import('../src/shared/install-state').EntryInstallState} EntryInstallState */
 
-const DEFAULT_SITE_URL = "https://montahds.app";
+const DEFAULT_SITE_URL = "https://www.montahds.app";
 const SITE_URL_STORAGE_KEY = "montahd.siteUrl";
 /** Fallback quando o Chromium bloqueia localStorage em file:// (sandbox). */
 let memorySiteUrl = null;
@@ -51,6 +51,15 @@ function isAllowedCatalogOrigin(input, allowLocalhost) {
 
 function normalizeSiteUrl(input) {
   const raw = (input?.trim() || DEFAULT_SITE_URL).replace(/\/+$/, "");
+  try {
+    const parsed = new URL(raw.includes("://") ? raw : `https://${raw}`);
+    const host = parsed.hostname.toLowerCase();
+    if (host === "montahds.app" || host === "www.montahds.app") {
+      return DEFAULT_SITE_URL;
+    }
+  } catch {
+    // cai no fallback
+  }
   if (isAllowedCatalogOrigin(raw, true)) return raw;
   return DEFAULT_SITE_URL;
 }

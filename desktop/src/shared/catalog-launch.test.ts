@@ -10,11 +10,12 @@ import {
 } from "./catalog-launch.ts";
 
 test("normalizeSiteUrl descarta localhost e URLs inválidas", () => {
-  assert.equal(normalizeSiteUrl("http://localhost:3000"), "https://montahds.app");
-  assert.equal(normalizeSiteUrl("http://127.0.0.1:3000"), "https://montahds.app");
-  assert.equal(normalizeSiteUrl("ftp://example.com"), "https://montahds.app");
-  assert.equal(normalizeSiteUrl("https://evil.example"), "https://montahds.app");
-  assert.equal(normalizeSiteUrl("https://montahds.app/"), "https://montahds.app");
+  assert.equal(normalizeSiteUrl("http://localhost:3000"), "https://www.montahds.app");
+  assert.equal(normalizeSiteUrl("http://127.0.0.1:3000"), "https://www.montahds.app");
+  assert.equal(normalizeSiteUrl("ftp://example.com"), "https://www.montahds.app");
+  assert.equal(normalizeSiteUrl("https://evil.example"), "https://www.montahds.app");
+  assert.equal(normalizeSiteUrl("https://montahds.app/"), "https://www.montahds.app");
+  assert.equal(normalizeSiteUrl("https://www.montahds.app/"), "https://www.montahds.app");
 });
 
 test("localhost só entra na allowlist quando o app não está empacotado", () => {
@@ -51,7 +52,7 @@ test("www.montahds.app vira o domínio canônico", () => {
     "montahd://open?url=https%3A%2F%2Fwww.montahds.app&slug=jogos360",
   );
   assert.ok(launch);
-  assert.equal(launch.baseUrl, "https://montahds.app");
+  assert.equal(launch.baseUrl, "https://www.montahds.app");
 });
 
 test("IPC recusa origem fora da lista", () => {
@@ -61,7 +62,7 @@ test("IPC recusa origem fora da lista", () => {
   );
   assert.equal(
     requireAllowedCatalogOrigin("https://montahds.app/"),
-    "https://montahds.app",
+    "https://www.montahds.app",
   );
   assert.equal(
     requireAllowedCatalogOrigin("http://localhost:3000", { allowLocalhost: true }),
@@ -116,7 +117,7 @@ test("aceita launch so com sessao (ids ficam no manifesto filtrado)", () => {
   assert.deepEqual(launch.entryIds, []);
   assert.equal(launch.installSession, "sess-xyz");
   assert.equal(launch.slug, "jogos360");
-  assert.equal(launch.baseUrl, "https://montahds.app");
+  assert.equal(launch.baseUrl, "https://www.montahds.app");
 });
 
 test("aceita formato legado open?url=…&slug=…&session=…", () => {

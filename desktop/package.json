@@ -60,7 +60,7 @@
     },
     "publish": {
       "provider": "generic",
-      "url": "https://montahds.app/downloads"
+      "url": "https://www.montahds.app/downloads"
     },
     "electronFuses": {
       "runAsNode": false,

@@ -321,7 +321,7 @@ async function requestManifestToken(
 
   if (response.status === 403) {
     throw new Error(
-      data.error ?? "Assinatura ativa necessária. Assine em montahds.app/assinar.",
+      data.error ?? "Assinatura ativa necessária. Assine em www.montahds.app/assinar.",
     );
   }
   if (!response.ok) {

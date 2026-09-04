@@ -6,8 +6,8 @@ export type CatalogLaunch = {
   manifestToken: string | null;
 };
 
-export const DEFAULT_SITE_URL = "https://montahds.app";
-export const PRODUCTION_SITE_ORIGIN = "https://montahds.app";
+export const DEFAULT_SITE_URL = "https://www.montahds.app";
+export const PRODUCTION_SITE_ORIGIN = "https://www.montahds.app";
 
 export type CatalogOriginOptions = {
   allowLocalhost?: boolean;
@@ -58,7 +58,8 @@ export function normalizeSiteUrl(
   options: CatalogOriginOptions = {},
 ): string {
   const raw = (input?.trim() || DEFAULT_SITE_URL).replace(/\/+$/, "");
-  if (isAllowedCatalogOrigin(raw, options)) return raw;
+  const canonical = canonicalizeCatalogBaseUrl(raw);
+  if (isAllowedCatalogOrigin(canonical, options)) return canonical;
   return DEFAULT_SITE_URL;
 }
 
@@ -67,10 +68,11 @@ export function requireAllowedCatalogOrigin(
   options: CatalogOriginOptions = {},
 ): string {
   const raw = input.trim().replace(/\/+$/, "");
-  if (!isAllowedCatalogOrigin(raw, options)) {
+  const canonical = canonicalizeCatalogBaseUrl(raw);
+  if (!isAllowedCatalogOrigin(canonical, options)) {
     throw new Error("Origem do catálogo não permitida.");
   }
-  return raw;
+  return canonical;
 }
 
 function parseEntryIds(raw: string | null): string[] {

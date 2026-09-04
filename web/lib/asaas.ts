@@ -102,7 +102,7 @@ async function asaasRequest<T>(
   const headers = new Headers(init.headers);
   headers.set("access_token", key);
   headers.set("Accept", "application/json");
-  headers.set("User-Agent", "MontaHD/0.6.23 (https://montahds.app)");
+  headers.set("User-Agent", "MontaHD/0.6.23 (https://www.montahds.app)");
   if (init.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
