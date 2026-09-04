@@ -51,15 +51,17 @@ export async function currentAppUser(): Promise<AppUser | null> {
     .eq("id", user.id)
     .maybeSingle();
 
-  const profile = withReset.error
-    ? (
-        await supabase
-          .from("profiles")
-          .select("display_name, role, password_changed_at")
-          .eq("id", user.id)
-          .maybeSingle()
-      ).data
-    : withReset.data;
+  const fallback = withReset.error
+    ? await supabase
+        .from("profiles")
+        .select("display_name, role, password_changed_at")
+        .eq("id", user.id)
+        .maybeSingle()
+    : null;
+
+  const profile = withReset.error ? fallback?.data : withReset.data;
+  const mustResetPassword =
+    !withReset.error && withReset.data?.password_reset_required === true;
 
   const displayName =
     (typeof profile?.display_name === "string" && profile.display_name) ||
@@ -78,7 +80,7 @@ export async function currentAppUser(): Promise<AppUser | null> {
     displayName,
     role,
     passwordChangedAt,
-    mustResetPassword: profile?.password_reset_required === true,
+    mustResetPassword,
   };
 }
 
