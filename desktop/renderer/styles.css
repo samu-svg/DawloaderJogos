@@ -16,8 +16,8 @@
   --danger: #f87171;
   --danger-muted: rgba(248, 113, 113, 0.12);
   --titlebar-h: 36px;
-  --radius: 12px;
-  --radius-sm: 8px;
+  --radius: 20px;
+  --radius-sm: 12px;
   --shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
 }
 
@@ -63,7 +63,14 @@ body::before {
 }
 
 .titlebar {
-  display: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 44px;
+  padding: 0 22px;
+  border-bottom: 1px solid rgba(41, 41, 56, 0.8);
+  background: rgba(8, 8, 15, 0.78);
 }
 
 .titlebar-brand {
@@ -99,9 +106,9 @@ body::before {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 8px 24px;
-  background: var(--accent-muted);
-  border-bottom: 1px solid var(--border);
+  padding: 10px 22px;
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0.2), rgba(34, 211, 238, 0.08));
+  border-bottom: 1px solid rgba(139, 92, 246, 0.28);
   font-size: 13px;
 }
 
@@ -127,28 +134,28 @@ body::before {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding: 20px 24px 16px;
+  padding: 22px 24px 20px;
 }
 
 .hero-panel {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .eyebrow {
   margin: 0 0 6px;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: #c4b5fd;
+  color: var(--accent-2);
 }
 
 .hero-panel h1 {
   margin: 0;
-  font-size: 1.45rem;
+  font-size: 1.55rem;
   font-weight: 700;
   letter-spacing: -0.03em;
-  line-height: 1.25;
+  line-height: 1.2;
   background: linear-gradient(100deg, #ffffff 10%, #c4b5fd 45%, #67e8f9 90%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -165,16 +172,22 @@ body::before {
 .steps {
   display: flex;
   align-items: center;
-  gap: 0;
-  margin-bottom: 16px;
+  gap: 6px;
+  margin-bottom: 18px;
+  padding: 5px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: rgba(18, 18, 28, 0.72);
 }
 
 .step {
   display: flex;
+  flex: 1;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 8px 12px;
-  border-radius: 999px;
+  padding: 9px 12px;
+  border-radius: 12px;
   border: 1px solid transparent;
   color: var(--muted);
   background: transparent;
@@ -187,9 +200,14 @@ button.step {
   -webkit-app-region: no-drag;
 }
 
-button.step:hover {
+button.step:hover:not(:disabled) {
   color: var(--text);
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+button.step:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
 }
 
 .step.active {
@@ -233,17 +251,14 @@ button.step:hover {
 }
 
 .step-connector {
-  flex: 0 0 28px;
-  height: 1px;
-  margin: 0 4px;
-  background: linear-gradient(90deg, var(--border), rgba(139, 92, 246, 0.35), var(--border));
+  display: none;
 }
 
 .panel {
-  border: 1px solid var(--border);
+  border: 1px solid rgba(41, 41, 56, 0.9);
   border-radius: var(--radius);
-  background: rgba(18, 18, 28, 0.88);
-  padding: 18px 20px;
+  background: rgba(18, 18, 28, 0.82);
+  padding: 20px 22px;
   box-shadow: var(--shadow);
 }
 
@@ -312,8 +327,8 @@ input[type="url"]:focus,
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 18px;
-  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  border-radius: 12px;
   border: 1px solid transparent;
   font: inherit;
   font-size: 13px;
@@ -392,15 +407,21 @@ input[type="url"]:focus,
 
 .welcome-flow {
   display: grid;
-  gap: 14px;
+  gap: 12px;
+}
+
+@media (min-width: 860px) {
+  .welcome-flow {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .welcome-step {
   display: flex;
   align-items: flex-start;
   gap: 14px;
-  padding: 12px 14px;
-  border-radius: var(--radius-sm);
+  padding: 14px;
+  border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(8, 8, 15, 0.45);
 }
@@ -454,7 +475,7 @@ input[type="url"]:focus,
 .path-card {
   margin-top: 14px;
   padding: 12px 14px;
-  border-radius: var(--radius-sm);
+  border-radius: 14px;
   border: 1px dashed rgba(139, 92, 246, 0.35);
   background: rgba(139, 92, 246, 0.06);
 }
@@ -500,8 +521,8 @@ input[type="url"]:focus,
 }
 .install-mode-select {
   font-size: 0.82rem;
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.06);
   color: var(--text);
@@ -558,7 +579,7 @@ input[type="url"]:focus,
 .table-shell {
   margin-top: 14px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: 14px;
   overflow: auto;
   max-height: min(380px, 46vh);
   background: rgba(8, 8, 15, 0.6);
@@ -592,7 +613,7 @@ thead th {
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: #a1a1aa;
-  background: #161622;
+  background: #14141f;
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
@@ -662,8 +683,8 @@ tbody tr:hover td {
 
 .library-empty {
   margin-top: 16px;
-  padding: 18px 14px;
-  border-radius: var(--radius-sm);
+  padding: 28px 16px;
+  border-radius: 16px;
   border: 1px dashed var(--border);
   color: var(--muted);
   text-align: center;
@@ -672,7 +693,7 @@ tbody tr:hover td {
 .library-loading {
   margin-top: 16px;
   padding: 28px 16px;
-  border-radius: var(--radius-sm);
+  border-radius: 16px;
   border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.03);
   text-align: center;
@@ -894,10 +915,10 @@ tbody tr:hover td {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  min-height: 32px;
-  padding: 0 16px;
+  min-height: 36px;
+  padding: 0 20px;
   border-top: 1px solid var(--border);
-  background: rgba(12, 12, 20, 0.95);
+  background: rgba(8, 8, 15, 0.92);
 }
 
 .status-text {
@@ -932,7 +953,7 @@ tbody tr:hover td {
   position: relative;
   width: min(520px, 100%);
   padding: 22px;
-  border-radius: var(--radius);
+  border-radius: 22px;
   border: 1px solid var(--border);
   background: var(--bg-elevated);
   box-shadow: var(--shadow);

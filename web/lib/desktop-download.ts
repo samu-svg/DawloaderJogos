@@ -1,9 +1,9 @@
-export const DESKTOP_APP_VERSION = "0.6.24";
+export const DESKTOP_APP_VERSION = "0.6.25";
 
 export const DESKTOP_SETUP_FILENAME = `MontaHD-${DESKTOP_APP_VERSION}-setup.exe`;
 
 /** Tamanho aproximado do instalador (para exibir na UI). */
-export const DESKTOP_SETUP_SIZE_LABEL = "≈ 83 MB";
+export const DESKTOP_SETUP_SIZE_LABEL = "≈ 93 MB";
 
 export function getDesktopDownloadUrl(): string {
   const override = process.env.NEXT_PUBLIC_DESKTOP_DOWNLOAD_URL?.trim();

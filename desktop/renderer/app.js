@@ -308,6 +308,7 @@ function init() {
     step2.classList.toggle("done", library && Boolean(manifest));
     stepLibrary.classList.toggle("active", library);
     stepLibrary.classList.toggle("done", false);
+    step2.disabled = !manifest;
   }
 
   function showWelcomeView() {
@@ -1706,6 +1707,14 @@ function init() {
 
   openLibraryFromInstallBtn.addEventListener("click", () => {
     void openLibrary({ pickIfNeeded: true });
+  });
+
+  step1.addEventListener("click", () => {
+    showWelcomeView();
+  });
+
+  step2.addEventListener("click", () => {
+    if (manifest) showInstallView();
   });
 
   stepLibrary.addEventListener("click", () => {
