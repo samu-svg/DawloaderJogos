@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  LAUNCH_IFRAME_CLEANUP_MS,
+  LAUNCH_ANCHOR_CLEANUP_MS,
   launchMontaHdProtocol,
   type LaunchMontaHdHost,
 } from "./launch-montahd.ts";
@@ -9,13 +9,17 @@ import {
 function createHost() {
   const timers: Array<{ fn: () => void; ms: number }> = [];
   const appended: unknown[] = [];
-  const iframe = {
+  const anchor = {
     style: { display: "" },
-    src: "",
+    href: "",
     attributes: {} as Record<string, string>,
+    clicked: false,
     removed: false,
     setAttribute(name: string, value: string) {
       this.attributes[name] = value;
+    },
+    click() {
+      this.clicked = true;
     },
     remove() {
       this.removed = true;
@@ -24,8 +28,8 @@ function createHost() {
 
   const host: LaunchMontaHdHost = {
     createElement(tagName) {
-      assert.equal(tagName, "iframe");
-      return iframe;
+      assert.equal(tagName, "a");
+      return anchor;
     },
     body: {
       appendChild(node) {
@@ -38,27 +42,28 @@ function createHost() {
     },
   };
 
-  return { host, iframe, appended, timers };
+  return { host, anchor, appended, timers };
 }
 
-test("abre o protocolo via iframe oculto e remove depois", () => {
-  const { host, iframe, appended, timers } = createHost();
+test("abre o protocolo via ancora oculta, clica e remove depois", () => {
+  const { host, anchor, appended, timers } = createHost();
   const deepLink = "montahd://install/jogos360/sess.abc";
 
   launchMontaHdProtocol(deepLink, host);
 
-  assert.equal(iframe.src, deepLink);
-  assert.equal(iframe.style.display, "none");
-  assert.equal(iframe.attributes.hidden, "");
-  assert.equal(iframe.attributes["aria-hidden"], "true");
+  assert.equal(anchor.href, deepLink);
+  assert.equal(anchor.style.display, "none");
+  assert.equal(anchor.attributes.hidden, "");
+  assert.equal(anchor.attributes["aria-hidden"], "true");
+  assert.equal(anchor.clicked, true);
   assert.equal(appended.length, 1);
-  assert.equal(appended[0], iframe);
-  assert.equal(iframe.removed, false);
+  assert.equal(appended[0], anchor);
+  assert.equal(anchor.removed, false);
   assert.equal(timers.length, 1);
-  assert.equal(timers[0]?.ms, LAUNCH_IFRAME_CLEANUP_MS);
+  assert.equal(timers[0]?.ms, LAUNCH_ANCHOR_CLEANUP_MS);
 
   timers[0]?.fn();
-  assert.equal(iframe.removed, true);
+  assert.equal(anchor.removed, true);
 });
 
 test("nao faz nada sem window/document (SSR)", () => {

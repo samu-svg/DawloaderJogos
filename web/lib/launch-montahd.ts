@@ -1,13 +1,14 @@
-/** Tempo até remover o iframe oculto usado para abrir o protocolo. */
-export const LAUNCH_IFRAME_CLEANUP_MS = 4000;
+/** Tempo até remover o âncora oculta usada para abrir o protocolo. */
+export const LAUNCH_ANCHOR_CLEANUP_MS = 4000;
 
 const PROTOCOL_PREFIX = "montahd://";
 
 export type LaunchMontaHdHost = {
-  createElement: (tagName: "iframe") => {
+  createElement: (tagName: "a") => {
     style: { display: string };
-    src: string;
+    href: string;
     setAttribute: (name: string, value: string) => void;
+    click: () => void;
     remove: () => void;
   };
   body: { appendChild: (node: unknown) => void } | null;
@@ -31,8 +32,9 @@ function defaultHost(): LaunchMontaHdHost | null {
 }
 
 /**
- * Abre um deep link `montahd://` sem navegar a página (`location.href`).
- * Usa um iframe oculto e remove depois de alguns segundos.
+ * Abre um deep link `montahd://` sem navegar a página (`location.href`)
+ * e sem iframe — o CSP de produção só permite `frame-src` para o próprio
+ * site e o Stripe, então `montahd://` num iframe é bloqueado.
  */
 export function launchMontaHdProtocol(
   deepLink: string,
@@ -41,15 +43,17 @@ export function launchMontaHdProtocol(
   if (!host?.body) return;
   if (!deepLink.startsWith(PROTOCOL_PREFIX)) return;
 
-  const iframe = host.createElement("iframe");
-  iframe.setAttribute("hidden", "");
-  iframe.setAttribute("aria-hidden", "true");
-  iframe.setAttribute("tabindex", "-1");
-  iframe.style.display = "none";
-  iframe.src = deepLink;
-  host.body.appendChild(iframe);
+  const anchor = host.createElement("a");
+  anchor.setAttribute("hidden", "");
+  anchor.setAttribute("aria-hidden", "true");
+  anchor.setAttribute("tabindex", "-1");
+  anchor.setAttribute("rel", "noopener");
+  anchor.style.display = "none";
+  anchor.href = deepLink;
+  host.body.appendChild(anchor);
+  anchor.click();
 
   host.setTimeout(() => {
-    iframe.remove();
-  }, LAUNCH_IFRAME_CLEANUP_MS);
+    anchor.remove();
+  }, LAUNCH_ANCHOR_CLEANUP_MS);
 }
