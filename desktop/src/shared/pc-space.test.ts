@@ -10,6 +10,8 @@ import {
   largestEntryBytes,
   largestPcStagingBytes,
   maxConcurrentExtracts,
+  hdSpaceNeeded,
+  notEnoughHdSpaceMessage,
   notEnoughPcSpaceMessage,
   orderDownloadQueue,
   peakConcurrentBytes,
@@ -141,4 +143,18 @@ test("peakConcurrentBytes soma no máximo N extrações do modo", () => {
   const large = FAT32_MAX_FILE_BYTES + 1;
   assert.equal(peakPcStagingBytes([100, large, large], "equilibrado"), large * 2);
   assert.equal(peakPcStagingBytes([100, large], "rapido"), large);
+});
+
+test("hdSpaceNeeded soma o pico de extração com o jogo que permanece no HD", () => {
+  const sizes = [100, 80, 50];
+  assert.equal(hdSpaceNeeded(sizes, "economico"), 100);
+  assert.equal(hdSpaceNeeded(sizes, "economico", 40), 140);
+  assert.equal(hdSpaceNeeded(sizes, "equilibrado", 0), 180);
+});
+
+test("mensagem de HD insuficiente distingue reinstalação", () => {
+  const plain = notEnoughHdSpaceMessage(2000, 500);
+  assert.match(plain, /baixar e descompactar/);
+  const reinstall = notEnoughHdSpaceMessage(2000, 500, true);
+  assert.match(reinstall, /sem apagar o jogo atual/);
 });

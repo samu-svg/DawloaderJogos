@@ -17,9 +17,15 @@ import { isPathUnderRoot } from "../shared/path-safety";
 import {
   hdMarkersForEntry,
   isDeliverableArchiveDestination,
+  isPriorityRootInstall,
 } from "../shared/special-downloads";
 import { resolveUnderRoot } from "./paths";
 import { removeStagingEntry, stagingEntryDir } from "./staging";
+import {
+  discardAllOutgoing,
+  recoverInterruptedDestSwap,
+  recoverInterruptedRootSwap,
+} from "./install-swap";
 
 const HD_META_DIR = ".montahd";
 
@@ -114,6 +120,35 @@ export async function clearEntryInstallFiles(options: {
   }
 
   await removeStagingEntry(stagingEntryDir(stagingRoot, entryId));
+  await discardAllOutgoing(rootDir, entryId);
+}
+
+/**
+ * No reset de reinstalação: só lixo de download e troca interrompida.
+ * A pasta já instalada permanece até o conteúdo novo estar íntegro.
+ */
+export async function clearDownloadResidues(options: {
+  rootDir: string;
+  destination: string;
+  entryId: string;
+  stagingRoot: string;
+}): Promise<void> {
+  const { rootDir, destination, entryId, stagingRoot } = options;
+  const resolved = resolveUnderRoot(rootDir, destination);
+  if (!resolved.ok) throw new Error(resolved.error);
+
+  const destPath = resolved.fullPath;
+  const installDir = installDirForDestPath(destPath);
+
+  await unlink(destPath + HD_PARTIAL_SUFFIX).catch(() => undefined);
+  await removeStagingEntry(stagingEntryDir(stagingRoot, entryId));
+
+  if (isPriorityRootInstall(entryId)) {
+    await recoverInterruptedRootSwap(rootDir, entryId);
+    return;
+  }
+
+  await recoverInterruptedDestSwap(rootDir, entryId, installDir);
 }
 
 export async function removeStaleHdExtractDirs(rootDir: string): Promise<void> {

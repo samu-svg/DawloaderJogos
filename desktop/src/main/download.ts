@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import { createWriteStream, existsSync, statSync, unlinkSync } from "node:fs";
-import { copyFile, open, unlink } from "node:fs/promises";
+import { createWriteStream, existsSync, statSync } from "node:fs";
+import { copyFile, open, readdir, unlink } from "node:fs/promises";
 import path from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
@@ -17,12 +17,11 @@ import {
 } from "../shared/pc-space";
 import { copyDirectory } from "./copy-dir";
 import { ensureDir, ensureDirSync } from "./ensure-dir";
-import { deleteHdItem } from "./hd-library";
+import { withDestSwap, withRootSwap } from "./install-swap";
 import { removeStagingEntry, stagingEntryDir } from "./staging";
 import { extractRarToContentRoot, isRarFile } from "./archive-extract";
 import {
   hdMarkersForEntry,
-  isDeliverableArchiveDestination,
   isPriorityRootInstall,
 } from "../shared/special-downloads";
 import {
@@ -335,47 +334,49 @@ async function extractAndPlace(
   );
 
   try {
-    await ensureDir(hdInstallDir);
     const installRel = path.relative(hdRoot, hdInstallDir).replace(/\\/g, "/");
     const copyFilter = isGamesDestination(installRel) ? shouldCopyGameFile : undefined;
 
-    const installed = await copyDirectory(
-      contentRoot,
-      hdInstallDir,
-      (copied, total) => {
-        onProgress({
-          entryId,
-          label,
-          downloadedBytes: copied,
-          totalBytes: total,
-          status: copyStatus,
-        });
-      },
-      signal,
-      copyFilter,
-    );
+    return await withDestSwap(hdRoot, entryId, hdInstallDir, async () => {
+      await ensureDir(hdInstallDir);
+      const copied = await copyDirectory(
+        contentRoot,
+        hdInstallDir,
+        (copiedBytes, total) => {
+          onProgress({
+            entryId,
+            label,
+            downloadedBytes: copiedBytes,
+            totalBytes: total,
+            status: copyStatus,
+          });
+        },
+        signal,
+        copyFilter,
+      );
 
-    if (isGamesDestination(installRel)) {
-      const contentTrees = await findContentInstallTrees(tempDir);
-      for (const contentTree of contentTrees) {
-        await copyDirectory(
-          contentTree,
-          path.join(hdRoot, "Content"),
-          (copied, total) => {
-            onProgress({
-              entryId,
-              label,
-              downloadedBytes: installed.bytesCopied + copied,
-              totalBytes: installed.bytesCopied + total,
-              status: copyStatus,
-            });
-          },
-          signal,
-        );
+      if (isGamesDestination(installRel)) {
+        const contentTrees = await findContentInstallTrees(tempDir);
+        for (const contentTree of contentTrees) {
+          await copyDirectory(
+            contentTree,
+            path.join(hdRoot, "Content"),
+            (copiedBytes, total) => {
+              onProgress({
+                entryId,
+                label,
+                downloadedBytes: copied.bytesCopied + copiedBytes,
+                totalBytes: copied.bytesCopied + total,
+                status: copyStatus,
+              });
+            },
+            signal,
+          );
+        }
       }
-    }
 
-    return hdInstallDir;
+      return hdInstallDir;
+    });
   } finally {
     await removeTempDir(tempDir);
   }
@@ -453,14 +454,21 @@ async function prepareOnHd(options: {
   };
 }
 
-async function removeRootMarkersBeforeInstall(
-  hdRoot: string,
+async function rootNamesToRetire(
   entryId: string,
-): Promise<void> {
+  contentRoot: string,
+  archiveName: string,
+): Promise<string[]> {
+  const names = new Set<string>();
   for (const marker of hdMarkersForEntry(entryId)) {
-    if (isDeliverableArchiveDestination(marker)) continue;
-    await deleteHdItem(hdRoot, marker).catch(() => undefined);
+    names.add(path.basename(marker));
   }
+  if (archiveName) names.add(path.basename(archiveName));
+  for (const name of await readdir(contentRoot)) {
+    if (!name || name === "." || name === ".." || name.startsWith(".")) continue;
+    names.add(name);
+  }
+  return [...names];
 }
 
 /** Utilitários na raiz do HD: extrai o pacote e copia tudo para a raiz (substituindo). */
@@ -517,44 +525,44 @@ async function installPreparedToHdRoot(
   }
 
   try {
-    await removeRootMarkersBeforeInstall(hdRoot, entryId);
+    const names = await rootNamesToRetire(entryId, contentRoot, archiveName);
+    return await withRootSwap(hdRoot, entryId, names, async () => {
+      onProgress({
+        entryId,
+        label,
+        downloadedBytes: 0,
+        totalBytes: fileSize,
+        status: target === "pc" ? "copying" : "installing",
+        target,
+      });
 
-    onProgress({
-      entryId,
-      label,
-      downloadedBytes: 0,
-      totalBytes: fileSize,
-      status: target === "pc" ? "copying" : "installing",
-      target,
+      await copyDirectory(
+        contentRoot,
+        hdRoot,
+        (copied, total) => {
+          onProgress({
+            entryId,
+            label,
+            downloadedBytes: copied,
+            totalBytes: total,
+            status: target === "pc" ? "copying" : "installing",
+            target,
+          });
+        },
+        signal,
+      );
+
+      await ensureDir(hdRoot);
+      await copyFile(zipPath, archiveDest);
+      await removeZipDownloadArtifacts(destPath);
+      if (stagingDir) {
+        await removeStagingEntry(stagingDir);
+      } else {
+        await unlink(zipPath).catch(() => undefined);
+      }
+
+      return { installedPath: archiveDest };
     });
-
-    await copyDirectory(
-      contentRoot,
-      hdRoot,
-      (copied, total) => {
-        onProgress({
-          entryId,
-          label,
-          downloadedBytes: copied,
-          totalBytes: total,
-          status: target === "pc" ? "copying" : "installing",
-          target,
-        });
-      },
-      signal,
-    );
-
-    await ensureDir(hdRoot);
-    if (existsSync(archiveDest)) unlinkSync(archiveDest);
-    await copyFile(zipPath, archiveDest);
-    await removeZipDownloadArtifacts(destPath);
-    if (stagingDir) {
-      await removeStagingEntry(stagingDir);
-    } else {
-      await unlink(zipPath).catch(() => undefined);
-    }
-
-    return { installedPath: archiveDest };
   } finally {
     await removeTempDir(tempDir);
   }
@@ -596,8 +604,10 @@ async function installPreparedOnHd(
   }
 
   await ensureDir(path.dirname(destPath));
-  if (existsSync(destPath)) unlinkSync(destPath);
-  await copyFile(zipPath, destPath);
+  await withDestSwap(hdRoot, prepared.entryId, destPath, async () => {
+    await copyFile(zipPath, destPath);
+    return destPath;
+  });
   await unlink(zipPath).catch(() => undefined);
   return { installedPath: destPath };
 }
@@ -715,8 +725,10 @@ async function installPreparedViaPc(
     }
 
     await ensureDir(path.dirname(destPath));
-    if (existsSync(destPath)) unlinkSync(destPath);
-    await copyFile(zipPath, destPath);
+    await withDestSwap(hdRoot, entryId, destPath, async () => {
+      await copyFile(zipPath, destPath);
+      return destPath;
+    });
     copiedToHd = true;
     return { installedPath: destPath };
   } finally {

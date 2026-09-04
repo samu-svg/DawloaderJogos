@@ -45,6 +45,7 @@ import {
   recordInstalled,
 } from "./hd-library";
 import {
+  clearDownloadResidues,
   clearEntryInstallFiles,
   inspectInstallStates,
   removeStaleHdExtractDirs,
@@ -61,9 +62,9 @@ import {
   type InstallMode,
   isValidInstallMode,
   largestPcStagingBytes,
+  hdSpaceNeeded,
   notEnoughHdSpaceMessage,
   notEnoughPcSpaceMessage,
-  peakHdInstallBytes,
   peakPcStagingBytes,
 } from "../shared/pc-space";
 import { loadInstallMode, saveInstallMode } from "./install-mode-store";
@@ -687,7 +688,7 @@ ipcMain.handle(
     for (const entry of requestedEntries) {
       if (!resetIds.has(entry.id)) continue;
       try {
-        await clearEntryInstallFiles({
+        await clearDownloadResidues({
           rootDir,
           destination: destinationForPriorityRootInstall(entry.id, entry.destination),
           entryId: entry.id,
@@ -697,7 +698,7 @@ ipcMain.handle(
         const message =
           error instanceof Error
             ? error.message
-            : "Não foi possível apagar a instalação anterior.";
+            : "Não foi possível preparar a reinstalação.";
         send("download-progress", {
           entryId: entry.id,
           label: entry.label,
@@ -738,11 +739,14 @@ ipcMain.handle(
       }
     }
 
-    const hdNeeded = peakHdInstallBytes(sizes, installMode);
+    const hdRetained = entriesToDownload
+      .filter((entry) => resetIds.has(entry.id))
+      .reduce((sum, entry) => sum + (entry.sizeBytes || 0), 0);
+    const hdNeeded = hdSpaceNeeded(sizes, installMode, hdRetained);
     if (hdNeeded > 0) {
       const hdFree = await getFreeBytes(rootDir);
       if (hdFree < hdNeeded) {
-        const message = notEnoughHdSpaceMessage(hdNeeded, hdFree);
+        const message = notEnoughHdSpaceMessage(hdNeeded, hdFree, hdRetained > 0);
         for (const entry of entriesToDownload) {
           send("download-progress", {
             entryId: entry.id,

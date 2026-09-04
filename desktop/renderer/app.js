@@ -1867,14 +1867,19 @@ function init() {
       }
     }
     const hdNeeded = peakHdInstallBytes(sizes, mode);
-    if (hdNeeded > 0 && selectedRoot) {
+    const resetSet = new Set(resetEntryIds ?? []);
+    const retained = toDownload
+      .filter((entry) => resetSet.has(entry.id))
+      .reduce((sum, entry) => sum + (entry.sizeBytes || 0), 0);
+    const hdTotal = hdNeeded + retained;
+    if (hdTotal > 0 && selectedRoot) {
       try {
         const hdDisk = await window.montahd.getHdDiskSpace(selectedRoot);
-        if (hdDisk.freeBytes < hdNeeded) {
+        if (hdDisk.freeBytes < hdTotal) {
           setSummary(
-            `Espaço insuficiente no HD. Livre: ${formatBytes(hdDisk.freeBytes)}. ` +
-              `Necessário pelo menos ${formatBytes(hdNeeded)} para baixar e descompactar. ` +
-              `Libere espaço no HD e tente de novo.`,
+            retained > 0
+              ? `Espaço insuficiente no HD para reinstalar sem apagar o jogo atual. Livre: ${formatBytes(hdDisk.freeBytes)}. Necessário pelo menos ${formatBytes(hdTotal)}. Libere espaço no HD e tente de novo.`
+              : `Espaço insuficiente no HD. Livre: ${formatBytes(hdDisk.freeBytes)}. Necessário pelo menos ${formatBytes(hdTotal)} para baixar e descompactar. Libere espaço no HD e tente de novo.`,
             "error",
           );
           return;

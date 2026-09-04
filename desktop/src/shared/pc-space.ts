@@ -91,6 +91,14 @@ export function peakHdInstallBytes(sizes: number[], mode: InstallMode): number {
   return peakConcurrentBytes(hdSizes, mode);
 }
 
+export function hdSpaceNeeded(
+  sizes: number[],
+  mode: InstallMode,
+  retainedBytes = 0,
+): number {
+  return peakHdInstallBytes(sizes, mode) + Math.max(0, retainedBytes);
+}
+
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   const units = ["KB", "MB", "GB", "TB"];
@@ -156,10 +164,17 @@ export function notEnoughPcSpaceMessage(needed: number, free: number): string {
   );
 }
 
-export function notEnoughHdSpaceMessage(needed: number, free: number): string {
+export function notEnoughHdSpaceMessage(
+  needed: number,
+  free: number,
+  reinstall = false,
+): string {
+  const reason = reinstall
+    ? "para reinstalar sem apagar o jogo atual"
+    : "para baixar e descompactar";
   return (
     `Espaço insuficiente no HD. Livre: ${formatBytes(free)}. ` +
-    `Necessário pelo menos ${formatBytes(needed)} para baixar e descompactar. ` +
+    `Necessário pelo menos ${formatBytes(needed)} ${reason}. ` +
     `Libere espaço no HD e tente de novo.`
   );
 }
