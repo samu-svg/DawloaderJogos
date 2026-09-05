@@ -7,7 +7,7 @@ export function SiteFooter() {
         <p>MontaHD — aplicativo de download e organização de arquivos.</p>
         <div className="flex flex-wrap gap-4">
           <Link href="/baixar" className="hover:text-zinc-400">
-            Acervo
+            Montar meu HD
           </Link>
           <Link href="/assinar" className="hover:text-zinc-400">
             Acesso

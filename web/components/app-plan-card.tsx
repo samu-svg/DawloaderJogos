@@ -32,14 +32,14 @@ export function AppPlanCard({
           App e acervo liberados
         </h2>
         <p className="mt-2 text-sm text-zinc-400">
-          Baixe o instalador e escolha os jogos no seu acervo.
+          Baixe o instalador, selecione os jogos e monte seu HD.
         </p>
         <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/baixar"
             className="rounded-2xl bg-accent px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-accent/25 transition hover:bg-accent-hover"
           >
-            Abrir meu acervo
+            Montar meu HD
           </Link>
         </div>
       </section>

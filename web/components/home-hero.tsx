@@ -95,10 +95,7 @@ export function HomeHero({
           </div>
         </div>
 
-        <DesktopDownloadCard
-          title="Baixar o MontaHD"
-          description="Escolha o instalador do seu Windows. Depois, os jogos abertos aqui são baixados e organizados no HD."
-        />
+        <DesktopDownloadCard />
       </div>
     </section>
   );

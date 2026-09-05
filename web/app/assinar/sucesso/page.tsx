@@ -26,7 +26,7 @@ export default async function AssinarSucessoPage() {
           href="/baixar"
           className="mx-auto mt-8 rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-hover"
         >
-          Abrir meu acervo
+          Montar meu HD
         </Link>
       </main>
     </>

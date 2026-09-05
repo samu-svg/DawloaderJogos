@@ -58,12 +58,14 @@ export function GameCard({
       className="card-glow group block overflow-hidden rounded-xl border border-border bg-surface"
     >
       <div className="relative aspect-[3/4] w-full overflow-hidden">
-        <GameCoverFrame
-          title={displayTitle}
-          coverUrl={coverUrl}
-          badges={audioBadges}
-          showTitle={!hasCover}
-        />
+        <div className="h-full w-full transition duration-300 ease-out group-hover:scale-[1.04]">
+          <GameCoverFrame
+            title={displayTitle}
+            coverUrl={coverUrl}
+            badges={audioBadges}
+            showTitle={!hasCover}
+          />
+        </div>
         <span className="absolute left-2 top-2 rounded-md bg-black/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300 backdrop-blur">
           {platform}
         </span>

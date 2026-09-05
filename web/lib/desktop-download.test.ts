@@ -12,6 +12,13 @@ test("x64 atual continua no caminho clássico", () => {
   assert.equal(build.href, `/downloads/MontaHD-${DESKTOP_APP_VERSION}-setup.exe`);
 });
 
+test("32-bit e Windows 7/8 são versões novas", () => {
+  assert.equal(getDesktopBuild("win10-x64").preview, undefined);
+  assert.equal(getDesktopBuild("win10-ia32").preview, true);
+  assert.equal(getDesktopBuild("win7-x64").preview, true);
+  assert.equal(getDesktopBuild("win7-ia32").preview, true);
+});
+
 test("ia32 e legado usam arquivos separados", () => {
   assert.equal(
     getDesktopBuild("win10-ia32").href,

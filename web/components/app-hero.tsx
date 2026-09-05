@@ -23,7 +23,7 @@ export function AppHero({
     : loggedIn
       ? "/assinar"
       : "/cadastro?next=/assinar";
-  const primaryLabel = hasAccess ? "Abrir meu acervo" : "Ver os planos";
+  const primaryLabel = hasAccess ? "Montar meu HD" : "Ver os planos";
 
   return (
     <header className="mx-auto max-w-2xl text-center">

@@ -183,7 +183,7 @@ export function CatalogBrowser({
     <div className="space-y-6 pb-40">
       <header className="space-y-3">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-2">
-          Meu acervo
+          Montar meu HD
         </p>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -239,7 +239,7 @@ export function CatalogBrowser({
               type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar no acervo…"
+              placeholder="Buscar jogos…"
               className="w-full rounded-2xl border border-border bg-background py-2.5 pl-4 pr-4 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-accent focus:ring-1 focus:ring-accent"
             />
           </label>

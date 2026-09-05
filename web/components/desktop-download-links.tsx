@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   getDesktopBuild,
@@ -34,6 +35,11 @@ function BuildRow({
           {suggested && (
             <span className="rounded-full bg-accent/30 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent-hover">
               Sugerido
+            </span>
+          )}
+          {build.preview && (
+            <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-200">
+              Nova
             </span>
           )}
         </span>
@@ -75,6 +81,27 @@ export function DesktopDownloadPicker({
       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">
         Escolha o instalador do seu Windows
       </p>
+      <p className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3.5 py-3 text-xs leading-5 text-emerald-100/90">
+        {compact ? (
+          <>
+            O aplicativo é totalmente seguro. Se o Google ou o Chrome bloquear o
+            download, clique em{" "}
+            <strong className="font-semibold text-white">Manter</strong> ou{" "}
+            <strong className="font-semibold text-white">Aceitar</strong>.
+          </>
+        ) : (
+          <>
+            O aplicativo é totalmente seguro. Se o Google ou o Chrome bloquear o
+            download, clique em{" "}
+            <strong className="font-semibold text-white">Manter</strong> ou{" "}
+            <strong className="font-semibold text-white">Aceitar</strong>. No
+            Windows, se aparecer “O Windows protegeu o computador”, escolha{" "}
+            <strong className="font-semibold text-white">Mais informações</strong>{" "}
+            e depois{" "}
+            <strong className="font-semibold text-white">Executar assim mesmo</strong>.
+          </>
+        )}
+      </p>
       <ul className="space-y-2">
         {builds.map((build) => (
           <li key={build.id}>
@@ -86,6 +113,21 @@ export function DesktopDownloadPicker({
           </li>
         ))}
       </ul>
+      <p
+        className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-3 text-xs leading-5 text-amber-100/90"
+        role="note"
+      >
+        As versões marcadas como <strong className="font-semibold text-amber-50">Nova</strong>{" "}
+        (32-bit e Windows 7/8/8.1) ainda podem apresentar instabilidade. Se
+        algo não funcionar,{" "}
+        <Link
+          href="/suporte"
+          className="font-semibold text-white underline underline-offset-2 hover:text-amber-100"
+        >
+          fale com o suporte
+        </Link>{" "}
+        — resolvemos em até 24 horas.
+      </p>
     </div>
   );
 }

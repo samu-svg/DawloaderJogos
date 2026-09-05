@@ -1,8 +1,8 @@
 import { DesktopDownloadPicker } from "@/components/desktop-download-links";
 
 export function DesktopDownloadCard({
-  title = "App MontaHD para Windows",
-  description = "Instale uma vez. Depois, os jogos escolhidos aqui são baixados, extraídos e organizados no HD automaticamente.",
+  title = "Vamos baixar o aplicativo?",
+  description = "Escolha o instalador do seu Windows. Instale uma vez — depois os jogos escolhidos aqui são baixados, extraídos e organizados no HD.",
 }: {
   title?: string;
   description?: string;

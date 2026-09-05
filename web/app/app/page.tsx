@@ -49,10 +49,7 @@ export default async function AppPage() {
             planLabel={lowestPlanPriceLabel()}
           />
 
-          <DesktopDownloadCard
-            title="Instalador para Windows"
-            description="Instale uma vez. Depois, os jogos escolhidos no site são baixados, extraídos e organizados no HD automaticamente."
-          />
+          <DesktopDownloadCard />
 
           <AppValueProps />
 

@@ -127,7 +127,7 @@ export default async function AssinarPage({ searchParams }: PageProps) {
                     href="/baixar"
                     className="rounded-2xl bg-accent px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-accent/25 transition hover:bg-accent-hover"
                   >
-                    Abrir meu acervo
+                    Montar meu HD
                   </Link>
                   <Link
                     href="/conta/assinatura"

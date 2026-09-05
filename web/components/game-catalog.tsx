@@ -137,30 +137,43 @@ export function GameCatalog({
 
   return (
     <section id="jogos" ref={listTopRef} className="scroll-mt-20">
-      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-4 sm:p-5">
-        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+      <div className="mb-5 flex flex-col items-center gap-1 text-center sm:flex-row sm:items-end sm:justify-between sm:text-left">
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight text-white">
+            Acervo
+          </h2>
+          <p className="mt-0.5 text-sm text-zinc-500">
+            {filtered.length} {filtered.length === 1 ? "jogo" : "jogos"}
+            {totalBytes > 0 ? ` · ${formatBytes(totalBytes)}` : ""}
+            {totalPages > 1 ? ` · página ${currentPage} de ${totalPages}` : ""}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-4 rounded-2xl border border-border/80 bg-surface/70 p-4 sm:p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <input
             type="search"
             value={search}
             onChange={(event) => update(() => setSearch(event.target.value))}
             placeholder="Buscar jogo por nome..."
-            className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-center text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-accent focus:ring-1 focus:ring-accent sm:max-w-md"
+            className="w-full min-w-0 flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-accent focus:ring-1 focus:ring-accent"
           />
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-zinc-500">Ordenar:</span>
+          <label className="flex shrink-0 items-center gap-2 text-sm text-zinc-500">
+            <span>Ordenar</span>
             <select
               value={sort}
               onChange={(event) =>
                 update(() => setSort(event.target.value as SortMode))
               }
-              className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-white outline-none focus:border-accent"
+              className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-white outline-none focus:border-accent"
             >
               <option value="populares">Mais populares</option>
               <option value="az">A → Z</option>
               <option value="za">Z → A</option>
               <option value="maiores">Maiores primeiro</option>
             </select>
-          </div>
+          </label>
         </div>
 
         {collections.length > 1 && (
@@ -281,15 +294,10 @@ export function GameCatalog({
         )}
       </div>
 
-      <p className="mt-4 text-center text-sm text-zinc-500">
-        {filtered.length} jogo(s)
-        {totalBytes > 0 ? ` · ${formatBytes(totalBytes)}` : ""}
-        {totalPages > 1 ? ` · página ${currentPage} de ${totalPages}` : ""}
-      </p>
-
       {shown.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-dashed border-border p-14 text-center">
-          <p className="text-zinc-500">
+        <div className="mt-6 rounded-2xl border border-dashed border-border bg-surface/40 px-6 py-16 text-center">
+          <p className="text-base font-medium text-white">Nenhum jogo aqui</p>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-zinc-500">
             {games.length === 0
               ? "Nenhum jogo publicado ainda. Volte em breve."
               : "Nenhum jogo encontrado com esses filtros."}

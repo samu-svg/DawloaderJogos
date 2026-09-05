@@ -19,6 +19,8 @@ export type DesktopBuildInfo = {
   sizeLabel: string;
   version: string;
   recommended?: boolean;
+  /** 32-bit e Windows 7/8 — recém-lançadas, ainda em estabilização. */
+  preview?: boolean;
 };
 
 const BUILDS: readonly DesktopBuildInfo[] = [
@@ -42,6 +44,7 @@ const BUILDS: readonly DesktopBuildInfo[] = [
     href: `/downloads/MontaHD-${DESKTOP_APP_VERSION}-ia32-setup.exe`,
     sizeLabel: "≈ 87 MB",
     version: DESKTOP_APP_VERSION,
+    preview: true,
   },
   {
     id: "win7-x64",
@@ -52,6 +55,7 @@ const BUILDS: readonly DesktopBuildInfo[] = [
     href: `/downloads/legacy/MontaHD-${DESKTOP_APP_VERSION}-legacy-x64-setup.exe`,
     sizeLabel: "≈ 71 MB",
     version: DESKTOP_APP_VERSION,
+    preview: true,
   },
   {
     id: "win7-ia32",
@@ -62,6 +66,7 @@ const BUILDS: readonly DesktopBuildInfo[] = [
     href: `/downloads/legacy/MontaHD-${DESKTOP_APP_VERSION}-legacy-ia32-setup.exe`,
     sizeLabel: "≈ 68 MB",
     version: DESKTOP_APP_VERSION,
+    preview: true,
   },
 ];
 

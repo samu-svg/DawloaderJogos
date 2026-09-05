@@ -76,7 +76,7 @@ export function SiteHeader({
                 href={hasAccess ? "/baixar" : "/assinar"}
                 className="rounded-lg bg-accent px-4 py-1.5 font-medium text-white transition hover:bg-accent-hover"
               >
-                {hasAccess ? "Meu acervo" : "Liberar o app"}
+                {hasAccess ? "Montar meu HD" : "Liberar o app"}
               </Link>
               <form action={signOut}>
                 <button

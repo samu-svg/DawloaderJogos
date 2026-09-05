@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { buildMontaHDCatalogLink } from "@/lib/montahd-link";
-import { getDesktopDownloadInfo } from "@/lib/desktop-download";
+import { launchMontaHdProtocol } from "@/lib/launch-montahd";
+import { InstallOnHdControls } from "@/components/install-on-hd-controls";
 
 type GameInstallPanelProps = {
   siteUrl: string;
@@ -22,9 +23,10 @@ export function GameInstallPanel({
   access,
   isUtility = false,
 }: GameInstallPanelProps) {
-  const download = getDesktopDownloadInfo();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [launched, setLaunched] = useState(false);
+  const lastDeepLink = useRef<string | null>(null);
 
   async function install() {
     setError(null);
@@ -48,18 +50,27 @@ export function GameInstallPanel({
       }
 
       const data = (await response.json()) as { session?: string | null };
-      window.location.href = buildMontaHDCatalogLink(
+      const deepLink = buildMontaHDCatalogLink(
         siteUrl,
         collectionSlug,
         entryIds,
         { installSession: data.session ?? null },
       );
+      lastDeepLink.current = deepLink;
+      launchMontaHdProtocol(deepLink);
+      setLaunched(true);
     } catch (caught) {
       setError(
         caught instanceof Error ? caught.message : "Erro ao iniciar download.",
       );
     } finally {
       setLoading(false);
+    }
+  }
+
+  function retryLaunch() {
+    if (lastDeepLink.current) {
+      launchMontaHdProtocol(lastDeepLink.current);
     }
   }
 
@@ -133,23 +144,12 @@ export function GameInstallPanel({
           {error}
         </p>
       )}
-      <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-        <button
-          type="button"
-          disabled={loading}
-          onClick={() => void install()}
-          className="rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-hover disabled:opacity-50"
-        >
-          {loading ? "Preparando..." : "Instalar no HD"}
-        </button>
-        <a
-          href={download.href}
-          download={download.fileName}
-          className="text-sm text-zinc-400 underline-offset-2 hover:text-white hover:underline"
-        >
-          Ainda não tenho o app ({download.version})
-        </a>
-      </div>
+      <InstallOnHdControls
+        loading={loading}
+        launched={launched}
+        onInstall={() => void install()}
+        onRetry={retryLaunch}
+      />
     </div>
   );
 }

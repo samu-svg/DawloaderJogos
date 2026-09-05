@@ -6,8 +6,8 @@ import { loadAcervo } from "@/lib/games";
 import { getSiteUrl } from "@/lib/site-url";
 
 export const metadata: Metadata = {
-  title: "Meu acervo — MontaHD",
-  description: "Escolha os jogos do acervo e deixe o app montar o seu HD.",
+  title: "Montar meu HD — MontaHD",
+  description: "Selecione os jogos e deixe o MontaHD baixar, verificar e montar no seu HD.",
 };
 
 type PageProps = {

@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export function StoreFooter() {
   return (
-    <footer className="mt-24 border-t border-border pt-10 pb-10">
+    <footer className="mt-24 border-t border-border/70 pt-12 pb-10">
       <div className="content-narrow flex flex-col items-center gap-6 px-6 text-center">
         <div className="flex flex-col items-center gap-3">
           <Image

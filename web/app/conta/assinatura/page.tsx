@@ -164,7 +164,7 @@ export default async function AssinaturaPage() {
             Suporte
           </Link>
           <Link href="/baixar" className="hover:text-zinc-400">
-            ← Voltar ao acervo
+            ← Montar meu HD
           </Link>
         </p>
       </main>
