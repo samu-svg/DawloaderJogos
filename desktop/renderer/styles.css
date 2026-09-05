@@ -510,29 +510,54 @@ input[type="url"]:focus,
 
 .install-mode-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
   margin: 12px 0 0;
 }
 .install-mode-label {
+  margin: 0;
   font-size: 0.82rem;
   color: var(--muted);
   white-space: nowrap;
 }
-.install-mode-select {
-  font-size: 0.82rem;
-  padding: 7px 10px;
-  border-radius: 10px;
+.install-mode-picker {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text);
+  background: #12121c;
+}
+.install-mode-option {
+  appearance: none;
+  padding: 7px 12px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  background: #1b1b28;
+  color: #e4e4e7;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
   outline: none;
 }
-.install-mode-select:focus {
-  border-color: var(--accent);
+.install-mode-option:hover:not(:disabled) {
+  background: #27273a;
+  color: #fafafa;
 }
-.install-mode-select:disabled {
-  opacity: 0.5;
+.install-mode-option:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.35);
+}
+.install-mode-option.is-selected {
+  background: var(--accent);
+  color: #fff;
+}
+.install-mode-option:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .space-notice {

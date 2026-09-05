@@ -131,7 +131,7 @@ function init() {
   const libraryLoading = document.getElementById("library-loading");
   const libraryTableShell = document.getElementById("library-table-shell");
   const libraryBody = document.getElementById("library-body");
-  const installModeSelect = document.getElementById("install-mode");
+  const installModePicker = document.getElementById("install-mode");
 
   if (
     !baseUrlInput ||
@@ -185,7 +185,7 @@ function init() {
     !libraryLoading ||
     !libraryTableShell ||
     !libraryBody ||
-    !installModeSelect
+    !installModePicker
   ) {
     document.body.innerHTML =
       '<div style="padding:24px;font-family:Segoe UI,sans-serif;color:#f4f4f5;background:#08080f">' +
@@ -232,18 +232,43 @@ function init() {
   /** @type {Map<string, { bytes: number, at: number, mbps: number }>} */
   const downloadSpeedSamples = new Map();
 
-  void window.montahd.getInstallMode().then((mode) => {
-    if (installModeSelect instanceof HTMLSelectElement) {
-      installModeSelect.value = mode;
+  function installModeButtons() {
+    return [...installModePicker.querySelectorAll("[data-mode]")];
+  }
+
+  function currentInstallMode() {
+    const selected = installModePicker.querySelector("[data-mode].is-selected");
+    return selected?.getAttribute("data-mode") || "equilibrado";
+  }
+
+  function setInstallModeControlsDisabled(disabled) {
+    for (const button of installModeButtons()) {
+      button.disabled = disabled;
     }
+  }
+
+  function applyInstallMode(mode, persist = false) {
+    const next = mode === "economico" || mode === "rapido" ? mode : "equilibrado";
+    for (const button of installModeButtons()) {
+      const selected = button.getAttribute("data-mode") === next;
+      button.classList.toggle("is-selected", selected);
+      button.setAttribute("aria-checked", selected ? "true" : "false");
+    }
+    if (persist) {
+      void window.montahd.setInstallMode(next).catch(() => undefined);
+      updateSpaceNotice();
+    }
+  }
+
+  void window.montahd.getInstallMode().then((mode) => {
+    applyInstallMode(mode);
   }).catch(() => undefined);
 
-  if (installModeSelect instanceof HTMLSelectElement) {
-    installModeSelect.addEventListener("change", () => {
-      void window.montahd.setInstallMode(installModeSelect.value).catch(() => undefined);
-      updateSpaceNotice();
-    });
-  }
+  installModePicker.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-mode]");
+    if (!button || button.disabled) return;
+    applyInstallMode(button.getAttribute("data-mode"), true);
+  });
 
   function setActiveEntryPhase(entryId, phase) {
     if (!entryId) return;
@@ -551,11 +576,6 @@ function init() {
       .reduce((max, size) => Math.max(max, size), 0);
   }
 
-  function currentInstallMode() {
-    return installModeSelect instanceof HTMLSelectElement
-      ? installModeSelect.value
-      : "equilibrado";
-  }
 
   function peakConcurrentBytes(sizes, mode) {
     const cap = mode === "economico" ? 1 : mode === "rapido" ? 5 : 2;
@@ -1167,7 +1187,7 @@ function init() {
       removePausedBtn.classList.add("hidden");
       downloadBtn.disabled = true;
       clearListBtn.disabled = true;
-      installModeSelect.disabled = true;
+      setInstallModeControlsDisabled(true);
     } else if (hasPausedEntries()) {
       pauseBtn.classList.add("hidden");
       cancelBtn.classList.add("hidden");
@@ -1175,13 +1195,13 @@ function init() {
       removePausedBtn.classList.remove("hidden");
       downloadBtn.disabled = true;
       clearListBtn.disabled = true;
-      installModeSelect.disabled = true;
+      setInstallModeControlsDisabled(true);
     } else {
       pauseBtn.classList.add("hidden");
       cancelBtn.classList.add("hidden");
       resumeBtn.classList.add("hidden");
       removePausedBtn.classList.add("hidden");
-      installModeSelect.disabled = false;
+      setInstallModeControlsDisabled(false);
       updateDownloadButton();
     }
     refreshAllEntryActionButtons();

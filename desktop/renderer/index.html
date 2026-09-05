@@ -152,14 +152,43 @@
             ainda extraem — a fila não para.
           </p>
           <div class="install-mode-row">
-            <label class="install-mode-label" for="install-mode">
+            <p class="install-mode-label" id="install-mode-label">
               Velocidade da instalação
-            </label>
-            <select id="install-mode" class="install-mode-select">
-              <option value="equilibrado" selected>Equilibrado (padrão) — até 2 descompactações</option>
-              <option value="economico">Pouco espaço — 1 descompactação por vez</option>
-              <option value="rapido">Rápido — até 5 descompactações em paralelo</option>
-            </select>
+            </p>
+            <div
+              id="install-mode"
+              class="install-mode-picker"
+              role="radiogroup"
+              aria-labelledby="install-mode-label"
+            >
+              <button
+                type="button"
+                class="install-mode-option"
+                role="radio"
+                aria-checked="false"
+                data-mode="economico"
+              >
+                Pouco espaço
+              </button>
+              <button
+                type="button"
+                class="install-mode-option is-selected"
+                role="radio"
+                aria-checked="true"
+                data-mode="equilibrado"
+              >
+                Equilibrado
+              </button>
+              <button
+                type="button"
+                class="install-mode-option"
+                role="radio"
+                aria-checked="false"
+                data-mode="rapido"
+              >
+                Rápido
+              </button>
+            </div>
           </div>
           <p class="space-notice space-notice-info" id="space-notice" role="status">
             Jogos até 4 GB são baixados e extraídos direto no HD (formato FAT32
