@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   authErrorMessage,
+  CONFIRM_EMAIL_PENDING_MESSAGE,
   CONFIRM_EMAIL_SENT_MESSAGE,
   FORGOT_PASSWORD_SENT_MESSAGE,
   SIGNUP_CONFIRM_MESSAGE,
@@ -24,6 +25,11 @@ test("mapeia senha igual à anterior", () => {
     authErrorMessage("New password should be different from the old password."),
     "A nova senha precisa ser diferente da atual.",
   );
+});
+
+test("login sem confirmar aponta para a mesma tela de código", () => {
+  assert.match(CONFIRM_EMAIL_PENDING_MESSAGE, /código/i);
+  assert.match(CONFIRM_EMAIL_PENDING_MESSAGE, /confirme o e-mail/i);
 });
 
 test("reenvio de confirmação não revela se o e-mail existe", () => {

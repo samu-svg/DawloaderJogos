@@ -48,11 +48,13 @@ export function authCallbackFailurePath(
 export function confirmEmailPath(input?: {
   email?: string;
   enviado?: boolean;
+  pendente?: boolean;
 }): string {
   const params = new URLSearchParams();
   const email = input?.email?.trim().toLowerCase() ?? "";
   if (isWellFormedEmail(email)) params.set("email", email);
   if (input?.enviado) params.set("enviado", "1");
+  if (input?.pendente) params.set("pendente", "1");
   const query = params.toString();
   return query ? `${EMAIL_CONFIRM_PATH}?${query}` : EMAIL_CONFIRM_PATH;
 }

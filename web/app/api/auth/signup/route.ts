@@ -76,7 +76,11 @@ export async function POST(request: Request) {
       );
     }
     if (!result.errorMessage) {
-      return NextResponse.json({ ok: true, needsConfirmation: true });
+      return NextResponse.json({
+        ok: true,
+        needsConfirmation: true,
+        emailSent: result.emailSent !== false,
+      });
     }
   }
 

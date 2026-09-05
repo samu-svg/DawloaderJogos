@@ -14,13 +14,11 @@ export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
-    setNeedsConfirmation(false);
     setLoading(true);
 
     try {
@@ -40,8 +38,11 @@ export function LoginForm() {
       }
 
       if (!response.ok) {
+        if (payload.code === "email_not_confirmed") {
+          router.replace(confirmEmailPath({ email, pendente: true }));
+          return;
+        }
         setError(authErrorMessage(payload.error ?? ""));
-        setNeedsConfirmation(payload.code === "email_not_confirmed");
         return;
       }
 
@@ -61,16 +62,6 @@ export function LoginForm() {
           {error}
         </p>
       )}
-      {needsConfirmation ? (
-        <p className="text-sm text-zinc-400">
-          <Link
-            href={confirmEmailPath({ email, enviado: true })}
-            className="font-medium text-accent hover:text-accent-hover"
-          >
-            Confirmar e-mail com o código
-          </Link>
-        </p>
-      ) : null}
       <label className="block space-y-1.5">
         <span className="text-sm font-medium">E-mail</span>
         <input

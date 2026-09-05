@@ -24,8 +24,9 @@ export default async function CadastroPage() {
             Criar conta
           </h1>
           <p className="text-sm text-zinc-500">
-            Crie sua conta para liberar o app MontaHD e o acervo completo. Senha
-            com no mínimo {PASSWORD_MIN_LENGTH} caracteres.
+            Crie sua conta para liberar o app MontaHD e o acervo completo. Em
+            seguida você confirma com o código enviado por e-mail. Senha com no
+            mínimo {PASSWORD_MIN_LENGTH} caracteres.
           </p>
         </div>
         <div className="mt-8 rounded-2xl border border-border bg-surface p-6">

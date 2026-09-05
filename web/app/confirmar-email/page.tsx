@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ConfirmEmailForm } from "@/components/confirm-email-form";
 import { SiteHeader } from "@/components/site-header";
 import { currentAppUser } from "@/lib/auth";
+import { CONFIRM_EMAIL_PENDING_MESSAGE } from "@/lib/auth-messages";
 import {
   PASSWORD_RECOVERY_PATH,
   isWellFormedEmail,
@@ -17,6 +18,7 @@ export default async function ConfirmarEmailPage({
     enviado?: string;
     erro?: string;
     expirado?: string;
+    pendente?: string;
   }>;
 }) {
   const user = await currentAppUser();
@@ -55,6 +57,11 @@ export default async function ConfirmarEmailPage({
             <p className="mb-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
               O link expirou ou já foi usado. Cole o código aqui, ou peça outro
               e-mail.
+            </p>
+          ) : null}
+          {params.pendente === "1" ? (
+            <p className="mb-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+              {CONFIRM_EMAIL_PENDING_MESSAGE}
             </p>
           ) : null}
           <ConfirmEmailForm

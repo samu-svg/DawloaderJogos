@@ -3,6 +3,9 @@
 export const SIGNUP_CONFIRM_MESSAGE =
   "Conta criada. Enviamos um código para seu e-mail — cole-o abaixo para entrar.";
 
+export const CONFIRM_EMAIL_PENDING_MESSAGE =
+  "Confirme o e-mail para entrar. Cole o código que já enviamos ou peça outro.";
+
 export const CONFIRM_EMAIL_SENT_MESSAGE =
   "Se este e-mail precisar de confirmação, enviamos um código. Confira também a caixa de spam.";
 

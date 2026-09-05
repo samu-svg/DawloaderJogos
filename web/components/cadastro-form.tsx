@@ -36,6 +36,7 @@ export function CadastroForm() {
         error?: string;
         session?: boolean;
         needsConfirmation?: boolean;
+        emailSent?: boolean;
       };
 
       if (response.status === 429) {
@@ -54,7 +55,12 @@ export function CadastroForm() {
         return;
       }
 
-      router.push(confirmEmailPath({ email, enviado: true }));
+      router.replace(
+        confirmEmailPath({
+          email,
+          enviado: payload.emailSent !== false,
+        }),
+      );
       router.refresh();
     } catch {
       setError("Não foi possível concluir. Tente novamente em instantes.");

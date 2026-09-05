@@ -48,6 +48,7 @@ export async function sendSignupConfirmationOtp(input: {
 }): Promise<{
   alreadyRegistered: boolean;
   errorMessage?: string;
+  emailSent?: boolean;
 }> {
   if (!authMailConfigured()) {
     return { alreadyRegistered: false, errorMessage: "mail-disabled" };
@@ -73,8 +74,8 @@ export async function sendSignupConfirmationOtp(input: {
     return { alreadyRegistered: already, errorMessage: error.message };
   }
 
-  await sendGeneratedConfirmation(input.email, data);
-  return { alreadyRegistered: false };
+  const emailSent = await sendGeneratedConfirmation(input.email, data);
+  return { alreadyRegistered: false, emailSent };
 }
 
 export async function resendConfirmationOtp(input: {

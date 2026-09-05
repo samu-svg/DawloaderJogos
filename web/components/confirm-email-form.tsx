@@ -128,35 +128,33 @@ export function ConfirmEmailForm({
         </button>
       </form>
 
-      {sent ? (
-        <form onSubmit={verifyCode} className="space-y-4 border-t border-border pt-4">
-          <label className="block space-y-1.5">
-            <span className="text-sm font-medium">Código do e-mail</span>
-            <input
-              type="text"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              required
-              minLength={6}
-              maxLength={12}
-              value={token}
-              onChange={(event) => setToken(event.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 tracking-[0.3em] text-white outline-none focus:border-accent focus:ring-1 focus:ring-accent"
-            />
-            <span className="text-xs text-zinc-500">
-              O caminho certo é colar o código aqui. O botão do e-mail é só um
-              atalho.
-            </span>
-          </label>
-          <button
-            type="submit"
-            disabled={verifying || sending}
-            className="w-full rounded-lg border border-accent py-2.5 font-medium text-white transition hover:bg-accent/20 disabled:opacity-60"
-          >
-            {verifying ? "Confirmando..." : "Confirmar e entrar"}
-          </button>
-        </form>
-      ) : null}
+      <form onSubmit={verifyCode} className="space-y-4 border-t border-border pt-4">
+        <label className="block space-y-1.5">
+          <span className="text-sm font-medium">Código do e-mail</span>
+          <input
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            required
+            minLength={6}
+            maxLength={12}
+            value={token}
+            onChange={(event) => setToken(event.target.value)}
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 tracking-[0.3em] text-white outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+          />
+          <span className="text-xs text-zinc-500">
+            Já tem o código? Cole aqui e confirme. O botão do e-mail é só um
+            atalho.
+          </span>
+        </label>
+        <button
+          type="submit"
+          disabled={verifying || sending}
+          className="w-full rounded-lg border border-accent py-2.5 font-medium text-white transition hover:bg-accent/20 disabled:opacity-60"
+        >
+          {verifying ? "Confirmando..." : "Confirmar e entrar"}
+        </button>
+      </form>
 
       <p className="text-center text-sm text-zinc-500">
         Já confirmou?{" "}
