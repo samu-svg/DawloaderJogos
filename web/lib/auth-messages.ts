@@ -20,6 +20,16 @@ export function isEmailNotConfirmedMessage(raw: string): boolean {
   );
 }
 
+export function isAlreadyRegisteredMessage(raw: string): boolean {
+  const lower = raw.toLowerCase();
+  return (
+    lower.includes("already registered") ||
+    lower.includes("already been registered") ||
+    lower.includes("user already registered") ||
+    lower.includes("já está cadastrado")
+  );
+}
+
 export function authErrorMessage(raw: string): string {
   const lower = raw.toLowerCase();
 
@@ -54,11 +64,7 @@ export function authErrorMessage(raw: string): string {
     return "E-mail ou senha incorretos.";
   }
 
-  if (
-    lower.includes("already registered") ||
-    lower.includes("already been registered") ||
-    lower.includes("user already registered")
-  ) {
+  if (isAlreadyRegisteredMessage(raw)) {
     return "Este e-mail já está cadastrado.";
   }
 

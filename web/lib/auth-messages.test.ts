@@ -6,6 +6,7 @@ import {
   CONFIRM_EMAIL_SENT_MESSAGE,
   FORGOT_PASSWORD_SENT_MESSAGE,
   SIGNUP_CONFIRM_MESSAGE,
+  isAlreadyRegisteredMessage,
   isEmailNotConfirmedMessage,
 } from "./auth-messages.ts";
 
@@ -75,6 +76,16 @@ test("não reescreve erro de origem já em português", () => {
 test("não reescreve e-mail já cadastrado", () => {
   assert.equal(
     authErrorMessage("Este e-mail já está cadastrado."),
+    "Este e-mail já está cadastrado.",
+  );
+});
+
+test("reconhece e-mail já cadastrado para o CTA de confirmação", () => {
+  assert.equal(isAlreadyRegisteredMessage("User already registered"), true);
+  assert.equal(isAlreadyRegisteredMessage("Este e-mail já está cadastrado."), true);
+  assert.equal(isAlreadyRegisteredMessage("Invalid login credentials"), false);
+  assert.equal(
+    authErrorMessage("A user with this email address has already been registered"),
     "Este e-mail já está cadastrado.",
   );
 });

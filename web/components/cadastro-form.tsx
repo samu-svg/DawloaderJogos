@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { authErrorMessage } from "@/lib/auth-messages";
+import {
+  authErrorMessage,
+  isAlreadyRegisteredMessage,
+} from "@/lib/auth-messages";
 import { confirmEmailPath } from "@/lib/email-confirmation";
 import { PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
 
@@ -13,11 +16,13 @@ export function CadastroForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
+    setAlreadyRegistered(false);
 
     if (password.length < PASSWORD_MIN_LENGTH) {
       setError(`A senha precisa ter pelo menos ${PASSWORD_MIN_LENGTH} caracteres.`);
@@ -34,6 +39,7 @@ export function CadastroForm() {
       });
       const payload = (await response.json()) as {
         error?: string;
+        code?: string;
         session?: boolean;
         needsConfirmation?: boolean;
         emailSent?: boolean;
@@ -45,7 +51,13 @@ export function CadastroForm() {
       }
 
       if (!response.ok) {
-        setError(authErrorMessage(payload.error ?? ""));
+        const message = authErrorMessage(payload.error ?? "");
+        setError(message);
+        setAlreadyRegistered(
+          payload.code === "already_registered" ||
+            isAlreadyRegisteredMessage(payload.error ?? "") ||
+            isAlreadyRegisteredMessage(message),
+        );
         return;
       }
 
@@ -69,12 +81,36 @@ export function CadastroForm() {
     }
   }
 
+  const confirmHref = confirmEmailPath({ email });
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
-          {error}
-        </p>
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+          <p>{error}</p>
+          {alreadyRegistered ? (
+            <div className="mt-3 space-y-2">
+              <Link
+                href={confirmHref}
+                className="flex w-full items-center justify-center rounded-lg bg-accent py-2.5 text-center font-medium text-white transition hover:bg-accent-hover"
+              >
+                Não confirmou? Enviar código
+              </Link>
+              <p className="text-center text-xs text-red-600/80 dark:text-red-300/80">
+                <Link href="/login" className="font-medium underline-offset-2 hover:underline">
+                  Entrar
+                </Link>
+                {" · "}
+                <Link
+                  href="/esqueci-senha"
+                  className="font-medium underline-offset-2 hover:underline"
+                >
+                  Esqueci a senha
+                </Link>
+              </p>
+            </div>
+          ) : null}
+        </div>
       )}
       <label className="block space-y-1.5">
         <span className="text-sm font-medium">Nome</span>
@@ -127,7 +163,7 @@ export function CadastroForm() {
         </Link>
         {" · "}
         <Link
-          href="/confirmar-email"
+          href={confirmHref}
           className="font-medium text-accent hover:text-accent-hover"
         >
           Confirmar e-mail

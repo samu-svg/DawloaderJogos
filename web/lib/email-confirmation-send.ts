@@ -1,4 +1,11 @@
 import { authCallbackUrl } from "./email-confirmation.ts";
+import {
+  decideExistingSignup,
+  findUserInAdminList,
+  isAuthEmailConfirmed,
+  parseAdminUsersList,
+  type ExistingSignupDecision,
+} from "./auth-user-status.ts";
 import { logError } from "./logger.ts";
 import {
   authMailConfigured,
@@ -40,6 +47,68 @@ export function tryServiceRoleClient() {
   }
 }
 
+async function findAuthUserByEmail(email: string) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!url || !key) return null;
+
+  const endpoint = new URL("/auth/v1/admin/users", url.replace(/\/$/, ""));
+  endpoint.searchParams.set("filter", email);
+  endpoint.searchParams.set("page", "1");
+  endpoint.searchParams.set("per_page", "50");
+
+  try {
+    const response = await fetch(endpoint, {
+      headers: {
+        Authorization: `Bearer ${key}`,
+        apikey: key,
+      },
+    });
+    if (!response.ok) {
+      logError("Falha ao buscar usuário por e-mail", undefined, {
+        status: response.status,
+      });
+      return null;
+    }
+    const body: unknown = await response.json();
+    return findUserInAdminList(parseAdminUsersList(body), email);
+  } catch (error) {
+    logError("Falha ao buscar usuário por e-mail", error);
+    return null;
+  }
+}
+
+async function inspectExistingSignup(
+  email: string,
+  origin: string,
+): Promise<ExistingSignupDecision> {
+  const listed = await findAuthUserByEmail(email);
+  const fromList = decideExistingSignup(listed);
+  if (fromList !== "unknown") return fromList;
+
+  const admin = tryServiceRoleClient();
+  if (!admin) return "unknown";
+
+  const { data, error } = await admin.auth.admin.generateLink({
+    type: "magiclink",
+    email,
+    options: { redirectTo: authCallbackUrl(origin, "confirm") },
+  });
+  if (error) {
+    logError("generateLink magiclink para inspecionar cadastro falhou", error);
+    return "unknown";
+  }
+  return decideExistingSignup(data?.user);
+}
+
+/** Conta já existente: reenviar se ainda não confirmou; recusar se já confirmou. */
+export async function resolveExistingSignupEmail(
+  email: string,
+  origin: string,
+): Promise<ExistingSignupDecision> {
+  return inspectExistingSignup(email, origin);
+}
+
 export async function sendSignupConfirmationOtp(input: {
   email: string;
   password: string;
@@ -47,6 +116,7 @@ export async function sendSignupConfirmationOtp(input: {
   origin: string;
 }): Promise<{
   alreadyRegistered: boolean;
+  unconfirmedExisting?: boolean;
   errorMessage?: string;
   emailSent?: boolean;
 }> {
@@ -70,8 +140,19 @@ export async function sendSignupConfirmationOtp(input: {
 
   if (error) {
     const already = /already/i.test(error.message);
-    if (!already) logError("generateLink signup falhou", error);
-    return { alreadyRegistered: already, errorMessage: error.message };
+    if (!already) {
+      logError("generateLink signup falhou", error);
+      return { alreadyRegistered: false, errorMessage: error.message };
+    }
+    const decision = await inspectExistingSignup(input.email, input.origin);
+    if (decision === "resend") {
+      return { alreadyRegistered: false, unconfirmedExisting: true };
+    }
+    return { alreadyRegistered: true, errorMessage: error.message };
+  }
+
+  if (isAuthEmailConfirmed(data?.user)) {
+    return { alreadyRegistered: true };
   }
 
   const emailSent = await sendGeneratedConfirmation(input.email, data);
