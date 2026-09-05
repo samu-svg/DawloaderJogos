@@ -1,4 +1,17 @@
 /** Aceita POST de auth só da origem deste site (defesa extra contra CSRF). */
+
+function canonicalHost(host: string): string {
+  return host.replace(/:\d+$/, "").replace(/^www\./i, "").toLowerCase();
+}
+
+function hostnameOf(originOrUrl: string): string | null {
+  try {
+    return new URL(originOrUrl).hostname;
+  } catch {
+    return null;
+  }
+}
+
 export function isTrustedAuthOrigin(
   request: Request,
   options?: { requireOrigin?: boolean },
@@ -19,14 +32,13 @@ export function isTrustedAuthOrigin(
 
   const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
   const host = forwardedHost || request.headers.get("host");
-  if (host && parsed.host === host) return true;
+  if (host && canonicalHost(parsed.hostname) === canonicalHost(host)) return true;
 
   const site = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (site) {
-    try {
-      if (parsed.origin === new URL(site).origin) return true;
-    } catch {
-      return false;
+    const siteHost = hostnameOf(site);
+    if (siteHost && canonicalHost(parsed.hostname) === canonicalHost(siteHost)) {
+      return true;
     }
   }
 

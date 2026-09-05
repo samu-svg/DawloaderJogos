@@ -58,3 +58,17 @@ test("preserva e-mail inválido já em português", () => {
     "Informe um e-mail válido.",
   );
 });
+
+test("não reescreve erro de origem já em português", () => {
+  assert.equal(
+    authErrorMessage("Origem não permitida."),
+    "Origem não permitida.",
+  );
+});
+
+test("não reescreve e-mail já cadastrado", () => {
+  assert.equal(
+    authErrorMessage("Este e-mail já está cadastrado."),
+    "Este e-mail já está cadastrado.",
+  );
+});

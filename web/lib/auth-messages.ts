@@ -21,6 +21,17 @@ export function authErrorMessage(raw: string): string {
   const lower = raw.toLowerCase();
 
   if (
+    lower.includes("não foi possível") ||
+    lower.includes("origem não permitida") ||
+    lower.includes("já está cadastrado") ||
+    lower.includes("informe nome") ||
+    lower.includes("verifique os dados") ||
+    lower.includes("aguarde um instante")
+  ) {
+    return raw;
+  }
+
+  if (
     lower.includes("email not confirmed") ||
     lower.includes("not confirmed") ||
     lower.includes("confirmation")
