@@ -95,7 +95,7 @@ export function HomeHero({
           </div>
         </div>
 
-        <DesktopDownloadCard />
+        {hasAccess ? <DesktopDownloadCard /> : null}
       </div>
     </section>
   );
