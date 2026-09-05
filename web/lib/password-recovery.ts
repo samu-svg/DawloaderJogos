@@ -34,8 +34,20 @@ export function isPasswordRecoveryPath(path: string): boolean {
 export function isPasswordRecoveryCallback(input: {
   type: string | null;
   nonce: string | null;
+  intent?: string | null;
 }): boolean {
-  return input.type === "recovery" || Boolean(input.nonce);
+  const type = input.type ?? "";
+  if (
+    input.intent === "confirm" ||
+    type === "signup" ||
+    type === "email" ||
+    type === "invite" ||
+    type === "magiclink" ||
+    type === "email_change"
+  ) {
+    return false;
+  }
+  return input.intent === "recovery" || type === "recovery" || Boolean(input.nonce);
 }
 
 export function parseAuthCallbackHash(hash: string): {

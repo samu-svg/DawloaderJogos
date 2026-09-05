@@ -36,6 +36,10 @@ export default async function CadastroPage() {
           <Link href="/login" className="text-accent hover:text-accent-hover">
             Entrar
           </Link>
+          {" · "}
+          <Link href="/confirmar-email" className="text-accent hover:text-accent-hover">
+            Confirmar e-mail
+          </Link>
         </p>
       </main>
     </>

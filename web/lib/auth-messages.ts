@@ -1,10 +1,21 @@
 /** Mensagens de autenticação — nunca expõem o provedor por trás do login. */
 
 export const SIGNUP_CONFIRM_MESSAGE =
-  "Conta criada. Enviamos um código para seu e-mail — confirme para entrar.";
+  "Conta criada. Enviamos um código para seu e-mail — cole-o abaixo para entrar.";
+
+export const CONFIRM_EMAIL_SENT_MESSAGE =
+  "Se este e-mail precisar de confirmação, enviamos um código. Confira também a caixa de spam.";
 
 export const FORGOT_PASSWORD_SENT_MESSAGE =
   "Se este e-mail estiver cadastrado, enviamos um código (e, se o modelo do e-mail tiver botão, um link). Confira também a caixa de spam.";
+
+export function isEmailNotConfirmedMessage(raw: string): boolean {
+  const lower = raw.toLowerCase();
+  return (
+    lower.includes("email not confirmed") ||
+    lower.includes("email_not_confirmed")
+  );
+}
 
 export function authErrorMessage(raw: string): string {
   const lower = raw.toLowerCase();
@@ -14,7 +25,7 @@ export function authErrorMessage(raw: string): string {
     lower.includes("not confirmed") ||
     lower.includes("confirmation")
   ) {
-    return "Enviamos um código para seu e-mail. Confirme antes de entrar.";
+    return "Digite o código que enviamos por e-mail para confirmar a conta.";
   }
 
   if (lower.includes("muitas tentativas") || lower.includes("too many")) {

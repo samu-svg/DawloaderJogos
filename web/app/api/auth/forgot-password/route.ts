@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { recordAudit, requestIp } from "@/lib/audit";
 import { FORGOT_PASSWORD_SENT_MESSAGE } from "@/lib/auth-messages";
+import { authCallbackUrl } from "@/lib/email-confirmation";
 import { logError } from "@/lib/logger";
 import {
   PASSWORD_RECOVERY_NONCE_COOKIE,
@@ -66,7 +67,7 @@ export async function POST(request: Request) {
     const { data, error } = await admin.auth.admin.generateLink({
       type: "recovery",
       email,
-      options: { redirectTo: `${origin}/auth/callback` },
+          options: { redirectTo: authCallbackUrl(origin, "recovery") },
     });
 
     if (!error && data?.properties?.email_otp && data.properties.action_link) {
@@ -85,7 +86,7 @@ export async function POST(request: Request) {
   } else {
     const supabase = await createClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${origin}/auth/callback`,
+      redirectTo: authCallbackUrl(origin, "recovery"),
     });
     if (error) {
       logError("Falha ao enviar e-mail de recuperação (Supabase SMTP)", error);

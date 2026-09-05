@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { authErrorMessage } from "@/lib/auth-messages";
+import { authCallbackUrl } from "@/lib/email-confirmation";
+import { sendSignupConfirmationOtp } from "@/lib/email-confirmation-send";
 import { PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
+import { isWellFormedEmail } from "@/lib/password-recovery";
+import { authMailConfigured } from "@/lib/password-recovery-mail";
 import { enforceRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { publicSiteOrigin } from "@/lib/site-url";
 import { createClient } from "@/lib/supabase/server";
@@ -32,6 +36,9 @@ export async function POST(request: Request) {
   if (!email || !password || !displayName) {
     return NextResponse.json({ error: "Informe nome, e-mail e senha." }, { status: 400 });
   }
+  if (!isWellFormedEmail(email)) {
+    return NextResponse.json({ error: "Informe um e-mail válido." }, { status: 400 });
+  }
   if (password.length < PASSWORD_MIN_LENGTH) {
     return NextResponse.json(
       { error: `A senha precisa ter pelo menos ${PASSWORD_MIN_LENGTH} caracteres.` },
@@ -47,13 +54,39 @@ export async function POST(request: Request) {
   );
   if (emailLimited) return emailLimited;
 
+  const origin = publicSiteOrigin(request);
+
+  if (authMailConfigured()) {
+    const result = await sendSignupConfirmationOtp({
+      email,
+      password,
+      displayName,
+      origin,
+    });
+    if (result.alreadyRegistered) {
+      return NextResponse.json(
+        { error: authErrorMessage("User already registered") },
+        { status: 400 },
+      );
+    }
+    if (result.errorMessage && result.errorMessage !== "mail-disabled" && result.errorMessage !== "no-service-role") {
+      return NextResponse.json(
+        { error: authErrorMessage(result.errorMessage) },
+        { status: 400 },
+      );
+    }
+    if (!result.errorMessage) {
+      return NextResponse.json({ ok: true, needsConfirmation: true });
+    }
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: { display_name: displayName },
-      emailRedirectTo: `${publicSiteOrigin(request)}/auth/callback`,
+      emailRedirectTo: authCallbackUrl(origin, "confirm"),
     },
   });
 
@@ -64,5 +97,18 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({ ok: true, session: Boolean(data.session) });
+  const identities = data.user?.identities;
+  if (Array.isArray(identities) && identities.length === 0) {
+    return NextResponse.json(
+      { error: authErrorMessage("User already registered") },
+      { status: 400 },
+    );
+  }
+
+  const session = Boolean(data.session);
+  return NextResponse.json({
+    ok: true,
+    session,
+    needsConfirmation: !session,
+  });
 }

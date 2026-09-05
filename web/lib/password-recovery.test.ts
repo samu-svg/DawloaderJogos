@@ -30,6 +30,18 @@ test("callback de recuperação pelo tipo ou pelo nonce do pedido", () => {
     isPasswordRecoveryCallback({ type: "signup", nonce: null }),
     false,
   );
+  assert.equal(
+    isPasswordRecoveryCallback({ type: "signup", nonce: "abc" }),
+    false,
+  );
+  assert.equal(
+    isPasswordRecoveryCallback({
+      type: null,
+      nonce: "abc",
+      intent: "confirm",
+    }),
+    false,
+  );
 });
 
 test("lê tokens do hash do e-mail de recuperação", () => {

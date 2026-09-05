@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
+import {
+  authCallbackFailurePath,
+  resolveAuthCallbackKind,
+} from "@/lib/email-confirmation";
 import { parseAuthCallbackHash } from "@/lib/password-recovery";
 import { createClient } from "@/lib/supabase/client";
 
@@ -9,10 +13,14 @@ export function AuthCallbackClient() {
     const { type, accessToken, refreshToken } = parseAuthCallbackHash(
       window.location.hash,
     );
+    const intent = new URLSearchParams(window.location.search).get("intent");
+    const kind = resolveAuthCallbackKind({ type, intent, nonce: null });
+    const failExpired = authCallbackFailurePath(kind, "expirado");
+    const failError = authCallbackFailurePath(kind, "erro");
 
     async function finish() {
       if (!accessToken || !refreshToken) {
-        window.location.replace("/esqueci-senha?expirado=1");
+        window.location.replace(failExpired);
         return;
       }
 
@@ -22,14 +30,14 @@ export function AuthCallbackClient() {
         refresh_token: refreshToken,
       });
       if (error) {
-        window.location.replace("/esqueci-senha?expirado=1");
+        window.location.replace(failExpired);
         return;
       }
 
-      if (type === "recovery") {
+      if (kind === "recovery" || type === "recovery") {
         const lock = await fetch("/api/auth/recovery-lock", { method: "POST" });
         if (!lock.ok) {
-          window.location.replace("/esqueci-senha?erro=1");
+          window.location.replace(failError);
           return;
         }
         window.location.replace("/redefinir-senha");

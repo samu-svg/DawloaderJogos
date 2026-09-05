@@ -2,11 +2,14 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AuthCallbackClient } from "@/components/auth-callback-client";
+import {
+  authCallbackFailurePath,
+  resolveAuthCallbackKind,
+} from "@/lib/email-confirmation";
 import { logError } from "@/lib/logger";
 import {
   PASSWORD_RECOVERY_NONCE_COOKIE,
   PASSWORD_RECOVERY_PATH,
-  isPasswordRecoveryCallback,
 } from "@/lib/password-recovery";
 import { lockRecoverySession } from "@/lib/password-recovery-session";
 import { safeInternalPath } from "@/lib/safe-redirect";
@@ -37,20 +40,22 @@ export default async function AuthCallbackPage({
     type?: string;
     next?: string;
     error?: string;
+    intent?: string;
   }>;
 }) {
   const params = await searchParams;
-  if (params.error) {
-    redirect("/esqueci-senha?erro=1");
-  }
-
   const cookieStore = await cookies();
   const nonce = cookieStore.get(PASSWORD_RECOVERY_NONCE_COOKIE)?.value ?? null;
   const otpType = parseOtpType(params.type);
-  const recovery = isPasswordRecoveryCallback({
+  const kind = resolveAuthCallbackKind({
     type: params.type ?? null,
+    intent: params.intent ?? null,
     nonce,
   });
+
+  if (params.error) {
+    redirect(authCallbackFailurePath(kind, "erro"));
+  }
 
   const supabase = await createClient();
   let userId: string | null = null;
@@ -75,12 +80,12 @@ export default async function AuthCallbackPage({
   }
 
   if (userId) {
-    if (recovery || otpType === "recovery") {
+    if (kind === "recovery" || otpType === "recovery") {
       const locked = await lockRecoverySession(userId);
       if (locked.error) {
         logError("Falha ao marcar recuperação de senha", locked.error);
         await supabase.auth.signOut();
-        redirect("/esqueci-senha?erro=1");
+        redirect(authCallbackFailurePath("recovery", "erro"));
       }
       redirect(PASSWORD_RECOVERY_PATH);
     }
@@ -88,7 +93,7 @@ export default async function AuthCallbackPage({
   }
 
   if (params.code || params.token_hash) {
-    redirect("/esqueci-senha?expirado=1");
+    redirect(authCallbackFailurePath(kind, "expirado"));
   }
 
   return <AuthCallbackClient />;

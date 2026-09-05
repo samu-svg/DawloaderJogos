@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { authErrorMessage, SIGNUP_CONFIRM_MESSAGE } from "@/lib/auth-messages";
+import { authErrorMessage } from "@/lib/auth-messages";
+import { confirmEmailPath } from "@/lib/email-confirmation";
 import { PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
 
 export function CadastroForm() {
@@ -12,13 +13,11 @@ export function CadastroForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
-    setMessage(null);
 
     if (password.length < PASSWORD_MIN_LENGTH) {
       setError(`A senha precisa ter pelo menos ${PASSWORD_MIN_LENGTH} caracteres.`);
@@ -36,6 +35,7 @@ export function CadastroForm() {
       const payload = (await response.json()) as {
         error?: string;
         session?: boolean;
+        needsConfirmation?: boolean;
       };
 
       if (response.status === 429) {
@@ -48,13 +48,14 @@ export function CadastroForm() {
         return;
       }
 
-      if (payload.session) {
+      if (payload.session && !payload.needsConfirmation) {
         router.push("/baixar");
         router.refresh();
         return;
       }
 
-      setMessage(SIGNUP_CONFIRM_MESSAGE);
+      router.push(confirmEmailPath({ email, enviado: true }));
+      router.refresh();
     } catch {
       setError("Não foi possível concluir. Tente novamente em instantes.");
     } finally {
@@ -67,11 +68,6 @@ export function CadastroForm() {
       {error && (
         <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
           {error}
-        </p>
-      )}
-      {message && (
-        <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
-          {message}
         </p>
       )}
       <label className="block space-y-1.5">
@@ -122,6 +118,13 @@ export function CadastroForm() {
         Já tem conta?{" "}
         <Link href="/login" className="font-medium text-accent hover:text-accent-hover">
           Entrar
+        </Link>
+        {" · "}
+        <Link
+          href="/confirmar-email"
+          className="font-medium text-accent hover:text-accent-hover"
+        >
+          Confirmar e-mail
         </Link>
       </p>
     </form>

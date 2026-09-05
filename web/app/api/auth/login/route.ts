@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { authErrorMessage } from "@/lib/auth-messages";
+import { authErrorMessage, isEmailNotConfirmedMessage } from "@/lib/auth-messages";
 import { enforceRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { isTrustedAuthOrigin } from "@/lib/trusted-origin";
@@ -37,7 +37,12 @@ export async function POST(request: Request) {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
     return NextResponse.json(
-      { error: authErrorMessage(error.message) },
+      {
+        error: authErrorMessage(error.message),
+        code: isEmailNotConfirmedMessage(error.message)
+          ? "email_not_confirmed"
+          : undefined,
+      },
       { status: 401 },
     );
   }

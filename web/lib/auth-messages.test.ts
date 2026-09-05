@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { authErrorMessage, FORGOT_PASSWORD_SENT_MESSAGE, SIGNUP_CONFIRM_MESSAGE } from "./auth-messages.ts";
+import {
+  authErrorMessage,
+  CONFIRM_EMAIL_SENT_MESSAGE,
+  FORGOT_PASSWORD_SENT_MESSAGE,
+  SIGNUP_CONFIRM_MESSAGE,
+  isEmailNotConfirmedMessage,
+} from "./auth-messages.ts";
 
 test("cadastro pede confirmação sem citar provedor", () => {
   assert.match(SIGNUP_CONFIRM_MESSAGE, /código/i);
@@ -20,11 +26,18 @@ test("mapeia senha igual à anterior", () => {
   );
 });
 
+test("reenvio de confirmação não revela se o e-mail existe", () => {
+  assert.match(CONFIRM_EMAIL_SENT_MESSAGE, /se este e-mail precisar/i);
+  assert.doesNotMatch(CONFIRM_EMAIL_SENT_MESSAGE, /supabase/i);
+});
+
 test("mapeia e-mail não confirmado", () => {
   assert.equal(
     authErrorMessage("Email not confirmed"),
-    "Enviamos um código para seu e-mail. Confirme antes de entrar.",
+    "Digite o código que enviamos por e-mail para confirmar a conta.",
   );
+  assert.equal(isEmailNotConfirmedMessage("Email not confirmed"), true);
+  assert.equal(isEmailNotConfirmedMessage("Invalid login credentials"), false);
 });
 
 test("esconde mensagens técnicas", () => {
