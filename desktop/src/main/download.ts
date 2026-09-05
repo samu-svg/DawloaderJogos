@@ -2,7 +2,6 @@ import { createHash } from "node:crypto";
 import { createWriteStream, existsSync, statSync } from "node:fs";
 import { copyFile, open, readdir, unlink } from "node:fs/promises";
 import path from "node:path";
-import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { formatFsError } from "../shared/fs-errors";
 import { assertSafeDownloadUrl } from "../shared/http-url.ts";
@@ -20,6 +19,7 @@ import { ensureDir, ensureDirSync } from "./ensure-dir";
 import { withDestSwap, withRootSwap } from "./install-swap";
 import { removeStagingEntry, stagingEntryDir } from "./staging";
 import { extractRarToContentRoot, isRarFile } from "./archive-extract";
+import { readableFromWebBody } from "./stream-from-body.ts";
 import {
   hdMarkersForEntry,
   isPriorityRootInstall,
@@ -739,7 +739,7 @@ async function installPreparedViaPc(
 }
 
 async function writeStream(
-  body: ReadableStream<Uint8Array>,
+  body: unknown,
   filePath: string,
   startAt: number,
   entryId: string,
@@ -747,9 +747,7 @@ async function writeStream(
   expectedSize: number,
   onProgress: (progress: DownloadProgress) => void,
 ): Promise<void> {
-  const nodeStream = Readable.fromWeb(
-    body as unknown as import("stream/web").ReadableStream,
-  );
+  const nodeStream = readableFromWebBody(body);
   const fileStream = createWriteStream(filePath, { flags: startAt > 0 ? "a" : "w" });
   let downloaded = startAt;
 

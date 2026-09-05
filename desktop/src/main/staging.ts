@@ -1,6 +1,16 @@
+import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
-import { mkdir, rm, statfs } from "node:fs/promises";
+import * as fsPromises from "node:fs/promises";
 import path from "node:path";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
+const { mkdir, rm } = fsPromises;
+
+type StatFsFn = (target: string) => Promise<{
+  bavail: number | bigint;
+  bsize: number | bigint;
+}>;
 
 export function safeStagingId(entryId: string): string {
   const cleaned = entryId.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 80);
@@ -33,9 +43,64 @@ export async function ensureStagingRoot(stagingRoot: string): Promise<void> {
   await mkdir(resolved, { recursive: true });
 }
 
+/** `C:` a partir de `C:\Games` — usado no fallback do Windows 7 (sem `statfs`). */
+export function windowsDriveDeviceId(dir: string): string {
+  return path.parse(path.resolve(dir)).root.replace(/[\\/]/g, "");
+}
+
+function getStatFs(): StatFsFn | undefined {
+  const candidate = (fsPromises as { statfs?: StatFsFn }).statfs;
+  return typeof candidate === "function" ? candidate : undefined;
+}
+
+async function getFreeBytesViaWmic(dir: string): Promise<number> {
+  const device = windowsDriveDeviceId(dir);
+  const { stdout } = await execFileAsync(
+    "wmic",
+    ["logicaldisk", "where", `DeviceID='${device}'`, "get", "FreeSpace", "/value"],
+    { windowsHide: true, timeout: 15_000 },
+  );
+  const match = stdout.match(/FreeSpace=(\d+)/);
+  if (!match) throw new Error("wmic não devolveu FreeSpace.");
+  return Number(match[1]);
+}
+
+async function getFreeBytesViaPowerShell(dir: string): Promise<number> {
+  const letter = windowsDriveDeviceId(dir).replace(":", "");
+  const { stdout } = await execFileAsync(
+    "powershell",
+    [
+      "-NoProfile",
+      "-NonInteractive",
+      "-Command",
+      `(New-Object -ComObject Scripting.FileSystemObject).GetDrive('${letter}').AvailableSpace`,
+    ],
+    { windowsHide: true, timeout: 15_000 },
+  );
+  const value = Number(stdout.trim());
+  if (!Number.isFinite(value) || value < 0) {
+    throw new Error("PowerShell não devolveu o espaço livre.");
+  }
+  return value;
+}
+
 export async function getFreeBytes(dir: string): Promise<number> {
-  const stats = await statfs(existingAncestor(dir));
-  return Number(stats.bavail) * Number(stats.bsize);
+  const target = existingAncestor(dir);
+  const statfs = getStatFs();
+  if (statfs) {
+    const stats = await statfs(target);
+    return Number(stats.bavail) * Number(stats.bsize);
+  }
+
+  if (process.platform === "win32") {
+    try {
+      return await getFreeBytesViaWmic(target);
+    } catch {
+      return getFreeBytesViaPowerShell(target);
+    }
+  }
+
+  throw new Error("Não foi possível medir o espaço livre neste sistema.");
 }
 
 export async function removeStagingEntry(dir: string): Promise<void> {

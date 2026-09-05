@@ -1,6 +1,9 @@
 "use client";
 
-import { getDesktopDownloadInfo } from "@/lib/desktop-download";
+import {
+  DesktopDownloadFallbackLink,
+  DesktopDownloadPicker,
+} from "@/components/desktop-download-links";
 
 type InstallOnHdControlsProps = {
   loading: boolean;
@@ -19,8 +22,6 @@ export function InstallOnHdControls({
   onRetry,
   layout = "card",
 }: InstallOnHdControlsProps) {
-  const download = getDesktopDownloadInfo();
-  const downloadLabel = `Baixar MontaHD ${download.version} (${download.sizeLabel})`;
   const isBar = layout === "bar";
 
   const primaryClass = isBar
@@ -56,13 +57,7 @@ export function InstallOnHdControls({
           <button type="button" onClick={onRetry} className={primaryClass}>
             Tentar abrir de novo
           </button>
-          <a
-            href={download.href}
-            download={download.fileName}
-            className={linkClass}
-          >
-            {downloadLabel}
-          </a>
+          <DesktopDownloadFallbackLink className={linkClass} />
         </div>
       </div>
     );
@@ -101,13 +96,7 @@ export function InstallOnHdControls({
         }
       >
         <p className={captionClass}>Ainda não tenho o app</p>
-        <a
-          href={download.href}
-          download={download.fileName}
-          className={linkClass}
-        >
-          {downloadLabel}
-        </a>
+        <DesktopDownloadPicker compact />
       </div>
     </div>
   );

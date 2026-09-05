@@ -1,4 +1,5 @@
 import { assertSafeDownloadUrl } from "../shared/http-url.ts";
+import { runtimeFetch } from "./runtime-fetch.ts";
 
 const MAX_REDIRECTS = 5;
 
@@ -11,7 +12,7 @@ export async function fetchSameOrigin(
   let current = url;
 
   for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
-    const response = await fetch(current, { ...init, redirect: "manual" });
+    const response = await runtimeFetch(current, { ...init, redirect: "manual" });
     if (response.status < 300 || response.status >= 400) {
       return response;
     }
@@ -44,7 +45,7 @@ export async function fetchSafeRedirects(
   let current = assertSafeDownloadUrl(url).toString();
 
   for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
-    const response = await fetch(current, { ...init, redirect: "manual" });
+    const response = await runtimeFetch(current, { ...init, redirect: "manual" });
     if (response.status < 300 || response.status >= 400) {
       return response;
     }

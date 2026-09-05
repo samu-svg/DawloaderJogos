@@ -12,7 +12,7 @@ if ($env:WSL_DISTRO_NAME -or $env:WSL_INTEROP) {
     Write-Error @"
 Detectado WSL. O instalador NSIS NÃO funciona aqui.
 Abra PowerShell nativo do Windows (não Ubuntu/WSL) em:
-  C:\Users\<voce>\Documents\DawloaderJogos\desktop
+  C:\Users\<voce>\Projects\DawloaderJogos\desktop
 "@
 }
 
@@ -28,10 +28,13 @@ $outDir = Join-Path $desktop $outName
 $setup = Join-Path $outDir "MontaHD-$version-setup.exe"
 $portable = Join-Path $outDir "MontaHD-$version-portable.exe"
 $yml = Join-Path $outDir "latest.yml"
+$setupIa32 = Join-Path $outDir "MontaHD-$version-ia32-setup.exe"
+$portableIa32 = Join-Path $outDir "MontaHD-$version-ia32-portable.exe"
+$ymlIa32 = Join-Path $outDir "latest-ia32.yml"
 
 foreach ($path in @($setup, $portable, $yml)) {
     if (-not (Test-Path $path)) {
-        Write-Error "Arquivo ausente: $path`nRode antes: npm.cmd run dist:win"
+        Write-Error "Arquivo ausente: $path`nRode antes: npm.cmd run dist:win:x64"
     }
 }
 
@@ -50,8 +53,24 @@ Copy-Item $yml $downloads -Force
 $blockmap = Join-Path $outDir "MontaHD-$version-setup.exe.blockmap"
 if (Test-Path $blockmap) { Copy-Item $blockmap $downloads -Force }
 
+if (Test-Path $setupIa32) {
+    $ia32Size = (Get-Item $setupIa32).Length
+    if ($ia32Size -lt 50MB) {
+        Write-Error "Setup ia32 inválido ($([math]::Round($ia32Size / 1MB, 2)) MB)."
+    }
+    Copy-Item $setupIa32 $downloads -Force
+    if (Test-Path $portableIa32) { Copy-Item $portableIa32 $downloads -Force }
+    if (Test-Path $ymlIa32) { Copy-Item $ymlIa32 $downloads -Force }
+    $blockmapIa32 = Join-Path $outDir "MontaHD-$version-ia32-setup.exe.blockmap"
+    if (Test-Path $blockmapIa32) { Copy-Item $blockmapIa32 $downloads -Force }
+} else {
+    Write-Warning "Build ia32 ausente. Rode: npm.cmd run dist:win:ia32"
+}
+
 Write-Host "OK — copiado para web\public\downloads\"
-Get-ChildItem $downloads | Where-Object { $_.Name -like "MontaHD-$version*" -or $_.Name -eq "latest.yml" }
+Get-ChildItem $downloads | Where-Object {
+    $_.Name -like "MontaHD-$version*" -or $_.Name -eq "latest.yml" -or $_.Name -eq "latest-ia32.yml"
+}
 Write-Host ""
 Write-Host "Proximo passo (na raiz do repo):"
 Write-Host "  git add web/public/downloads/"

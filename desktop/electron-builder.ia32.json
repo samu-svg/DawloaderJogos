@@ -1,0 +1,72 @@
+{
+  "appId": "com.montahd.desktop",
+  "productName": "MontaHD",
+  "copyright": "Copyright © 2026 MontaHD",
+  "icon": "build/icon.png",
+  "directories": {
+    "output": "release25"
+  },
+  "files": [
+    "dist/**/*",
+    "renderer/**/*",
+    "!**/*.map",
+    "!**/*.test.js"
+  ],
+  "asarUnpack": [
+    "renderer/**/*",
+    "**/7zip-bin/**"
+  ],
+  "win": {
+    "requestedExecutionLevel": "asInvoker",
+    "signExecutable": false,
+    "verifyUpdateCodeSignature": false,
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["ia32"]
+      },
+      {
+        "target": "portable",
+        "arch": ["ia32"]
+      }
+    ],
+    "signtoolOptions": {
+      "publisherName": "MontaHD"
+    }
+  },
+  "publish": {
+    "provider": "generic",
+    "url": "https://www.montahds.app/downloads"
+  },
+  "electronFuses": {
+    "runAsNode": false,
+    "enableCookieEncryption": true,
+    "enableNodeOptionsEnvironmentVariable": false,
+    "enableNodeCliInspectArguments": false,
+    "enableEmbeddedAsarIntegrityValidation": true,
+    "onlyLoadAppFromAsar": false,
+    "grantFileProtocolExtraPrivileges": false
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowElevation": false,
+    "allowToChangeInstallationDirectory": false,
+    "createDesktopShortcut": "always",
+    "createStartMenuShortcut": true,
+    "runAfterFinish": true,
+    "shortcutName": "MontaHD",
+    "uninstallDisplayName": "MontaHD",
+    "artifactName": "MontaHD-${version}-ia32-setup.exe",
+    "include": "build/installer.nsh"
+  },
+  "portable": {
+    "artifactName": "MontaHD-${version}-ia32-portable.exe"
+  },
+  "protocols": [
+    {
+      "name": "MontaHD",
+      "schemes": ["montahd"]
+    }
+  ]
+}

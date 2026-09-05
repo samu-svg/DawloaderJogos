@@ -1,7 +1,7 @@
 const INCLUDED = [
   {
     title: "Licença do app",
-    text: "MontaHD para Windows 64-bit, com atualizações enquanto o plano estiver ativo.",
+    text: "MontaHD para Windows 10/11 (32 e 64-bit) e Windows 7/8/8.1 (linha legado), com atualizações enquanto o plano estiver ativo.",
   },
   {
     title: "Acervo completo",

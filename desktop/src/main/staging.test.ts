@@ -4,7 +4,12 @@ import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { getFreeBytes, safeStagingId, stagingEntryDir } from "./staging.ts";
+import {
+  getFreeBytes,
+  safeStagingId,
+  stagingEntryDir,
+  windowsDriveDeviceId,
+} from "./staging.ts";
 
 test("safeStagingId remove caracteres perigosos", () => {
   assert.equal(safeStagingId("abc-123"), "abc-123");
@@ -15,6 +20,12 @@ test("safeStagingId remove caracteres perigosos", () => {
 test("stagingEntryDir junta a raiz com o id", () => {
   const dir = stagingEntryDir("/tmp/staging", "entry-1");
   assert.match(dir.replace(/\\/g, "/"), /\/entry-1$/);
+});
+
+test("windowsDriveDeviceId devolve a letra da unidade", () => {
+  if (process.platform !== "win32") return;
+  assert.equal(windowsDriveDeviceId("C:\\Games\\Foo"), "C:");
+  assert.equal(windowsDriveDeviceId("D:/"), "D:");
 });
 
 test("getFreeBytes na raiz do disco não tenta mkdir", async () => {

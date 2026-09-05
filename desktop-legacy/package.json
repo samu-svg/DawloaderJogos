@@ -1,0 +1,87 @@
+{
+  "name": "montahd-desktop-legacy",
+  "version": "0.6.26",
+  "private": true,
+  "author": "MontaHD",
+  "description": "MontaHD para Windows 7 / 8 / 8.1 (Electron 22)",
+  "main": "dist/main/main.js",
+  "scripts": {
+    "sync-assets": "node scripts/sync-build-assets.js",
+    "build": "node scripts/sync-build-assets.js && tsc -p tsconfig.json",
+    "dist:win": "npm run build && electron-builder --win nsis portable --x64 --ia32"
+  },
+  "build": {
+    "appId": "com.montahd.desktop.legacy",
+    "productName": "MontaHD",
+    "copyright": "Copyright © 2026 MontaHD",
+    "icon": "build/icon.png",
+    "directories": {
+      "output": "release-legacy"
+    },
+    "files": [
+      "dist/**/*",
+      "renderer/**/*",
+      "!**/*.map",
+      "!**/*.test.js"
+    ],
+    "asarUnpack": [
+      "renderer/**/*",
+      "**/7zip-bin/**"
+    ],
+    "win": {
+      "requestedExecutionLevel": "asInvoker",
+      "forceCodeSigning": false,
+      "signAndEditExecutable": false,
+      "verifyUpdateCodeSignature": false,
+      "publisherName": "MontaHD",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64", "ia32"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64", "ia32"]
+        }
+      ]
+    },
+    "publish": {
+      "provider": "generic",
+      "url": "https://www.montahds.app/downloads/legacy"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": false,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "runAfterFinish": true,
+      "shortcutName": "MontaHD",
+      "uninstallDisplayName": "MontaHD (Windows 7 / 8)",
+      "artifactName": "MontaHD-${version}-legacy-${arch}-setup.exe",
+      "include": "build/installer.nsh"
+    },
+    "portable": {
+      "artifactName": "MontaHD-${version}-legacy-${arch}-portable.exe"
+    },
+    "protocols": [
+      {
+        "name": "MontaHD",
+        "schemes": ["montahd"]
+      }
+    ]
+  },
+  "devDependencies": {
+    "@types/node": "^16.18.126",
+    "electron": "22.3.27",
+    "electron-builder": "^24.13.3",
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "7zip-bin": "^5.2.0",
+    "electron-updater": "^5.3.0",
+    "extract-zip": "^2.0.1",
+    "undici": "^5.28.4"
+  }
+}

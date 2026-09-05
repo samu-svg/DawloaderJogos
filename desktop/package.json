@@ -1,6 +1,6 @@
 {
   "name": "montahd-desktop",
-  "version": "0.6.25",
+  "version": "0.6.26",
   "private": true,
   "author": "MontaHD",
   "description": "Baixa arquivos de um manifesto e organiza no HD",
@@ -11,7 +11,9 @@
     "start": "electron .",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder",
-    "dist:win": "npm run build && electron-builder --win nsis portable --x64"
+    "dist:win": "npm run build && npm run dist:win:x64 && npm run dist:win:ia32",
+    "dist:win:x64": "electron-builder --win nsis portable zip --x64",
+    "dist:win:ia32": "electron-builder --config electron-builder.ia32.json --win"
   },
   "build": {
     "appId": "com.montahd.desktop",
@@ -28,7 +30,8 @@
       "!**/*.test.js"
     ],
     "asarUnpack": [
-      "renderer/**/*"
+      "renderer/**/*",
+      "**/7zip-bin/**"
     ],
     "win": {
       "requestedExecutionLevel": "asInvoker",
