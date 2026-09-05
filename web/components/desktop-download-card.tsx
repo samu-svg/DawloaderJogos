@@ -9,8 +9,8 @@ export function DesktopDownloadCard({
 }) {
   return (
     <section className="overflow-hidden rounded-[28px] border border-accent/25 bg-gradient-to-br from-violet-600/15 via-surface to-cyan-500/10 px-5 py-5 sm:px-7 sm:py-6">
-      <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-start sm:justify-between">
-        <div className="max-w-xl space-y-2">
+      <div className="space-y-5">
+        <div className="max-w-2xl space-y-2">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-2">
             Primeiro passo
           </p>
@@ -18,10 +18,9 @@ export function DesktopDownloadCard({
             {title}
           </h2>
           <p className="text-sm leading-6 text-zinc-400">{description}</p>
-          <p className="text-xs leading-5 text-zinc-600">
-            Windows 10/11 (32 e 64-bit) e Windows 7/8/8.1 (linha legado). Atalhos
-            na área de trabalho e no Menu Iniciar. Instale só a build do seu
-            sistema.
+          <p className="text-xs leading-5 text-zinc-500">
+            Windows 10/11 (32 e 64-bit) e Windows 7/8/8.1. Instale só a versão do
+            seu sistema — a sugerida vem marcada.
           </p>
         </div>
         <DesktopDownloadPicker />

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { GameCatalog } from "@/components/game-catalog";
-import { MontaHDStrip } from "@/components/montahd-strip";
+import { HomeHero } from "@/components/home-hero";
 import { SiteHeader } from "@/components/site-header";
 import { StoreFooter } from "@/components/store-footer";
 import { canAccessPainel } from "@/lib/rbac";
@@ -41,19 +41,13 @@ export default async function HomePage({ searchParams }: PageProps) {
       />
       <main className="content-narrow flex-1 px-6 py-8">
         <div className="page-stack">
-        <header className="page-header">
-          <p className="page-eyebrow">Xbox 360</p>
-          <h1 className="page-title">Downloads de jogos</h1>
-          <p className="page-lead">
-            Navegue pelo acervo, abra a página do jogo e instale no HD pelo app
-            MontaHD. Você paga pelo software — os arquivos não são vendidos
-            separadamente.
-          </p>
-        </header>
+        <HomeHero
+          hasAccess={hasAccess}
+          gameCount={items.length}
+          totalBytes={items.reduce((sum, game) => sum + game.sizeBytes, 0)}
+        />
 
-        <MontaHDStrip hasAccess={hasAccess} />
-
-        <div className="mt-10">
+        <div className="mt-12">
           <GameCatalog
             games={items}
             collections={collections}
