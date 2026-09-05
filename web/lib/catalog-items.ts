@@ -37,3 +37,8 @@ export function toCatalogGameItem(game: AcervoGame): CatalogGameItem {
 export function toCatalogGameItems(games: AcervoGame[]): CatalogGameItem[] {
   return games.map(toCatalogGameItem);
 }
+
+/** Jogos do acervo — utilitários (Bad Avatar) saem da grade e viram CTA. */
+export function catalogStoreGames(games: CatalogGameItem[]): CatalogGameItem[] {
+  return games.filter((game) => !game.isUtility);
+}

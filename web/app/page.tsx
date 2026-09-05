@@ -4,7 +4,7 @@ import { HomeHero } from "@/components/home-hero";
 import { SiteHeader } from "@/components/site-header";
 import { StoreFooter } from "@/components/store-footer";
 import { canAccessPainel } from "@/lib/rbac";
-import { toCatalogGameItems } from "@/lib/catalog-items";
+import { catalogStoreGames, toCatalogGameItems } from "@/lib/catalog-items";
 import { loadAcervo } from "@/lib/games";
 import { currentAppUser } from "@/lib/auth";
 import { userHasCatalogAccess } from "@/lib/subscription";
@@ -30,7 +30,7 @@ export default async function HomePage({ searchParams }: PageProps) {
   const isAdmin = appUser ? canAccessPainel(appUser.role) : false;
   const hasAccess = appUser ? await userHasCatalogAccess(appUser) : false;
 
-  const items = toCatalogGameItems(games);
+  const items = catalogStoreGames(toCatalogGameItems(games));
 
   return (
     <>

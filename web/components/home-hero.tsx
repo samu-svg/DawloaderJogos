@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BaixarExploitCta } from "@/components/baixar-exploit-button";
 import { DesktopDownloadCard } from "@/components/desktop-download-card";
 import { formatBytes } from "@/lib/manifest";
 
@@ -92,6 +93,7 @@ export function HomeHero({
                 </Link>
               )}
             </div>
+            <BaixarExploitCta />
           </div>
         </div>
 
