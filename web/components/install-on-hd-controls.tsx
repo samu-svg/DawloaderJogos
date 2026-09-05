@@ -96,7 +96,11 @@ export function InstallOnHdControls({
         }
       >
         <p className={captionClass}>Ainda não tenho o app</p>
-        <DesktopDownloadPicker compact />
+        {isBar ? (
+          <DesktopDownloadFallbackLink className={linkClass} />
+        ) : (
+          <DesktopDownloadPicker compact />
+        )}
       </div>
     </div>
   );

@@ -25,7 +25,7 @@ export default async function BaixarPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <DesktopDownloadCard />
+      <DesktopDownloadCard variant="inline" />
       <CatalogBrowser
         games={toCatalogGameItems(games)}
         collections={collections}

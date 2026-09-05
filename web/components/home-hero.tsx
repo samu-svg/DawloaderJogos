@@ -57,9 +57,9 @@ export function HomeHero({
           </div>
         </dl>
 
-        <div className="overflow-hidden rounded-2xl border border-border/80 bg-surface/60 px-5 py-4 text-left sm:px-6">
-          <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
-            <div className="max-w-lg text-center sm:text-left">
+        <div className="overflow-hidden rounded-2xl border border-border/80 bg-surface/60 px-5 py-4 sm:px-6">
+          <div className="flex flex-col items-center gap-4">
+            <div className="max-w-lg text-center">
               <p className="text-sm font-semibold text-white">
                 Os downloads acontecem no{" "}
                 <span className="text-gradient">MontaHD</span>
