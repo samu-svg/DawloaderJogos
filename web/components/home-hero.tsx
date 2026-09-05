@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BaixarExploitCta } from "@/components/baixar-exploit-button";
 import { DesktopDownloadCard } from "@/components/desktop-download-card";
-import { formatBytes } from "@/lib/manifest";
+import { formatBytesDetailed } from "@/lib/manifest";
 
 type HomeHeroProps = {
   hasAccess: boolean;
@@ -46,7 +46,7 @@ export function HomeHero({
               <dt className="sr-only">Tamanho total</dt>
               <dd className="text-xs font-medium text-zinc-300">
                 <span className="font-semibold text-white">
-                  {formatBytes(totalBytes)}
+                  {formatBytesDetailed(totalBytes)}
                 </span>{" "}
                 no acervo
               </dd>
@@ -67,7 +67,7 @@ export function HomeHero({
               </p>
               <p className="mt-1 text-sm leading-6 text-zinc-400">
                 O app baixa, verifica, descompacta e coloca cada jogo na pasta
-                certa do HD.
+                certa do HD. O HD deve estar formatado em FAT32 pelo Xbox 360.
               </p>
             </div>
             <div className="flex shrink-0 flex-wrap items-center justify-center gap-2">
@@ -89,7 +89,7 @@ export function HomeHero({
                   href="#jogos"
                   className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-medium text-zinc-200 transition hover:border-white/30 hover:text-white"
                 >
-                  Ver o acervo
+                  MontarHD em lote
                 </Link>
               )}
             </div>

@@ -12,7 +12,7 @@ import {
   type GameCategoryId,
 } from "@/lib/game-categories";
 import { weeklyGamesLabel } from "@/lib/weekly-games";
-import { formatBytes } from "@/lib/manifest";
+import { formatBytesDetailed } from "@/lib/manifest";
 
 export type CatalogGameItem = {
   id: string;
@@ -144,7 +144,7 @@ export function GameCatalog({
           </h2>
           <p className="mt-0.5 text-sm text-zinc-500">
             {filtered.length} {filtered.length === 1 ? "jogo" : "jogos"}
-            {totalBytes > 0 ? ` · ${formatBytes(totalBytes)}` : ""}
+            {totalBytes > 0 ? ` · ${formatBytesDetailed(totalBytes)}` : ""}
             {totalPages > 1 ? ` · página ${currentPage} de ${totalPages}` : ""}
           </p>
         </div>

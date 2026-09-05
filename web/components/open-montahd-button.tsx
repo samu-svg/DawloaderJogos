@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { buildMontaHDCatalogLink } from "@/lib/montahd-link";
 import { launchMontaHdProtocol } from "@/lib/launch-montahd";
-import { formatBytes } from "@/lib/manifest";
+import { formatBytesDetailed } from "@/lib/manifest";
 import { InstallOnHdControls } from "@/components/install-on-hd-controls";
 
 type OpenMontaHDButtonProps = {
@@ -101,7 +101,7 @@ export function OpenMontaHDButton({
                 ? "Marque as capas e envie a seleção ao MontaHD."
                 : `${catalogTitle}${
                     selectedTotalBytes > 0
-                      ? ` · ${formatBytes(selectedTotalBytes)}`
+                      ? ` · ${formatBytesDetailed(selectedTotalBytes)}`
                       : ""
                   }`}
             </p>

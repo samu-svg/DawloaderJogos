@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { BaixarExploitCta } from "@/components/baixar-exploit-button";
 import { OpenMontaHDButton } from "@/components/open-montahd-button";
 import type {
   CatalogCollectionItem,
@@ -18,7 +19,7 @@ import {
   type GameCategoryId,
 } from "@/lib/game-categories";
 import { weeklyGamesLabel } from "@/lib/weekly-games";
-import { formatBytes } from "@/lib/manifest";
+import { formatBytesDetailed } from "@/lib/manifest";
 
 type CatalogBrowserProps = {
   games: CatalogGameItem[];
@@ -181,25 +182,23 @@ export function CatalogBrowser({
 
   return (
     <div className="space-y-6 pb-40">
-      <header className="space-y-3">
+      <header className="space-y-3 text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-2">
           Montar meu HD
         </p>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              {activeCollection.title}
-            </h1>
-            {activeCollection.description && (
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-                {activeCollection.description}
-              </p>
-            )}
-          </div>
-          <p className="shrink-0 text-sm text-zinc-500">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            {activeCollection.title}
+          </h1>
+          {activeCollection.description && (
+            <p className="mx-auto max-w-2xl text-sm leading-6 text-zinc-400">
+              {activeCollection.description}
+            </p>
+          )}
+          <p className="text-sm text-zinc-500">
             {matchedGames.length}{" "}
             {matchedGames.length === 1 ? "título" : "títulos"}
-            {totalBytes > 0 ? ` · ${formatBytes(totalBytes)}` : ""}
+            {totalBytes > 0 ? ` · ${formatBytesDetailed(totalBytes)}` : ""}
           </p>
         </div>
       </header>
@@ -300,6 +299,8 @@ export function CatalogBrowser({
         )}
       </section>
 
+      <BaixarExploitCta />
+
       {matchedGames.length === 0 ? (
         <div className="rounded-[28px] border border-dashed border-border bg-surface/40 px-6 py-16 text-center">
           <p className="text-base font-medium text-white">Nenhum jogo aqui</p>
@@ -325,7 +326,7 @@ export function CatalogBrowser({
               {selectedCount} de {matchedGames.length} selecionado
               {selectedCount === 1 ? "" : "s"}
               {selectedTotalBytes > 0
-                ? ` · ${formatBytes(selectedTotalBytes)}`
+                ? ` · ${formatBytesDetailed(selectedTotalBytes)}`
                 : ""}
             </p>
           </div>

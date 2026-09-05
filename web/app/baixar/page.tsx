@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { BaixarExploitCta } from "@/components/baixar-exploit-button";
 import { CatalogBrowser } from "@/components/catalog-browser";
 import { DesktopDownloadCard } from "@/components/desktop-download-card";
 import { catalogStoreGames, toCatalogGameItems } from "@/lib/catalog-items";
@@ -26,12 +25,7 @@ export default async function BaixarPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 flex-1">
-          <DesktopDownloadCard variant="inline" />
-        </div>
-        <BaixarExploitCta />
-      </div>
+      <DesktopDownloadCard variant="inline" />
       <CatalogBrowser
         games={catalogStoreGames(toCatalogGameItems(games))}
         collections={collections}

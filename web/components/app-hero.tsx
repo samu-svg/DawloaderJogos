@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatBytes } from "@/lib/manifest";
+import { formatBytesDetailed } from "@/lib/manifest";
 
 type AppHeroProps = {
   loggedIn: boolean;
@@ -80,7 +80,7 @@ export function AppHero({
             Acervo
           </dt>
           <dd className="mt-1 text-xl font-bold text-white sm:text-2xl">
-            {totalBytes > 0 ? formatBytes(totalBytes) : "—"}
+            {totalBytes > 0 ? formatBytesDetailed(totalBytes) : "—"}
           </dd>
         </div>
       </dl>

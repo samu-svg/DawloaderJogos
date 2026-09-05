@@ -200,3 +200,12 @@ export function formatBytes(bytes: number): string {
   }
   return `${value.toFixed(value >= 100 ? 0 : 1)} ${units[unit]}`;
 }
+
+/** Tamanho agregado em GB inteiro (ex.: 1069 GB). Abaixo de 1 GB, usa formatBytes. */
+export function formatBytesDetailed(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes <= 0) return "0 GB";
+
+  const gb = bytes / 1024 ** 3;
+  if (gb >= 1) return `${Math.round(gb)} GB`;
+  return formatBytes(bytes);
+}
