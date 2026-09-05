@@ -1,6 +1,5 @@
 "use client";
 
-import { Analytics } from "@vercel/analytics/react";
 import { usePathname, useSearchParams } from "next/navigation";
 import Script from "next/script";
 import { Suspense, useEffect } from "react";
@@ -53,12 +52,7 @@ function GoogleAnalytics() {
   );
 }
 
-/** Vercel Web Analytics + GA4 opcional (NEXT_PUBLIC_GA_MEASUREMENT_ID). */
+/** GA4 opcional — só carrega com NEXT_PUBLIC_GA_MEASUREMENT_ID definido. */
 export function SiteAnalytics() {
-  return (
-    <>
-      <Analytics />
-      <GoogleAnalytics />
-    </>
-  );
+  return <GoogleAnalytics />;
 }
