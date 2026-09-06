@@ -9,7 +9,12 @@ import {
   planPixAmount,
   waitForAsaasPixQrCode,
 } from "@/lib/asaas";
-import { pixCheckoutPath } from "@/lib/asaas-pix-format";
+import {
+  asaasCheckoutUserMessage,
+  buildPixCheckoutView,
+  pixCheckoutPath,
+  toQrView,
+} from "@/lib/asaas-pix-format";
 import { getApiUser } from "@/lib/auth";
 import { logError } from "@/lib/logger";
 import { passwordIsExpired } from "@/lib/password-policy";
@@ -21,14 +26,6 @@ type CheckoutBody = {
   plan?: string;
   cpfCnpj?: string;
 };
-
-function asaasUserError(error: unknown): string | null {
-  const message = error instanceof Error ? error.message : "";
-  if (/cpf|cnpj/i.test(message)) {
-    return "Informe um CPF válido para gerar o PIX.";
-  }
-  return null;
-}
 
 export async function POST(request: Request) {
   const limited = await enforceRateLimit(request, "asaas-checkout", RATE_LIMITS.tight);
@@ -97,13 +94,20 @@ export async function POST(request: Request) {
       description: `MontaHD — ${plan.title}`,
     });
 
-    const qr = await waitForAsaasPixQrCode(payment.id);
-    if (!qr.encodedImage?.trim() || !qr.payload?.trim()) {
-      return NextResponse.json(
-        { error: "Não foi possível gerar o QR Code PIX." },
-        { status: 502 },
-      );
+    let qr = null;
+    try {
+      qr = toQrView(await waitForAsaasPixQrCode(payment.id));
+    } catch {
+      qr = null;
     }
+
+    const view = buildPixCheckoutView({
+      payment,
+      planId,
+      planTitle: plan.title,
+      priceLabel: plan.priceLabel,
+      qr,
+    });
 
     await recordAudit({
       actorId: user.id,
@@ -114,16 +118,20 @@ export async function POST(request: Request) {
       metadata: { plan: planId, method: "pix" },
     });
 
-    return NextResponse.json({ url: pixCheckoutPath(payment.id) });
+    return NextResponse.json({
+      url: pixCheckoutPath(payment.id),
+      ...view,
+    });
   } catch (error) {
     logError("Asaas checkout failed", error, { plan: planId, userId: user.id });
+    const userError = asaasCheckoutUserMessage(error);
     return NextResponse.json(
       {
         error:
-          asaasUserError(error) ??
+          userError ??
           "Não foi possível iniciar o pagamento PIX. Tente outro plano ou forma de pagamento, ou tente de novo em instantes.",
       },
-      { status: 502 },
+      { status: userError ? 400 : 502 },
     );
   }
 }

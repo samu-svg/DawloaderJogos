@@ -40,6 +40,16 @@ export type AsaasWebhookEvent = {
   payment?: AsaasPayment;
 };
 
+export class AsaasApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "AsaasApiError";
+    this.status = status;
+  }
+}
+
 export function asaasApiKey(): string | null {
   return process.env.ASAAS_API_KEY?.trim() || null;
 }
@@ -134,7 +144,10 @@ async function asaasRequest<T>(
             .join("; ")
         : undefined;
 
-    throw new Error(message || `Asaas API error (${response.status}).`);
+    throw new AsaasApiError(
+      message || `Asaas API error (${response.status}).`,
+      response.status,
+    );
   }
 
   return data as T;
@@ -229,7 +242,7 @@ function sleep(ms: number): Promise<void> {
 
 export async function waitForAsaasPixQrCode(
   paymentId: string,
-  attempts = 4,
+  attempts = 6,
 ): Promise<AsaasPixQrCode> {
   let lastError: unknown;
   for (let attempt = 0; attempt < attempts; attempt += 1) {

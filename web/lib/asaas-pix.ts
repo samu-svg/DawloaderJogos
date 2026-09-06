@@ -6,10 +6,10 @@ import {
   type AsaasPayment,
 } from "@/lib/asaas";
 import {
-  asaasPaymentIsExpired,
   asaasPaymentIsPaid,
   isAsaasPaymentId,
-  qrCodeIsExpired,
+  toQrView,
+  buildPixCheckoutView,
   type PixCheckoutView,
   type PixQrView,
 } from "@/lib/asaas-pix-format";
@@ -17,19 +17,8 @@ import { logWarn } from "@/lib/logger";
 import { asaasCustomerRef, grantPrepaidAccess } from "@/lib/prepaid-access";
 import { getPlan } from "@/lib/stripe-plans";
 
-function toQrView(paymentQr: {
-  encodedImage?: string | null;
-  payload?: string | null;
-  expirationDate?: string | null;
-}): PixQrView | null {
-  const encodedImage = paymentQr.encodedImage?.trim();
-  const payload = paymentQr.payload?.trim();
-  if (!encodedImage || !payload) return null;
-  return {
-    encodedImage,
-    payload,
-    expirationDate: paymentQr.expirationDate?.trim() || null,
-  };
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export async function loadOwnedPixCheckout(
@@ -38,19 +27,22 @@ export async function loadOwnedPixCheckout(
 ): Promise<PixCheckoutView | null> {
   if (!isAsaasPaymentId(paymentId)) return null;
 
-  let payment: AsaasPayment;
-  try {
-    payment = await getAsaasPayment(paymentId);
-  } catch {
-    return null;
+  let payment: AsaasPayment | null = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      payment = await getAsaasPayment(paymentId);
+      break;
+    } catch {
+      if (attempt < 2) await sleep(300 * (attempt + 1));
+    }
   }
+  if (!payment) return null;
 
   const parsed = parseAsaasExternalReference(payment.externalReference);
   if (!parsed || parsed.userId !== userId) return null;
 
   const plan = getPlan(parsed.planId);
   const paid = asaasPaymentIsPaid(payment.status);
-  let expired = asaasPaymentIsExpired(payment.status);
 
   // Conciliação: rede de segurança para quando o webhook falha ou atrasa.
   // Inofensiva ao reabrir um checkout antigo, porque o razão é idempotente
@@ -79,21 +71,16 @@ export async function loadOwnedPixCheckout(
   if (!paid) {
     try {
       qr = toQrView(await getAsaasPixQrCode(payment.id));
-      if (qr && qrCodeIsExpired(qr.expirationDate)) expired = true;
     } catch {
       qr = null;
     }
   }
 
-  return {
-    paymentId: payment.id,
-    status: payment.status,
-    paid,
-    expired,
+  return buildPixCheckoutView({
+    payment,
     planId: parsed.planId,
     planTitle: plan.title,
     priceLabel: plan.priceLabel,
-    value: payment.value,
     qr,
-  };
+  });
 }

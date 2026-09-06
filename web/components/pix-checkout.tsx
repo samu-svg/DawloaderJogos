@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   formatCountdown,
+  isPixCheckoutView,
   parseAsaasDateTime,
+  pixCheckoutPath,
   pixPlanPath,
   pixQrImageSrc,
   type PixCheckoutView,
 } from "@/lib/asaas-pix-format";
-import { formatCpfCnpj, isValidCpfCnpj } from "@/lib/cpf-cnpj";
+import { digitsOnly, formatCpfCnpj, isValidCpfCnpj } from "@/lib/cpf-cnpj";
 
 const POLL_MS = 3000;
 
@@ -161,19 +163,24 @@ export function PixCheckout({
   const planTitle = view?.planTitle ?? plan.title;
   const priceLabel = view?.priceLabel ?? plan.priceLabel;
   const planId = view?.planId ?? plan.id;
+  const paymentId = view?.paymentId;
+  const hasQr = Boolean(view?.qr);
+  const paid = Boolean(view?.paid);
 
   const refresh = useCallback(async () => {
-    if (!view?.paymentId) return;
-    const response = await fetch(`/api/asaas/pix/${encodeURIComponent(view.paymentId)}`, {
+    if (!paymentId) return;
+    const response = await fetch(`/api/asaas/pix/${encodeURIComponent(paymentId)}`, {
       cache: "no-store",
+      credentials: "same-origin",
     });
     if (!response.ok) return;
     const next = (await response.json()) as PixCheckoutView;
+    if (!isPixCheckoutView(next)) return;
     setView(next);
-  }, [view?.paymentId]);
+  }, [paymentId]);
 
   useEffect(() => {
-    if (!view || view.paid || expired) return;
+    if (!paymentId || paid || expired) return;
 
     let cancelled = false;
 
@@ -186,9 +193,10 @@ export function PixCheckout({
       }
     }
 
+    void tick();
     const id = window.setInterval(() => {
       void tick();
-    }, POLL_MS);
+    }, hasQr ? POLL_MS : 1000);
     const onVisibility = () => {
       if (document.visibilityState === "visible") void tick();
     };
@@ -199,7 +207,7 @@ export function PixCheckout({
       window.clearInterval(id);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [expired, refresh, view]);
+  }, [expired, hasQr, paid, paymentId, refresh]);
 
   useEffect(() => {
     if (!view?.paid) return;
@@ -212,6 +220,7 @@ export function PixCheckout({
 
   async function handleGenerate(event: FormEvent) {
     event.preventDefault();
+    event.stopPropagation();
     setGenerateError(null);
     if (!isValidCpfCnpj(cpf)) {
       setGenerateError("Informe um CPF válido para gerar o PIX.");
@@ -223,7 +232,9 @@ export function PixCheckout({
       const response = await fetch("/api/asaas/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: planId, cpfCnpj: cpf }),
+        credentials: "same-origin",
+        cache: "no-store",
+        body: JSON.stringify({ plan: planId, cpfCnpj: digitsOnly(cpf) }),
       });
       const text = await response.text();
       let data: { url?: string; error?: string } = {};
@@ -234,10 +245,21 @@ export function PixCheckout({
           data = {};
         }
       }
-      if (!response.ok || !data.url) {
+      if (!response.ok) {
         throw new Error(data.error ?? "Não foi possível gerar o PIX.");
       }
-      router.replace(data.url);
+      if (isPixCheckoutView(data)) {
+        const nextUrl = data.url || pixCheckoutPath(data.paymentId);
+        setView(data);
+        window.history.replaceState(null, "", nextUrl);
+        setGenerating(false);
+        return;
+      }
+      if (data.url) {
+        window.location.assign(data.url);
+        return;
+      }
+      throw new Error(data.error ?? "Não foi possível gerar o PIX.");
     } catch (caught) {
       setGenerateError(
         caught instanceof Error ? caught.message : "Não foi possível gerar o PIX.",
@@ -396,7 +418,11 @@ export function PixCheckout({
             </div>
           </>
         ) : (
-          <form className="mt-8 space-y-5" onSubmit={(event) => void handleGenerate(event)}>
+          <form
+            className="mt-8 space-y-5"
+            method="post"
+            onSubmit={(event) => void handleGenerate(event)}
+          >
             <label className="block space-y-2">
               <span className="text-sm font-medium text-zinc-200">CPF</span>
               <input

@@ -33,6 +33,83 @@ export function pixCheckoutPath(paymentId: string): string {
   return `/assinar/pix?payment=${encodeURIComponent(paymentId)}`;
 }
 
+export function isPixCheckoutView(value: unknown): value is PixCheckoutView {
+  if (!value || typeof value !== "object") return false;
+  const view = value as Partial<PixCheckoutView>;
+  return (
+    typeof view.paymentId === "string" &&
+    isAsaasPaymentId(view.paymentId) &&
+    (view.planId === "1m" || view.planId === "2m" || view.planId === "3m") &&
+    typeof view.paid === "boolean"
+  );
+}
+
+export function asaasCheckoutUserMessage(error: unknown): string | null {
+  const rawMessage =
+    error instanceof Error
+      ? error.message
+      : error && typeof error === "object" && "message" in error
+        ? String((error as { message?: unknown }).message ?? "")
+        : "";
+  const message = rawMessage.trim();
+  if (/cpf|cnpj/i.test(message)) {
+    return "Informe um CPF válido para gerar o PIX.";
+  }
+
+  const status =
+    error && typeof error === "object" && "status" in error
+      ? Number((error as { status?: unknown }).status)
+      : 0;
+  if (status === 400 && message && !/^Asaas API error/i.test(message)) {
+    if (message.length > 180) {
+      return "Não foi possível gerar o PIX. Verifique o CPF e tente de novo.";
+    }
+    return message;
+  }
+
+  return null;
+}
+
+export function toQrView(paymentQr: {
+  encodedImage?: string | null;
+  payload?: string | null;
+  expirationDate?: string | null;
+}): PixQrView | null {
+  const encodedImage = paymentQr.encodedImage?.trim();
+  const payload = paymentQr.payload?.trim();
+  if (!encodedImage || !payload) return null;
+  return {
+    encodedImage,
+    payload,
+    expirationDate: paymentQr.expirationDate?.trim() || null,
+  };
+}
+
+export function buildPixCheckoutView(input: {
+  payment: { id: string; status: string; value: number };
+  planId: PixCheckoutView["planId"];
+  planTitle: string;
+  priceLabel: string;
+  qr: PixQrView | null;
+}): PixCheckoutView {
+  const paid = asaasPaymentIsPaid(input.payment.status);
+  let expired = asaasPaymentIsExpired(input.payment.status);
+  if (!paid && input.qr && qrCodeIsExpired(input.qr.expirationDate)) {
+    expired = true;
+  }
+  return {
+    paymentId: input.payment.id,
+    status: input.payment.status,
+    paid,
+    expired,
+    planId: input.planId,
+    planTitle: input.planTitle,
+    priceLabel: input.priceLabel,
+    value: input.payment.value,
+    qr: paid ? null : input.qr,
+  };
+}
+
 export function pixPlanPath(planId: "1m" | "2m" | "3m"): string {
   return `/assinar/pix?plan=${planId}`;
 }
