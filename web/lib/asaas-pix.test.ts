@@ -93,10 +93,10 @@ test("Asaas 400 com descrição própria aparece na UI", () => {
 
 test("resposta de criar PIX é reconhecida sem nova navegação", () => {
   const view = buildPixCheckoutView({
-    payment: { id: "pay_abc123", status: "PENDING", value: 49.9 },
+    payment: { id: "pay_abc123", status: "PENDING", value: 39.9 },
     planId: "1m",
     planTitle: "1 mês",
-    priceLabel: "R$ 49,90",
+    priceLabel: "R$ 39,90",
     qr: toQrView({
       encodedImage: "abc",
       payload: "00020126",
@@ -110,10 +110,10 @@ test("resposta de criar PIX é reconhecida sem nova navegação", () => {
 
 test("cobrança criada sem QR ainda é uma view válida", () => {
   const view = buildPixCheckoutView({
-    payment: { id: "pay_pending1", status: "PENDING", value: 49.9 },
+    payment: { id: "pay_pending1", status: "PENDING", value: 69.9 },
     planId: "2m",
     planTitle: "2 meses",
-    priceLabel: "R$ 89,90",
+    priceLabel: "R$ 69,90",
     qr: null,
   });
   assert.equal(isPixCheckoutView(view), true);

@@ -31,8 +31,8 @@ test("plano de 1 mês é o recomendado e aparece no centro", () => {
 });
 
 test("preço é inteiro em centavos", () => {
-  assert.equal(getPlan("1m").priceCents, 4990);
-  assert.equal(getPlan("2m").priceCents, 8990);
+  assert.equal(getPlan("1m").priceCents, 3990);
+  assert.equal(getPlan("2m").priceCents, 6990);
   assert.equal(getPlan("3m").priceCents, 15990);
   for (const plan of STRIPE_PLANS) {
     assert.equal(Number.isInteger(plan.priceCents), true);
@@ -40,8 +40,8 @@ test("preço é inteiro em centavos", () => {
 });
 
 test("rótulo é derivado dos centavos, nunca o contrário", () => {
-  assert.equal(getPlan("1m").priceLabel, "R$ 49,90");
-  assert.equal(getPlan("2m").priceLabel, "R$ 89,90");
+  assert.equal(getPlan("1m").priceLabel, "R$ 39,90");
+  assert.equal(getPlan("2m").priceLabel, "R$ 69,90");
   assert.equal(getPlan("3m").priceLabel, "R$ 159,90");
 });
 
