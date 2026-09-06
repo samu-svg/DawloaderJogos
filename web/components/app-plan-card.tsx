@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { STRIPE_PLANS } from "@/lib/stripe-plans";
+import { getPlan, STRIPE_PLANS } from "@/lib/stripe-plans";
 
 function formatBrl(value: number): string {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -20,7 +20,7 @@ export function AppPlanCard({
     : loggedIn
       ? "/assinar"
       : "/cadastro?next=/assinar";
-  const monthlyBase = STRIPE_PLANS[0].priceCents / 100;
+  const monthlyBase = getPlan("1m").priceCents / 100;
 
   if (hasAccess) {
     return (

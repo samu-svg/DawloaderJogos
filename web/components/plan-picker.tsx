@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { pixPlanPath } from "@/lib/asaas-pix-format";
 import type { PlanId } from "@/lib/stripe-plans";
-import { STRIPE_PLANS } from "@/lib/stripe-plans";
+import { getPlan, STRIPE_PLANS } from "@/lib/stripe-plans";
 
 async function readCheckoutResponse(response: Response): Promise<{ url?: string; error?: string }> {
   const text = await response.text();
@@ -47,7 +47,7 @@ export function PlanPicker({
 }) {
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const monthlyBase = STRIPE_PLANS[0].priceCents / 100;
+  const monthlyBase = getPlan("1m").priceCents / 100;
 
   async function handleCardCheckout(plan: PlanId) {
     const key = `${plan}-card`;

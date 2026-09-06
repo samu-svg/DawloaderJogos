@@ -17,8 +17,12 @@ test("planos têm meses corretos", () => {
   assert.equal(getPlan("3m").months, 3);
 });
 
-test("plano de 1 mês é o recomendado e aparece primeiro", () => {
-  assert.equal(STRIPE_PLANS[0].id, "1m");
+test("plano de 1 mês é o recomendado e aparece no centro", () => {
+  assert.deepEqual(
+    STRIPE_PLANS.map((plan) => plan.id),
+    ["2m", "1m", "3m"],
+  );
+  assert.equal(STRIPE_PLANS[1].id, "1m");
   assert.equal(getPlan("1m").recommended, true);
   assert.equal(
     STRIPE_PLANS.filter((plan) => plan.recommended).length,
@@ -70,7 +74,10 @@ test("price do plano é sempre o de assinatura no cartão", (t) => {
 
   assert.equal(stripePriceIdFor("1m"), "price_1m");
   assert.equal(stripePriceIdFor("3m"), null);
-  assert.deepEqual(knownCardPriceIds(), ["price_1m", "price_2m"]);
+  assert.deepEqual(
+    knownCardPriceIds().sort(),
+    ["price_1m", "price_2m"],
+  );
 });
 
 test("STRIPE_PRICE_ID antigo só vale para o plano de 1 mês", (t) => {

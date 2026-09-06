@@ -30,19 +30,19 @@ function definePlan(
 
 export const STRIPE_PLANS: readonly PlanDefinition[] = [
   definePlan({
+    id: "2m",
+    months: 2,
+    title: "2 meses",
+    priceCents: 8990,
+    cardCadence: "a cada 2 meses",
+  }),
+  definePlan({
     id: "1m",
     months: 1,
     title: "1 mês",
     priceCents: 4990,
     cardCadence: "por mês",
     recommended: true,
-  }),
-  definePlan({
-    id: "2m",
-    months: 2,
-    title: "2 meses",
-    priceCents: 8990,
-    cardCadence: "a cada 2 meses",
   }),
   definePlan({
     id: "3m",
@@ -102,7 +102,10 @@ export function stripePlansConfigured(): boolean {
 }
 
 export function lowestPlanPriceLabel(): string {
-  return `a partir de ${STRIPE_PLANS[0].priceLabel}`;
+  const cheapest = STRIPE_PLANS.reduce((min, plan) =>
+    plan.priceCents < min.priceCents ? plan : min,
+  );
+  return `a partir de ${cheapest.priceLabel}`;
 }
 
 export function accessMonthsFromMetadata(
