@@ -1704,5 +1704,625 @@
       "O app só baixa se o pack ainda não estiver no HD."
     ],
     "dlcNotes": []
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000bb": {
+    "displayTitle": "Bankshot Billiards 2",
+    "description": "Bankshot Billiards 2 — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/584107EC.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 584107EC.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 584107EC — destino Content/0000000000000000/584107EC. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000bc": {
+    "displayTitle": "PAC-MAN",
+    "description": "PAC-MAN — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/58410811.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 58410811.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 58410811 — destino Content/0000000000000000/58410811. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000bd": {
+    "displayTitle": "Tetris Splash",
+    "description": "Tetris Splash — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/5841083B.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 5841083B.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 5841083B — destino Content/0000000000000000/5841083B. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000be": {
+    "displayTitle": "Castlevania: Symphony of the Night",
+    "description": "Castlevania: Symphony of the Night — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/58410847.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 58410847.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 58410847 — destino Content/0000000000000000/58410847. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000bf": {
+    "displayTitle": "Prince of Persia",
+    "description": "Prince of Persia — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/58410865.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 58410865.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 58410865 — destino Content/0000000000000000/58410865. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000c0": {
+    "displayTitle": "Boom Boom Rocket",
+    "description": "Boom Boom Rocket — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/5841086A.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 5841086A.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 5841086A — destino Content/0000000000000000/5841086A. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000c1": {
+    "displayTitle": "Frogger 2",
+    "description": "Frogger 2 — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/5841087C.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 5841087C.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 5841087C — destino Content/0000000000000000/5841087C. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000c2": {
+    "displayTitle": "Peggle",
+    "description": "Peggle — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/58410889.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 58410889.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 58410889 — destino Content/0000000000000000/58410889. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000c3": {
+    "displayTitle": "Golf: Tee It Up!",
+    "description": "Golf: Tee It Up! — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/584108A1.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 584108A1.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 584108A1 — destino Content/0000000000000000/584108A1. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000c4": {
+    "displayTitle": "Vigilante 8 Arcade",
+    "description": "Vigilante 8 Arcade — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/584108A8.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 584108A8.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 584108A8 — destino Content/0000000000000000/584108A8. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000c5": {
+    "displayTitle": "1942: Joint Strike",
+    "description": "1942: Joint Strike — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/584108AA.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 584108AA.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 584108AA — destino Content/0000000000000000/584108AA. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000c6": {
+    "displayTitle": "R-Type Dimensions",
+    "description": "R-Type Dimensions — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/584108AD.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 584108AD.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 584108AD — destino Content/0000000000000000/584108AD. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000c7": {
+    "displayTitle": "Metal Slug 3",
+    "description": "Metal Slug 3 — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/584108CF.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 584108CF.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 584108CF — destino Content/0000000000000000/584108CF. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000c8": {
+    "displayTitle": "Metal Slug XX",
+    "description": "Metal Slug XX — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/58410972.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 58410972.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 58410972 — destino Content/0000000000000000/58410972. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000c9": {
+    "displayTitle": "Bomberman Battlefest",
+    "description": "Bomberman Battlefest — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/584109B2.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 584109B2.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 584109B2 — destino Content/0000000000000000/584109B2. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000ca": {
+    "displayTitle": "LIMBO",
+    "description": "LIMBO — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/584109D1.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 584109D1.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 584109D1 — destino Content/0000000000000000/584109D1. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000cb": {
+    "displayTitle": "Final Fight: DblImpact",
+    "description": "Final Fight: DblImpact — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/584109DD.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 584109DD.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 584109DD — destino Content/0000000000000000/584109DD. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000cc": {
+    "displayTitle": "Plants vs. Zombies",
+    "description": "Plants vs. Zombies — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/584109FF.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 584109FF.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 584109FF — destino Content/0000000000000000/584109FF. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000cd": {
+    "displayTitle": "After Burner Climax",
+    "description": "After Burner Climax — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/58410A06.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 58410A06.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 58410A06 — destino Content/0000000000000000/58410A06. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000ce": {
+    "displayTitle": "Sonic The Hedgehog 4",
+    "description": "Sonic The Hedgehog 4 — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/58410A07.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 58410A07.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 58410A07 — destino Content/0000000000000000/58410A07. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000cf": {
+    "displayTitle": "3D Ultra MiniGolf Adventures 2",
+    "description": "3D Ultra MiniGolf Adventures 2 — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/58410A3B.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 58410A3B.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 58410A3B — destino Content/0000000000000000/58410A3B. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000d0": {
+    "displayTitle": "Radiant Silvergun",
+    "description": "Radiant Silvergun — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/58410A54.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 58410A54.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 58410A54 — destino Content/0000000000000000/58410A54. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000d1": {
+    "displayTitle": "Bejeweled Blitz LIVE",
+    "description": "Bejeweled Blitz LIVE — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/58410A57.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 58410A57.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 58410A57 — destino Content/0000000000000000/58410A57. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000d2": {
+    "displayTitle": "Castlevania HD",
+    "description": "Castlevania HD — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/58410A7A.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 58410A7A.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 58410A7A — destino Content/0000000000000000/58410A7A. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000d3": {
+    "displayTitle": "Trine 2",
+    "description": "Trine 2 — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/58410A9B.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 58410A9B.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 58410A9B — destino Content/0000000000000000/58410A9B. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000d4": {
+    "displayTitle": "Trials Evolution",
+    "description": "Trials Evolution — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/58410AAD.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 58410AAD.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 58410AAD — destino Content/0000000000000000/58410AAD. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000d5": {
+    "displayTitle": "Galaga Legions DX",
+    "description": "Galaga Legions DX — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/58410AF9.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 58410AF9.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 58410AF9 — destino Content/0000000000000000/58410AF9. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000d6": {
+    "displayTitle": "Dead Rising 2: Case West",
+    "description": "Dead Rising 2: Case West — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/58410B00.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 58410B00.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 58410B00 — destino Content/0000000000000000/58410B00. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000d7": {
+    "displayTitle": "Motocross Madness",
+    "description": "Motocross Madness — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/58410B0F.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 58410B0F.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 58410B0F — destino Content/0000000000000000/58410B0F. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000d8": {
+    "displayTitle": "Street Fighter III: Online Edition",
+    "description": "Street Fighter III: Online Edition — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/58410B16.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 58410B16.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 58410B16 — destino Content/0000000000000000/58410B16. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000d9": {
+    "displayTitle": "Daytona USA",
+    "description": "Daytona USA — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/58410B1D.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 58410B1D.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 58410B1D — destino Content/0000000000000000/58410B1D. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000da": {
+    "displayTitle": "Bang Bang Racing",
+    "description": "Bang Bang Racing — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/58410B4A.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 58410B4A.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 58410B4A — destino Content/0000000000000000/58410B4A. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000db": {
+    "displayTitle": "Mortal Kombat Arcade",
+    "description": "Mortal Kombat Arcade — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/58410B62.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 58410B62.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 58410B62 — destino Content/0000000000000000/58410B62. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000dc": {
+    "displayTitle": "Fruit Ninja Kinect",
+    "description": "Fruit Ninja Kinect — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/58410B79.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 58410B79.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 58410B79 — destino Content/0000000000000000/58410B79. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000dd": {
+    "displayTitle": "Bejeweled 3",
+    "description": "Bejeweled 3 — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/584111D6.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 584111D6.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 584111D6 — destino Content/0000000000000000/584111D6. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000de": {
+    "displayTitle": "SONIC 4 Episode II",
+    "description": "SONIC 4 Episode II — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/584111F2.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 584111F2.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 584111F2 — destino Content/0000000000000000/584111F2. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000df": {
+    "displayTitle": "Virtua Fighter 5 Final Showdown",
+    "description": "Virtua Fighter 5 Final Showdown — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/584111FE.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 584111FE.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 584111FE — destino Content/0000000000000000/584111FE. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000e0": {
+    "displayTitle": "Marvel vs. Capcom Origins",
+    "description": "Marvel vs. Capcom Origins — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/58411223.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 58411223.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 58411223 — destino Content/0000000000000000/58411223. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000e1": {
+    "displayTitle": "Darkstalkers Resurrection",
+    "description": "Darkstalkers Resurrection — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/5841122F.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 5841122F.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 5841122F — destino Content/0000000000000000/5841122F. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000e2": {
+    "displayTitle": "Pool Nation",
+    "description": "Pool Nation — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/5841127A.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 5841127A.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 5841127A — destino Content/0000000000000000/5841127A. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000e3": {
+    "displayTitle": "Double Dragon II",
+    "description": "Double Dragon II — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/5841128D.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 5841128D.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 5841128D — destino Content/0000000000000000/5841128D. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000e4": {
+    "displayTitle": "Terraria: Xbox 360 Edition",
+    "description": "Terraria: Xbox 360 Edition — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/5841128F.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 5841128F.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 5841128F — destino Content/0000000000000000/5841128F. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000e5": {
+    "displayTitle": "Way of the Dogg",
+    "description": "Way of the Dogg — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/58411291.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 58411291.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 58411291 — destino Content/0000000000000000/58411291. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000e6": {
+    "displayTitle": "Brothers",
+    "description": "Brothers — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/584112A5.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 584112A5.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 584112A5 — destino Content/0000000000000000/584112A5. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000e7": {
+    "displayTitle": "Castle of Illusion Starring Mickey Mouse",
+    "description": "Castle of Illusion Starring Mickey Mouse — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/584112C7.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 584112C7.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 584112C7 — destino Content/0000000000000000/584112C7. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000e8": {
+    "displayTitle": "Dungeons & Dragons: Chronicles of Mystara",
+    "description": "Dungeons & Dragons: Chronicles of Mystara — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/584113C3.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 584113C3.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 584113C3 — destino Content/0000000000000000/584113C3. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000e9": {
+    "displayTitle": "DuckTales: Remastered",
+    "description": "DuckTales: Remastered — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/584113C6.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 584113C6.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 584113C6 — destino Content/0000000000000000/584113C6. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000ea": {
+    "displayTitle": "Thunder Wolves",
+    "description": "Thunder Wolves — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/584113F5.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 584113F5.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 584113F5 — destino Content/0000000000000000/584113F5. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000eb": {
+    "displayTitle": "Marlow Briggs",
+    "description": "Marlow Briggs — jogo Xbox Live Arcade do pack MontaHD. Instala em Content/0000000000000000/58411403.",
+    "audio": "desconhecido",
+    "audioNote": "Pacote GOD/XBLA (Content). Title ID 58411403.",
+    "installHint": "content",
+    "dlcNotes": [
+      "Title ID 58411403 — destino Content/0000000000000000/58411403. Pacote GOD; o zip contém a pasta Content pronta para a raiz do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000ec": {
+    "displayTitle": "Cabela's Big Game Hunter Pro Hunts 2014",
+    "description": "Simulador de caça da série Cabela's para Xbox 360.",
+    "audio": "desconhecido",
+    "audioNote": "Pasta Games: Cabelas.Big.Game.Hunter.Pro.Hunts.2014.",
+    "installHint": "games",
+    "technicalNotes": [
+      "Destino Games/Cabela's Big Game Hunter Pro Hunts 2014.zip — extração na pasta Games/ do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000ed": {
+    "displayTitle": "Game Party: In Motion",
+    "description": "Minijogos para Kinect — festa em família com desafios de movimento.",
+    "audio": "desconhecido",
+    "audioNote": "Pasta Games: Game Party In Motion.",
+    "installHint": "games",
+    "technicalNotes": [
+      "Destino Games/Game Party: In Motion.zip — extração na pasta Games/ do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000ee": {
+    "displayTitle": "Harry Potter for Kinect",
+    "description": "Aventuras de Harry Potter controladas por gestos no Kinect.",
+    "audio": "desconhecido",
+    "audioNote": "Pasta Games: Harry Potter for Kinect.",
+    "installHint": "games",
+    "technicalNotes": [
+      "Destino Games/Harry Potter for Kinect.zip — extração na pasta Games/ do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000ef": {
+    "displayTitle": "Kinectimals: Now with Bears",
+    "description": "Cuide de filhotes virtuais com o Kinect — edição com ursos.",
+    "audio": "desconhecido",
+    "audioNote": "Pasta Games: KINECTIMALS NOW WITH BEARS.",
+    "installHint": "games",
+    "technicalNotes": [
+      "Destino Games/Kinectimals: Now with Bears.zip — extração na pasta Games/ do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000f0": {
+    "displayTitle": "Michael Jackson: The Experience",
+    "description": "Dance e cante as coreografias de Michael Jackson com Kinect.",
+    "audio": "desconhecido",
+    "audioNote": "Pasta Games: Michael Jackson The Experience.",
+    "installHint": "games",
+    "technicalNotes": [
+      "Destino Games/Michael Jackson: The Experience.zip — extração na pasta Games/ do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000f1": {
+    "displayTitle": "PowerUp Heroes",
+    "description": "Luta corpo a corpo com super-heróis usando o Kinect.",
+    "audio": "desconhecido",
+    "audioNote": "Pasta Games: PowerUp Heroes.",
+    "installHint": "games",
+    "technicalNotes": [
+      "Destino Games/PowerUp Heroes.zip — extração na pasta Games/ do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000f2": {
+    "displayTitle": "Project Gotham Racing 4",
+    "description": "Corrida arcade-realista da série PGR com clima dinâmico.",
+    "audio": "desconhecido",
+    "audioNote": "Pasta Games: Project Gotham Racing 4.",
+    "installHint": "games",
+    "technicalNotes": [
+      "Destino Games/Project Gotham Racing 4.zip — extração na pasta Games/ do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000f3": {
+    "displayTitle": "Tom Clancy's Rainbow Six: Vegas",
+    "description": "Tiro tático em primeira pessoa em Las Vegas.",
+    "audio": "desconhecido",
+    "audioNote": "Pasta Games: Rainbow six vegas.",
+    "installHint": "games",
+    "technicalNotes": [
+      "Destino Games/Tom Clancy's Rainbow Six: Vegas.zip — extração na pasta Games/ do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000f4": {
+    "displayTitle": "Sniper: Ghost Warrior",
+    "description": "Atirador de elite em missões furtivas.",
+    "audio": "desconhecido",
+    "audioNote": "Pasta Games: Sniper Ghost Warrior.",
+    "installHint": "games",
+    "technicalNotes": [
+      "Destino Games/Sniper: Ghost Warrior.zip — extração na pasta Games/ do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000f5": {
+    "displayTitle": "Sonic Free Riders",
+    "description": "Corrida de hoverboard da série Sonic com controle Kinect.",
+    "audio": "desconhecido",
+    "audioNote": "Pasta Games: SONIC FREE RIDERS.",
+    "installHint": "games",
+    "technicalNotes": [
+      "Destino Games/Sonic Free Riders.zip — extração na pasta Games/ do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000f6": {
+    "displayTitle": "Tony Hawk's Pro Skater 5",
+    "description": "Skate arcade da série Tony Hawk.",
+    "audio": "desconhecido",
+    "audioNote": "Pasta Games: Tony Hawks Pro Skater 5.",
+    "installHint": "games",
+    "technicalNotes": [
+      "Destino Games/Tony Hawk's Pro Skater 5.zip — extração na pasta Games/ do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000f7": {
+    "displayTitle": "Zumba Fitness: World Party",
+    "description": "Aulas de Zumba em casa com Kinect e coreografias internacionais.",
+    "audio": "desconhecido",
+    "audioNote": "Pasta Games: Zumba Fitness World Party.",
+    "installHint": "games",
+    "technicalNotes": [
+      "Destino Games/Zumba Fitness: World Party.zip — extração na pasta Games/ do HD."
+    ]
+  },
+  "c2d3e4f5-0001-4000-8000-0000000000f8": {
+    "displayTitle": "Zumba Kids",
+    "description": "Zumba adaptado para crianças com Kinect.",
+    "audio": "desconhecido",
+    "audioNote": "Pasta Games: Zumba Kids.",
+    "installHint": "games",
+    "technicalNotes": [
+      "Destino Games/Zumba Kids.zip — extração na pasta Games/ do HD."
+    ]
   }
 }

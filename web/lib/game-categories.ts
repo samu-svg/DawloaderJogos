@@ -16,6 +16,8 @@ export const GAME_CATEGORY_LABELS = {
   estrategia: "Estratégia",
   plataforma: "Plataforma",
   colecao: "Coletânea",
+  arcade: "Arcade",
+  kinect: "Kinect",
 } as const;
 
 export type GameCategoryId = keyof typeof GAME_CATEGORY_LABELS;
@@ -23,6 +25,8 @@ export type GameCategoryId = keyof typeof GAME_CATEGORY_LABELS;
 const EXPLICIT_MAP = categoryMap as Record<string, GameCategoryId[]>;
 
 const CATEGORY_ORDER: GameCategoryId[] = [
+  "arcade",
+  "kinect",
   "mundo-aberto",
   "acao",
   "fps",
