@@ -10,6 +10,7 @@ export type PlanDefinition = {
   priceLabel: string;
   /** Texto curto para cartão recorrente */
   cardCadence: string;
+  recommended?: boolean;
 };
 
 export function formatBrlFromCents(cents: number): string {
@@ -34,6 +35,7 @@ export const STRIPE_PLANS: readonly PlanDefinition[] = [
     title: "1 mês",
     priceCents: 4990,
     cardCadence: "por mês",
+    recommended: true,
   }),
   definePlan({
     id: "2m",

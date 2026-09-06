@@ -74,7 +74,7 @@ export function PlanPicker({
 
           const total = plan.priceCents / 100;
           const monthly = total / plan.months;
-          const featured = plan.id === "2m";
+          const featured = Boolean(plan.recommended);
 
           return (
             <article

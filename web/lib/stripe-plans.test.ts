@@ -17,6 +17,15 @@ test("planos têm meses corretos", () => {
   assert.equal(getPlan("3m").months, 3);
 });
 
+test("plano de 1 mês é o recomendado e aparece primeiro", () => {
+  assert.equal(STRIPE_PLANS[0].id, "1m");
+  assert.equal(getPlan("1m").recommended, true);
+  assert.equal(
+    STRIPE_PLANS.filter((plan) => plan.recommended).length,
+    1,
+  );
+});
+
 test("preço é inteiro em centavos", () => {
   assert.equal(getPlan("1m").priceCents, 4990);
   assert.equal(getPlan("2m").priceCents, 8990);
