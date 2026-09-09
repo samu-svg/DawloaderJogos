@@ -5,12 +5,14 @@ import { formatBytesDetailed } from "@/lib/manifest";
 
 type HomeHeroProps = {
   hasAccess: boolean;
+  loggedIn: boolean;
   gameCount: number;
   totalBytes: number;
 };
 
 export function HomeHero({
   hasAccess,
+  loggedIn,
   gameCount,
   totalBytes,
 }: HomeHeroProps) {
@@ -28,8 +30,9 @@ export function HomeHero({
             Downloads de <span className="text-gradient">jogos</span>
           </h1>
           <p className="page-lead">
-            Abra a página do jogo e instale no HD pelo MontaHD. Você paga pelo
-            software — os arquivos não são vendidos separadamente.
+            Abra a página do jogo e instale no HD pelo MontaHD. Sem assinatura,
+            um título por vez. O plano pago libera o acervo em lote e a
+            velocidade cheia.
           </p>
         </header>
 
@@ -53,8 +56,10 @@ export function HomeHero({
             </div>
           )}
           <div className="rounded-full border border-border bg-surface/80 px-3.5 py-1.5">
-            <dt className="sr-only">Anúncios</dt>
-            <dd className="text-xs font-medium text-zinc-300">Sem anúncios</dd>
+            <dt className="sr-only">Como baixar</dt>
+            <dd className="text-xs font-medium text-zinc-300">
+              {hasAccess ? "Instalação em lote" : "Um jogo por vez"}
+            </dd>
           </div>
         </dl>
 
@@ -89,7 +94,7 @@ export function HomeHero({
                   href="#jogos"
                   className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-medium text-zinc-200 transition hover:border-white/30 hover:text-white"
                 >
-                  MontarHD em lote
+                  {loggedIn ? "Escolher um jogo" : "Ver os jogos"}
                 </Link>
               )}
             </div>
@@ -97,7 +102,7 @@ export function HomeHero({
           </div>
         </div>
 
-        {hasAccess ? <DesktopDownloadCard /> : null}
+        <DesktopDownloadCard />
       </div>
     </section>
   );

@@ -5,7 +5,7 @@ import { LoginForm } from "@/components/login-form";
 import { SiteHeader } from "@/components/site-header";
 import { currentAppUser } from "@/lib/auth";
 import { PASSWORD_RECOVERY_PATH } from "@/lib/password-recovery";
-import { userHasCatalogAccess } from "@/lib/subscription";
+import { afterAuthPath, userHasCatalogAccess } from "@/lib/subscription";
 
 export default async function LoginPage({
   searchParams,
@@ -16,7 +16,7 @@ export default async function LoginPage({
   if (user?.mustResetPassword) redirect(PASSWORD_RECOVERY_PATH);
   if (user) {
     const hasAccess = await userHasCatalogAccess(user);
-    redirect(hasAccess ? "/baixar" : "/assinar?next=/baixar");
+    redirect(afterAuthPath(hasAccess));
   }
 
   const { redefinida } = await searchParams;
@@ -30,7 +30,7 @@ export default async function LoginPage({
             Entrar
           </h1>
           <p className="text-sm text-zinc-500">
-            Acesse seu acervo e deixe o app montar o HD.
+            Acesse sua conta para baixar jogos no HD.
           </p>
         </div>
         <div className="mt-8 rounded-2xl border border-border bg-surface p-6">

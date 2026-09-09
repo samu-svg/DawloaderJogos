@@ -4,7 +4,7 @@ import { ForgotPasswordForm } from "@/components/forgot-password-form";
 import { SiteHeader } from "@/components/site-header";
 import { currentAppUser } from "@/lib/auth";
 import { PASSWORD_RECOVERY_PATH } from "@/lib/password-recovery";
-import { userHasCatalogAccess } from "@/lib/subscription";
+import { afterAuthPath, userHasCatalogAccess } from "@/lib/subscription";
 
 export default async function EsqueciSenhaPage({
   searchParams,
@@ -15,7 +15,7 @@ export default async function EsqueciSenhaPage({
   if (user?.mustResetPassword) redirect(PASSWORD_RECOVERY_PATH);
   if (user) {
     const hasAccess = await userHasCatalogAccess(user);
-    redirect(hasAccess ? "/baixar" : "/assinar?next=/baixar");
+    redirect(afterAuthPath(hasAccess));
   }
 
   const { erro, expirado } = await searchParams;

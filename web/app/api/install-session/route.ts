@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { getApiUser } from "@/lib/auth";
+import { isSingleGameInstall } from "@/lib/free-install";
 import { createInstallSessionToken } from "@/lib/install-session";
 import { passwordIsExpired } from "@/lib/password-policy";
+import { maxBytesPerSecondForPlan } from "@/lib/plan-limits";
 import { enforceRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { subscriptionsEnabled } from "@/lib/stripe";
-import { userHasCatalogAccess } from "@/lib/subscription";
+import { userDownloadPlan } from "@/lib/subscription";
 
 export async function POST(request: Request) {
   const limited = await enforceRateLimit(request, "install-session", RATE_LIMITS.tight);
@@ -28,13 +30,6 @@ export async function POST(request: Request) {
     user.id,
   );
   if (userLimited) return userLimited;
-
-  if (!(await userHasCatalogAccess(user))) {
-    return NextResponse.json(
-      { error: "Assinatura ativa necessária." },
-      { status: 403 },
-    );
-  }
 
   const body = (await request.json()) as {
     slug?: string;
@@ -60,6 +55,20 @@ export async function POST(request: Request) {
       ]
     : undefined;
 
+  const plan = await userDownloadPlan(user);
+  if (plan === "free") {
+    if (!entryIds?.length || !(await isSingleGameInstall(slug, entryIds))) {
+      return NextResponse.json(
+        {
+          error:
+            "No plano grátis só é possível instalar um jogo por vez. Assine para montar o HD em lote.",
+          code: "PAID_REQUIRED",
+        },
+        { status: 403 },
+      );
+    }
+  }
+
   if (!subscriptionsEnabled()) {
     return NextResponse.json({ session: null });
   }
@@ -68,6 +77,8 @@ export async function POST(request: Request) {
     userId: user.id,
     slug,
     entryIds,
+    plan,
+    maxBytesPerSecond: maxBytesPerSecondForPlan(plan),
   });
 
   if (!session) {

@@ -21,6 +21,9 @@ import { removeStagingEntry, stagingEntryDir } from "./staging";
 import { extractRarToContentRoot, isRarFile } from "./archive-extract";
 import { readableFromWebBody } from "./stream-from-body.ts";
 import {
+  createByteRateLimitTransform,
+} from "../shared/download-throttle";
+import {
   hdMarkersForEntry,
   isPriorityRootInstall,
 } from "../shared/special-downloads";
@@ -190,6 +193,7 @@ export async function prepareDownloadEntry(options: {
   kind?: ManifestEntryKind;
   onProgress: (progress: DownloadProgress) => void;
   signal?: AbortSignal;
+  maxBytesPerSecond?: number;
 }): Promise<PreparedDownload> {
   assertHostedSha256(options.kind, options.expectedSha256);
   assertHttpDownloadUrl(options.url);
@@ -244,6 +248,7 @@ async function downloadToFile(
   onProgress: (progress: DownloadProgress) => void,
   signal?: AbortSignal,
   refuseOverFat32 = false,
+  maxBytesPerSecond = 0,
 ): Promise<number> {
   ensureDirSync(path.dirname(filePath));
   let startAt = existsSync(filePath) ? statSync(filePath).size : 0;
@@ -272,7 +277,17 @@ async function downloadToFile(
     throw new NeedsPcStagingError(remoteSize);
   }
 
-  await writeStream(response.body, filePath, startAt, entryId, label, expectedSize || remoteSize, onProgress);
+  await writeStream(
+    response.body,
+    filePath,
+    startAt,
+    entryId,
+    label,
+    expectedSize || remoteSize,
+    onProgress,
+    signal,
+    maxBytesPerSecond,
+  );
   return statSync(filePath).size;
 }
 
@@ -394,6 +409,7 @@ async function prepareOnHd(options: {
   expectedSha256?: string;
   onProgress: (progress: DownloadProgress) => void;
   signal?: AbortSignal;
+  maxBytesPerSecond?: number;
 }): Promise<PreparedDownload> {
   const {
     entryId,
@@ -406,6 +422,7 @@ async function prepareOnHd(options: {
     expectedSha256,
     onProgress,
     signal,
+    maxBytesPerSecond = 0,
   } = options;
 
   const zipPartial = destPath + HD_PARTIAL_SUFFIX;
@@ -418,6 +435,7 @@ async function prepareOnHd(options: {
     onProgress,
     signal,
     true,
+    maxBytesPerSecond,
   );
 
   if (isOverFat32Limit(fileSize)) {
@@ -624,6 +642,7 @@ async function prepareViaPc(options: {
   expectedSha256?: string;
   onProgress: (progress: DownloadProgress) => void;
   signal?: AbortSignal;
+  maxBytesPerSecond?: number;
 }): Promise<PreparedDownload> {
   const {
     entryId,
@@ -636,6 +655,7 @@ async function prepareViaPc(options: {
     expectedSha256,
     onProgress,
     signal,
+    maxBytesPerSecond = 0,
   } = options;
 
   const stagingDir = stagingEntryDir(stagingRoot, entryId);
@@ -650,6 +670,8 @@ async function prepareViaPc(options: {
     expectedSize,
     onProgress,
     signal,
+    false,
+    maxBytesPerSecond,
   );
   await verifyDownload(
     zipPartial,
@@ -746,6 +768,8 @@ async function writeStream(
   label: string,
   expectedSize: number,
   onProgress: (progress: DownloadProgress) => void,
+  signal?: AbortSignal,
+  maxBytesPerSecond = 0,
 ): Promise<void> {
   const nodeStream = readableFromWebBody(body);
   const fileStream = createWriteStream(filePath, { flags: startAt > 0 ? "a" : "w" });
@@ -761,6 +785,15 @@ async function writeStream(
       status: "downloading",
     });
   });
+
+  if (maxBytesPerSecond > 0) {
+    await pipeline(
+      nodeStream,
+      createByteRateLimitTransform(maxBytesPerSecond, signal),
+      fileStream,
+    );
+    return;
+  }
 
   await pipeline(nodeStream, fileStream);
 }

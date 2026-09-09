@@ -1,5 +1,11 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { AppUser } from "@/lib/auth";
+import {
+  afterAuthPath,
+  isDownloadPlan,
+  maxBytesPerSecondForPlan,
+  type DownloadPlan,
+} from "@/lib/plan-limits";
 import { hasSubscriptionBypass } from "@/lib/rbac";
 import { subscriptionsEnabled } from "@/lib/stripe";
 import { subscriptionIsActive } from "@/lib/subscription-active";
@@ -36,12 +42,20 @@ export async function userHasCatalogAccess(user: AppUser): Promise<boolean> {
   return subscriptionIsActive(subscription);
 }
 
+export async function userDownloadPlan(user: AppUser): Promise<DownloadPlan> {
+  return (await userHasCatalogAccess(user)) ? "paid" : "free";
+}
+
+export { afterAuthPath };
+
 export type ManifestTokenPayload = {
   sub: string;
   slug: string;
   entries?: string[];
   hd?: string;
   exp: number;
+  plan?: DownloadPlan;
+  bps?: number;
 };
 
 function manifestTokenSecret(): string | null {
@@ -53,6 +67,8 @@ export function createManifestAccessToken(input: {
   slug: string;
   entryIds?: string[];
   hdFingerprint?: string;
+  plan?: DownloadPlan;
+  maxBytesPerSecond?: number;
   ttlSeconds?: number;
 }): string | null {
   const secret = manifestTokenSecret();
@@ -70,6 +86,17 @@ export function createManifestAccessToken(input: {
 
   if (input.hdFingerprint) {
     payload.hd = input.hdFingerprint.trim().toLowerCase();
+  }
+
+  if (input.plan) {
+    payload.plan = input.plan;
+  }
+
+  const bps =
+    input.maxBytesPerSecond ??
+    (input.plan ? maxBytesPerSecondForPlan(input.plan) : 0);
+  if (bps > 0) {
+    payload.bps = Math.floor(bps);
   }
 
   const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
@@ -102,6 +129,7 @@ export function verifyManifestAccessToken(
     if (payload.slug !== slug) return null;
     if (!payload.sub || !payload.exp) return null;
     if (payload.exp < Math.floor(Date.now() / 1000)) return null;
+    if (payload.plan && !isDownloadPlan(payload.plan)) return null;
 
     return payload;
   } catch {

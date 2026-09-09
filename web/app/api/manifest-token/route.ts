@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getApiUser } from "@/lib/auth";
 import { verifyInstallSessionToken } from "@/lib/install-session";
 import { passwordIsExpired } from "@/lib/password-policy";
+import { maxBytesPerSecondForPlan } from "@/lib/plan-limits";
 import { enforceRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { subscriptionsEnabled } from "@/lib/stripe";
 import {
@@ -35,6 +36,8 @@ export async function POST(request: Request) {
   let userId: string | null = null;
   let slug = body.slug?.trim() ?? "";
   let entryIds = normalizeEntryIds(body.entryIds);
+  let plan: "free" | "paid" = "paid";
+  let maxBytesPerSecond = 0;
 
   const sessionToken = body.session?.trim();
   if (sessionToken) {
@@ -48,6 +51,24 @@ export async function POST(request: Request) {
     userId = session.sub;
     slug = session.slug;
     entryIds = session.entries;
+    plan = session.plan === "free" ? "free" : "paid";
+    maxBytesPerSecond =
+      plan === "free"
+        ? session.bps && session.bps > 0
+          ? session.bps
+          : maxBytesPerSecondForPlan("free")
+        : 0;
+
+    if (plan === "free" && !entryIds?.length) {
+      return NextResponse.json(
+        {
+          error:
+            "No plano grátis só é possível instalar um jogo por vez. Assine para montar o HD em lote.",
+          code: "PAID_REQUIRED",
+        },
+        { status: 403 },
+      );
+    }
   } else {
     const user = await getApiUser();
     if (!user) {
@@ -63,7 +84,11 @@ export async function POST(request: Request) {
 
     if (!(await userHasCatalogAccess(user))) {
       return NextResponse.json(
-        { error: "Assinatura ativa necessária." },
+        {
+          error:
+            "No plano grátis abra um jogo no site e clique em Instalar no HD.",
+          code: "PAID_REQUIRED",
+        },
         { status: 403 },
       );
     }
@@ -92,6 +117,8 @@ export async function POST(request: Request) {
     userId,
     slug,
     entryIds,
+    plan,
+    maxBytesPerSecond,
   });
 
   if (!token) {

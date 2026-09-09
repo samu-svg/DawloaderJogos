@@ -11,6 +11,7 @@ type GameInstallPanelProps = {
   collectionSlug: string;
   entryIds: string[];
   gameTitle: string;
+  gamePath: string;
   access: "anon" | "sem-assinatura" | "liberado";
   isUtility?: boolean;
 };
@@ -20,6 +21,7 @@ export function GameInstallPanel({
   collectionSlug,
   entryIds,
   gameTitle,
+  gamePath,
   access,
   isUtility = false,
 }: GameInstallPanelProps) {
@@ -27,6 +29,7 @@ export function GameInstallPanel({
   const [error, setError] = useState<string | null>(null);
   const [launched, setLaunched] = useState(false);
   const lastDeepLink = useRef<string | null>(null);
+  const nextParam = encodeURIComponent(gamePath);
 
   async function install() {
     setError(null);
@@ -39,17 +42,33 @@ export function GameInstallPanel({
         body: JSON.stringify({ slug: collectionSlug, entryIds }),
       });
 
-      if (response.status === 403) {
-        window.location.href = "/assinar?next=/";
+      const data = (await response.json()) as {
+        error?: string;
+        code?: string;
+        session?: string | null;
+      };
+
+      if (response.status === 401) {
+        window.location.href = `/login?next=${nextParam}`;
         return;
       }
 
-      if (!response.ok) {
-        const data = (await response.json()) as { error?: string };
+      if (response.status === 403) {
+        if (data.code === "PASSWORD_EXPIRED") {
+          window.location.href = "/conta";
+          return;
+        }
+        if (data.code === "PAID_REQUIRED") {
+          window.location.href = `/assinar?next=${nextParam}`;
+          return;
+        }
         throw new Error(data.error ?? "Não foi possível preparar o download.");
       }
 
-      const data = (await response.json()) as { session?: string | null };
+      if (!response.ok) {
+        throw new Error(data.error ?? "Não foi possível preparar o download.");
+      }
+
       const deepLink = buildMontaHDCatalogLink(
         siteUrl,
         collectionSlug,
@@ -81,63 +100,45 @@ export function GameInstallPanel({
           Baixar {gameTitle}
         </h2>
         <p className="mt-2 text-sm leading-6 text-zinc-400">
-          O download é feito pelo app MontaHD, que instala o jogo direto na
-          pasta certa do HD. Crie sua conta e assine o software — os arquivos
-          não são vendidos separadamente.
+          Entre na sua conta e instale este jogo no HD pelo MontaHD. Sem
+          assinatura: um título por vez e velocidade limitada. O pagamento é
+          pelo software, não pelos arquivos.
         </p>
         <div className="mt-5 flex flex-wrap justify-center gap-3">
           <Link
-            href="/cadastro?next=/assinar"
+            href={`/cadastro?next=${nextParam}`}
             className="rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-hover"
           >
             Criar conta
           </Link>
           <Link
-            href="/app"
+            href={`/login?next=${nextParam}`}
             className="rounded-xl border border-border px-6 py-3 text-sm font-medium text-zinc-300 transition hover:border-zinc-600 hover:text-white"
           >
-            Como o app funciona
+            Entrar
           </Link>
         </div>
       </div>
     );
   }
 
-  if (access === "sem-assinatura") {
-    return (
-      <div className="rounded-2xl border border-accent/30 bg-accent-muted p-6 text-center">
-        <h2 className="text-base font-semibold text-white">
-          Baixar {gameTitle}
-        </h2>
-        <p className="mt-2 text-sm leading-6 text-zinc-400">
-          Assine o software MontaHD para baixar este e qualquer outro jogo do
-          acervo. Você paga pelo app, não pelos arquivos.
-        </p>
-        <div className="mt-5 flex flex-wrap justify-center gap-3">
-          <Link
-            href="/assinar?next=/"
-            className="rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-hover"
-          >
-            Liberar o app
-          </Link>
-          <Link
-            href="/app"
-            className="rounded-xl border border-border px-6 py-3 text-sm font-medium text-zinc-300 transition hover:border-zinc-600 hover:text-white"
-          >
-            Ver detalhes do app
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const limited = access === "sem-assinatura";
 
   return (
-    <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-6 text-center">
+    <div
+      className={`rounded-2xl p-6 text-center ${
+        limited
+          ? "border border-accent/30 bg-accent-muted"
+          : "border border-emerald-500/30 bg-emerald-500/10"
+      }`}
+    >
       <h2 className="text-base font-semibold text-white">Baixar {gameTitle}</h2>
       <p className="mt-2 text-sm leading-6 text-zinc-300">
         {isUtility
           ? "Abre o MontaHD com este utilitário marcado. O app grava o .rar na raiz do HD e só baixa se o pack ainda não estiver lá."
-          : "Abre o MontaHD já com este jogo marcado. Escolha a pasta raiz do seu HD (vinculado à assinatura) e confirme — o app baixa, verifica e descompacta sozinho."}
+          : limited
+            ? "Abre o MontaHD com este jogo. Velocidade limitada no plano grátis — um título por vez. Assine para instalar em lote e baixar sem teto."
+            : "Abre o MontaHD já com este jogo marcado. Escolha a pasta raiz do seu HD e confirme — o app baixa, verifica e descompacta sozinho."}
       </p>
       {error && (
         <p className="mt-3 rounded-lg border border-red-900/50 bg-red-950/40 px-4 py-2.5 text-sm text-red-300">
@@ -150,6 +151,17 @@ export function GameInstallPanel({
         onInstall={() => void install()}
         onRetry={retryLaunch}
       />
+      {limited ? (
+        <p className="mt-4 text-xs leading-5 text-zinc-500">
+          Quer vários jogos de uma vez e velocidade cheia?{" "}
+          <Link
+            href={`/assinar?next=${nextParam}`}
+            className="font-medium text-accent hover:text-accent-hover"
+          >
+            Assinar
+          </Link>
+        </p>
+      ) : null}
     </div>
   );
 }

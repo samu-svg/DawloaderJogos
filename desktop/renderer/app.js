@@ -104,6 +104,7 @@ function init() {
   const downloadBtn = document.getElementById("download-btn");
   const clearListBtn = document.getElementById("clear-list-btn");
   const spaceNotice = document.getElementById("space-notice");
+  const speedBanner = document.getElementById("speed-banner");
   const pauseBtn = document.getElementById("pause-btn");
   const resumeBtn = document.getElementById("resume-btn");
   const removePausedBtn = document.getElementById("remove-paused-btn");
@@ -346,9 +347,11 @@ function init() {
     heroPanel.classList.remove("hidden");
     heroTitle.textContent = "Escolha no site, instale aqui";
     heroDesc.innerHTML =
-      'Abra o catálogo no navegador, marque os jogos e clique em <strong>Instalar no HD</strong>. ' +
+      'Abra o catálogo no navegador, escolha um jogo e clique em <strong>Instalar no HD</strong>. ' +
       "O app abre já com tudo pronto — você só escolhe a pasta do HD. " +
+      "Assine para instalar vários de uma vez. " +
       "Jogos até 4 GB instalam no HD; acima disso o FAT32 do Xbox 360 exige processar no PC.";
+    setSpeedLimitBanner(null);
     setSteps("welcome");
   }
 
@@ -1222,6 +1225,15 @@ function init() {
     }
   }
 
+  function setSpeedLimitBanner(currentManifest) {
+    if (!speedBanner) return;
+    const limited =
+      currentManifest &&
+      typeof currentManifest.maxBytesPerSecond === "number" &&
+      currentManifest.maxBytesPerSecond > 0;
+    speedBanner.classList.toggle("hidden", !limited);
+  }
+
   function updatePortfolioMeta() {
     if (!manifest) return;
     const totalBytes = manifest.entries.reduce(
@@ -1666,6 +1678,7 @@ function init() {
       pendingCatalogFromSite = false;
       openCatalogBtn.classList.remove("hidden");
       showInstallView();
+      setSpeedLimitBanner(manifest);
       await persistCatalogHints();
       setSummary(
         selectedRoot

@@ -12,7 +12,7 @@ import { userHasCatalogAccess } from "@/lib/subscription";
 export const metadata: Metadata = {
   title: "MontaHD — Downloads de jogos de Xbox 360",
   description:
-    "Acervo de jogos de Xbox 360 para instalar no HD. Você paga pelo software MontaHD, não pelos arquivos — o app baixa, descompacta e organiza cada jogo na pasta certa.",
+    "Acervo de jogos de Xbox 360 para instalar no HD. Com conta, baixe um jogo por vez no MontaHD. O plano pago libera seleção em lote e velocidade cheia.",
 };
 
 type PageProps = {
@@ -43,11 +43,19 @@ export default async function HomePage({ searchParams }: PageProps) {
         <div className="page-stack">
         <HomeHero
           hasAccess={hasAccess}
+          loggedIn={Boolean(appUser)}
           gameCount={items.length}
           totalBytes={items.reduce((sum, game) => sum + game.sizeBytes, 0)}
         />
 
         <div className="mt-12">
+          {!hasAccess && (
+            <p className="mb-6 text-center text-sm leading-6 text-zinc-500">
+              {appUser
+                ? "Abra um jogo e clique em Instalar no HD. Sem assinatura: um título por vez e velocidade limitada no app."
+                : "Entre na conta para baixar um jogo por vez. Assine para montar o HD em lote, com velocidade cheia."}
+            </p>
+          )}
           <GameCatalog
             games={items}
             collections={collections}

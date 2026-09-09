@@ -1,18 +1,18 @@
 const STEPS = [
   {
     step: "01",
-    title: "Libere o app",
-    text: "Escolha 1, 2 ou 3 meses. Cartão renovável ou PIX à vista — você paga pelo software, não pelos arquivos.",
+    title: "Abra um jogo",
+    text: "Crie uma conta, escolha o título na aba Jogos e clique em Instalar no HD. Sem assinatura: um por vez.",
   },
   {
     step: "02",
-    title: "Marque os jogos",
-    text: "No site, selecione os títulos e clique em Instalar no HD. No app, escolha a pasta raiz onde gravar.",
+    title: "O app instala",
+    text: "O MontaHD baixa, confere a integridade, descompacta e organiza o jogo na pasta correta do HD.",
   },
   {
     step: "03",
-    title: "O HD se monta",
-    text: "O MontaHD baixa, confere a integridade, descompacta e organiza cada jogo na pasta correta.",
+    title: "Assine para o lote",
+    text: "O plano pago libera seleção em massa, velocidade cheia e instalação do acervo sem clicar jogo a jogo.",
   },
 ];
 

@@ -4,15 +4,15 @@ const INCLUDED = [
     text: "MontaHD para Windows 10/11 (32 e 64-bit) e Windows 7/8/8.1 (linha legado), com atualizações enquanto o plano estiver ativo.",
   },
   {
-    title: "Acervo completo",
-    text: "Acesso a todos os jogos do catálogo no período — sem comprar título por título.",
+    title: "Acervo em lote",
+    text: "Selecione vários jogos ou o acervo inteiro — sem clicar título por título.",
   },
   {
-    title: "Instalação automática",
-    text: "Download, verificação, extração e pasta certa no HD. Sem trabalho manual.",
+    title: "Velocidade cheia",
+    text: "Download sem teto no app. No plano grátis a velocidade fica limitada.",
   },
   {
-    title: "Sem amarras",
+    title: "Sem anúncios",
     text: "Qualquer pasta do HD, sem limite de PCs e sem anúncio, encurtador ou espera.",
   },
 ];

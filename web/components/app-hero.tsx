@@ -22,7 +22,7 @@ export function AppHero({
     ? "/baixar"
     : loggedIn
       ? "/assinar"
-      : "/cadastro?next=/assinar";
+      : "/cadastro";
   const primaryLabel = hasAccess ? "Montar meu HD" : "Ver os planos";
 
   return (
@@ -35,9 +35,9 @@ export function AppHero({
       </h1>
       <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-zinc-400 sm:text-base">
         Você paga pelo <strong className="text-zinc-200">software MontaHD</strong>,
-        não pelos arquivos. O app baixa, verifica, descompacta e coloca cada
-        jogo na pasta certa — sem anúncios. Planos de 1, 2 ou 3 meses, no cartão
-        ou no PIX.
+        não pelos arquivos. Sem assinatura você baixa um jogo por vez, com
+        velocidade limitada. O plano pago libera o acervo em lote e o download
+        sem teto. Planos de 1, 2 ou 3 meses, no cartão ou no PIX.
       </p>
 
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">

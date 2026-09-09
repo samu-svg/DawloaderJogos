@@ -21,7 +21,7 @@ import {
 export const metadata: Metadata = {
   title: "Assinar o MontaHD",
   description:
-    "Libere o app MontaHD e o acervo. Planos de 1, 2 ou 3 meses — cartão recorrente ou PIX à vista.",
+    "Libere o app MontaHD em lote e a velocidade cheia. Planos de 1, 2 ou 3 meses — cartão recorrente ou PIX à vista.",
 };
 
 const INCLUDED = [
@@ -30,15 +30,15 @@ const INCLUDED = [
     text: "MontaHD para Windows, com atualizações no período.",
   },
   {
-    title: "Acervo completo",
-    text: "Acesso a tudo enquanto o plano estiver ativo.",
+    title: "Acervo em lote",
+    text: "Selecione vários jogos de uma vez enquanto o plano estiver ativo.",
   },
   {
-    title: "Instalação automática",
-    text: "Download, extração e pasta certa no HD.",
+    title: "Velocidade cheia",
+    text: "Download sem teto no app — o plano grátis fica limitado.",
   },
   {
-    title: "Sem amarras",
+    title: "Sem anúncios",
     text: "Qualquer pasta, sem limite de dispositivos vinculados.",
   },
 ];

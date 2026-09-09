@@ -104,6 +104,23 @@ export function entryIdsForSelectedGames(
   return ids;
 }
 
+/** True se todos os IDs pertencem a um único jogo (incluindo extras/DLC). */
+export function entriesBelongToSingleGame(
+  games: ReadonlyArray<{ id: string; entryIds: string[] }>,
+  entryIds: readonly string[],
+): boolean {
+  if (entryIds.length === 0) return false;
+
+  const owners = new Set<string>();
+  for (const id of entryIds) {
+    const game = games.find((item) => item.entryIds.includes(id));
+    if (!game) return false;
+    owners.add(game.id);
+    if (owners.size > 1) return false;
+  }
+  return owners.size === 1;
+}
+
 export function groupLabel(group: string | null): string | null {
   if (group === "jogo") return "Jogo";
   if (group === "conteudo") return "DLC / Content";

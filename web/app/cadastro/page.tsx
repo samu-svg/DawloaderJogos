@@ -5,14 +5,14 @@ import { SiteHeader } from "@/components/site-header";
 import { currentAppUser } from "@/lib/auth";
 import { PASSWORD_RECOVERY_PATH } from "@/lib/password-recovery";
 import { PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
-import { userHasCatalogAccess } from "@/lib/subscription";
+import { afterAuthPath, userHasCatalogAccess } from "@/lib/subscription";
 
 export default async function CadastroPage() {
   const user = await currentAppUser();
   if (user?.mustResetPassword) redirect(PASSWORD_RECOVERY_PATH);
   if (user) {
     const hasAccess = await userHasCatalogAccess(user);
-    redirect(hasAccess ? "/baixar" : "/assinar?next=/baixar");
+    redirect(afterAuthPath(hasAccess));
   }
 
   return (
@@ -24,9 +24,9 @@ export default async function CadastroPage() {
             Criar conta
           </h1>
           <p className="text-sm text-zinc-500">
-            Crie sua conta para liberar o app MontaHD e o acervo completo. Em
-            seguida você confirma com o código enviado por e-mail. Senha com no
-            mínimo {PASSWORD_MIN_LENGTH} caracteres.
+            Crie sua conta para baixar jogos no MontaHD. Sem assinatura, um
+            título por vez. Em seguida você confirma com o código enviado por
+            e-mail. Senha com no mínimo {PASSWORD_MIN_LENGTH} caracteres.
           </p>
         </div>
         <div className="mt-8 rounded-2xl border border-border bg-surface p-6">

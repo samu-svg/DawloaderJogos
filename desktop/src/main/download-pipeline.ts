@@ -57,7 +57,10 @@ function buildPrepareOptions(
   hdRoot: string,
   stagingRoot: string,
   onProgress: (progress: DownloadProgress) => void,
-  signal?: AbortSignal,
+  signal: AbortSignal | undefined,
+  options: {
+    maxBytesPerSecond?: number;
+  },
 ) {
   return {
     entryId: item.entry.id,
@@ -71,6 +74,7 @@ function buildPrepareOptions(
     kind: item.entry.kind,
     onProgress,
     signal,
+    maxBytesPerSecond: options.maxBytesPerSecond,
   };
 }
 
@@ -133,6 +137,7 @@ export async function runPipelinedDownloads(
     stagingRoot: string;
     session: DownloadSession;
     installMode?: InstallMode;
+    maxBytesPerSecond?: number;
     onProgress: (progress: DownloadProgress) => void;
     onEntryComplete?: (
       item: PipelineEntry,
@@ -226,6 +231,7 @@ export async function runPipelinedDownloads(
           options.stagingRoot,
           options.onProgress,
           entrySignal,
+          { maxBytesPerSecond: options.maxBytesPerSecond },
         ),
       );
       if (options.session.isCancelled(item.entry.id)) {

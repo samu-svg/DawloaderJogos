@@ -73,6 +73,8 @@ export interface Manifest {
   totalBytes: number;
   expiresAt: string;
   entries: ResolvedManifestEntry[];
+  downloadPlan?: "free" | "paid";
+  maxBytesPerSecond?: number;
 }
 
 export type PathValidation =

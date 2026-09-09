@@ -93,7 +93,7 @@ export async function GET(
           error:
             access.error ??
             (access.status === 403
-              ? "Assinatura ativa necessária para baixar este catálogo."
+              ? "Sem permissão para este catálogo. No plano grátis, abra um jogo no site e clique em Instalar no HD."
               : access.status === 503
                 ? "Servidor temporariamente indisponível. Tente novamente em instantes."
                 : "Faça login ou abra o catálogo pelo site com sua conta."),
@@ -174,6 +174,8 @@ export async function GET(
       },
       totalBytes: entries.reduce((sum, entry) => sum + entry.sizeBytes, 0),
       expiresAt: new Date(Date.now() + downloadUrlTtl() * 1000).toISOString(),
+      downloadPlan: access.downloadPlan,
+      maxBytesPerSecond: access.maxBytesPerSecond,
     } as const;
 
     const manifest: Manifest | ManifestPreview = access.includeDownloadUrls

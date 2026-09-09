@@ -19,7 +19,7 @@ export function AppPlanCard({
     ? "/baixar"
     : loggedIn
       ? "/assinar"
-      : "/cadastro?next=/assinar";
+      : "/cadastro";
   const monthlyBase = getPlan("1m").priceCents / 100;
 
   if (hasAccess) {

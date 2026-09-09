@@ -116,6 +116,18 @@ body::before {
   display: none;
 }
 
+.speed-banner {
+  padding: 10px 22px;
+  background: rgba(245, 158, 11, 0.12);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.28);
+  color: #fbbf24;
+  font-size: 13px;
+}
+
+.speed-banner.hidden {
+  display: none;
+}
+
 .welcome-hd {
   margin: 12px 0 0;
   padding: 10px 12px;

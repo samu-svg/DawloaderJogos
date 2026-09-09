@@ -73,6 +73,7 @@ import { openExternalUrl } from "./open-external";
 import { fetchSameOrigin } from "./safe-fetch";
 import { installDownloadedUpdate, startAutoUpdate } from "./auto-update";
 import { debugLog, initDebugLog } from "./debug-log";
+import { parseMaxBytesPerSecond } from "../shared/download-throttle";
 
 initDebugLog(app.getPath("userData"));
 
@@ -94,6 +95,7 @@ let rendererReady = false;
  * resolves against this instead of trusting the copy the renderer sends back.
  */
 let trustedEntries: ReadonlyMap<string, ResolvedManifestEntry> = new Map();
+let trustedMaxBytesPerSecond = 0;
 
 const gotSingleInstanceLock = app.requestSingleInstanceLock();
 if (!gotSingleInstanceLock) {
@@ -260,7 +262,7 @@ async function fetchManifest(
   const response = await fetchSameOrigin(url, { headers });
   if (response.status === 401 || response.status === 403) {
     let detail =
-      "Assinatura ativa necessária. Abra o catálogo pelo site e clique em Instalar no HD.";
+      "Assinatura ou sessão inválida. Abra o jogo no site e clique em Instalar no HD.";
     try {
       const body = (await response.json()) as { error?: string };
       if (body.error) detail = body.error;
@@ -295,6 +297,7 @@ async function fetchManifest(
   }
 
   trustedEntries = new Map(manifest.entries.map((entry) => [entry.id, entry]));
+  trustedMaxBytesPerSecond = parseMaxBytesPerSecond(manifest.maxBytesPerSecond);
 
   return manifest;
 }
@@ -322,7 +325,7 @@ async function requestManifestToken(
 
   if (response.status === 403) {
     throw new Error(
-      data.error ?? "Assinatura ativa necessária. Assine em www.montahds.app/assinar.",
+      data.error ?? "Faça login no site e clique em Instalar no HD.",
     );
   }
   if (!response.ok) {
@@ -794,6 +797,7 @@ ipcMain.handle(
       stagingRoot,
       session,
       installMode,
+      maxBytesPerSecond: trustedMaxBytesPerSecond,
       onProgress: (progress) => send("download-progress", progress),
       onEntryComplete: async (item, result) => {
         if (!result.ok || !result.installedPath) return;

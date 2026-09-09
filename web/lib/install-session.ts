@@ -1,4 +1,8 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import {
+  isDownloadPlan,
+  type DownloadPlan,
+} from "./plan-limits.ts";
 
 export type InstallSessionPayload = {
   typ: "install";
@@ -6,6 +10,8 @@ export type InstallSessionPayload = {
   slug: string;
   entries?: string[];
   exp: number;
+  plan?: DownloadPlan;
+  bps?: number;
 };
 
 function tokenSecret(): string | null {
@@ -16,6 +22,8 @@ export function createInstallSessionToken(input: {
   userId: string;
   slug: string;
   entryIds?: string[];
+  plan?: DownloadPlan;
+  maxBytesPerSecond?: number;
   ttlSeconds?: number;
 }): string | null {
   const secret = tokenSecret();
@@ -30,6 +38,14 @@ export function createInstallSessionToken(input: {
 
   if (input.entryIds?.length) {
     payload.entries = input.entryIds;
+  }
+
+  if (input.plan) {
+    payload.plan = input.plan;
+  }
+
+  if (typeof input.maxBytesPerSecond === "number" && input.maxBytesPerSecond > 0) {
+    payload.bps = Math.floor(input.maxBytesPerSecond);
   }
 
   const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
@@ -59,6 +75,7 @@ export function verifyInstallSessionToken(token: string): InstallSessionPayload 
     if (payload.typ !== "install") return null;
     if (!payload.sub || !payload.slug || !payload.exp) return null;
     if (payload.exp < Math.floor(Date.now() / 1000)) return null;
+    if (payload.plan && !isDownloadPlan(payload.plan)) return null;
 
     return payload;
   } catch {

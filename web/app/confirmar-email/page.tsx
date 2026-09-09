@@ -8,7 +8,7 @@ import {
   PASSWORD_RECOVERY_PATH,
   isWellFormedEmail,
 } from "@/lib/password-recovery";
-import { userHasCatalogAccess } from "@/lib/subscription";
+import { afterAuthPath, userHasCatalogAccess } from "@/lib/subscription";
 
 export default async function ConfirmarEmailPage({
   searchParams,
@@ -25,7 +25,7 @@ export default async function ConfirmarEmailPage({
   if (user?.mustResetPassword) redirect(PASSWORD_RECOVERY_PATH);
   if (user) {
     const hasAccess = await userHasCatalogAccess(user);
-    redirect(hasAccess ? "/baixar" : "/assinar?next=/baixar");
+    redirect(afterAuthPath(hasAccess));
   }
 
   const params = await searchParams;

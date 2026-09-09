@@ -66,6 +66,9 @@ export interface Manifest {
   /** When the hosted download URLs stop working; the client refetches after this. */
   expiresAt: string;
   entries: ResolvedManifestEntry[];
+  downloadPlan?: "free" | "paid";
+  /** `0` or omitted = sem teto. */
+  maxBytesPerSecond?: number;
 }
 
 /**

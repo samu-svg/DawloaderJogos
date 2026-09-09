@@ -76,7 +76,7 @@ export function SiteHeader({
                 href={hasAccess ? "/baixar" : "/assinar"}
                 className="rounded-lg bg-accent px-4 py-1.5 font-medium text-white transition hover:bg-accent-hover"
               >
-                {hasAccess ? "Montar meu HD" : "Liberar o app"}
+                {hasAccess ? "Montar meu HD" : "Assinar"}
               </Link>
               <form action={signOut}>
                 <button
@@ -96,10 +96,10 @@ export function SiteHeader({
                 Entrar
               </Link>
               <Link
-                href="/cadastro?next=/assinar"
+                href="/cadastro"
                 className="rounded-lg bg-accent px-4 py-1.5 font-medium text-white transition hover:bg-accent-hover"
               >
-                Liberar o app
+                Criar conta
               </Link>
             </>
           )}

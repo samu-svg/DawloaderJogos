@@ -1,14 +1,18 @@
 import type { AppUser } from "@/lib/auth";
 import { getApiUser } from "@/lib/auth";
+import { includeManifestDownloadUrls } from "@/lib/manifest-download-urls";
+import { logWarn } from "@/lib/logger";
+import {
+  maxBytesPerSecondForPlan,
+  type DownloadPlan,
+} from "@/lib/plan-limits";
 import { hasSubscriptionBypass, parseRole, type Role } from "@/lib/rbac";
+import { subscriptionsEnabled } from "@/lib/stripe";
 import {
   subscriptionIsActive,
   verifyManifestAccessToken,
 } from "@/lib/subscription";
-import { subscriptionsEnabled } from "@/lib/stripe";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
-import { includeManifestDownloadUrls } from "@/lib/manifest-download-urls";
-import { logWarn } from "@/lib/logger";
 
 export type ManifestAccessResult =
   | {
@@ -18,16 +22,36 @@ export type ManifestAccessResult =
        * Whether the caller may receive signed download URLs.
        *
        * A signed URL works for anyone who holds it, so it is only handed to a
-       * caller that proved an active subscription via the desktop Bearer token.
-       * A plain browser session gets metadata only —
-       * otherwise a subscriber could copy the JSON and hand the whole catalog
-       * to people with no account at all.
+       * caller that proved access via the desktop Bearer token (paid catalog or
+       * a single-game free install). A plain browser session gets metadata only.
        */
       includeDownloadUrls: boolean;
+      downloadPlan: DownloadPlan;
+      maxBytesPerSecond: number;
       user?: AppUser | null;
       userId?: string;
     }
   | { allowed: false; status: 401 | 403 | 503; error?: string };
+
+function allowedAccess(input: {
+  entryFilter: string[] | null;
+  includeDownloadUrls: boolean;
+  downloadPlan: DownloadPlan;
+  user?: AppUser | null;
+  userId?: string;
+  maxBytesPerSecond?: number;
+}): Extract<ManifestAccessResult, { allowed: true }> {
+  return {
+    allowed: true,
+    entryFilter: input.entryFilter,
+    includeDownloadUrls: input.includeDownloadUrls,
+    downloadPlan: input.downloadPlan,
+    maxBytesPerSecond:
+      input.maxBytesPerSecond ?? maxBytesPerSecondForPlan(input.downloadPlan),
+    user: input.user,
+    userId: input.userId,
+  };
+}
 
 /** Opening the whole catalog has to be deliberate, never a side effect of missing env vars. */
 function acervoAberto(): boolean {
@@ -56,11 +80,11 @@ export async function resolveManifestAccess(
 ): Promise<ManifestAccessResult> {
   if (!subscriptionsEnabled()) {
     if (acervoAberto()) {
-      return {
-        allowed: true,
+      return allowedAccess({
         entryFilter: null,
         includeDownloadUrls: includeManifestDownloadUrls("open-catalog"),
-      };
+        downloadPlan: "paid",
+      });
     }
     logWarn(
       "Assinaturas desabilitadas e ACERVO_ABERTO desligado — acesso ao manifest negado",
@@ -105,13 +129,36 @@ export async function resolveManifestAccess(
       };
     }
 
+    const entryFilter = payload.entries?.length ? payload.entries : null;
+
     if (hasSubscriptionBypass(role)) {
-      return {
-        allowed: true,
-        entryFilter: payload.entries?.length ? payload.entries : null,
+      return allowedAccess({
+        entryFilter,
         includeDownloadUrls: includeManifestDownloadUrls("bearer"),
+        downloadPlan: "paid",
         userId: payload.sub,
-      };
+      });
+    }
+
+    if (payload.plan === "free") {
+      if (!entryFilter?.length) {
+        return {
+          allowed: false,
+          status: 403,
+          error:
+            "No plano grátis só é possível instalar um jogo por vez. Assine para montar o HD em lote.",
+        };
+      }
+      return allowedAccess({
+        entryFilter,
+        includeDownloadUrls: includeManifestDownloadUrls("bearer"),
+        downloadPlan: "free",
+        maxBytesPerSecond:
+          typeof payload.bps === "number" && payload.bps > 0
+            ? payload.bps
+            : maxBytesPerSecondForPlan("free"),
+        userId: payload.sub,
+      });
     }
 
     const subscription = await subscriptionStatusForUser(payload.sub);
@@ -119,12 +166,12 @@ export async function resolveManifestAccess(
       return { allowed: false, status: 403 };
     }
 
-    return {
-      allowed: true,
-      entryFilter: payload.entries?.length ? payload.entries : null,
+    return allowedAccess({
+      entryFilter,
       includeDownloadUrls: includeManifestDownloadUrls("bearer"),
+      downloadPlan: "paid",
       userId: payload.sub,
-    };
+    });
   }
 
   const user = await getApiUser();
@@ -133,13 +180,13 @@ export async function resolveManifestAccess(
   }
 
   if (hasSubscriptionBypass(user.role)) {
-    return {
-      allowed: true,
+    return allowedAccess({
       entryFilter: null,
       includeDownloadUrls: includeManifestDownloadUrls("cookie"),
+      downloadPlan: "paid",
       user,
       userId: user.id,
-    };
+    });
   }
 
   const subscription = await subscriptionStatusForUser(user.id);
@@ -147,11 +194,11 @@ export async function resolveManifestAccess(
     return { allowed: false, status: 403 };
   }
 
-  return {
-    allowed: true,
+  return allowedAccess({
     entryFilter: null,
     includeDownloadUrls: includeManifestDownloadUrls("cookie"),
+    downloadPlan: "paid",
     user,
     userId: user.id,
-  };
+  });
 }

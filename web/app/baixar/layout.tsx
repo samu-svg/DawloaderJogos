@@ -15,7 +15,7 @@ export default async function BaixarLayout({
     Promise.resolve(canAccessPainel(user.role)),
     userHasCatalogAccess(user),
   ]);
-  if (!hasAccess) redirect("/assinar?next=/baixar");
+  if (!hasAccess) redirect("/");
 
   return (
     <>

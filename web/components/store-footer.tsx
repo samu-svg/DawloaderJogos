@@ -18,9 +18,9 @@ export function StoreFooter() {
               Monta<span className="text-gradient">HD</span>
             </p>
             <p className="mx-auto mt-1 max-w-md text-sm text-zinc-500">
-              Software que baixa, descompacta e monta o seu HD. Você paga pelo
-              app, não pelos arquivos — acervo incluído no plano, sem
-              anúncios.
+              Software que baixa, descompacta e monta o seu HD. Com conta você
+              baixa um jogo por vez. O plano pago libera o acervo em lote,
+              velocidade cheia e sem anúncios.
             </p>
           </div>
         </div>

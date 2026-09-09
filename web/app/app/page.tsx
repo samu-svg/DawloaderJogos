@@ -17,7 +17,7 @@ import { userHasCatalogAccess } from "@/lib/subscription";
 export const metadata: Metadata = {
   title: "O app MontaHD — baixa e organiza os jogos no seu HD",
   description:
-    "Você paga pelo software MontaHD, não pelos arquivos. O app para Windows baixa, verifica, descompacta e coloca cada jogo na pasta certa do HD. Planos de 1, 2 ou 3 meses — cartão ou PIX.",
+    "Com conta, baixe um jogo por vez no MontaHD. O plano pago libera o acervo em lote, velocidade cheia e sem anúncios. Planos de 1, 2 ou 3 meses — cartão ou PIX.",
 };
 
 export default async function AppPage() {
@@ -49,7 +49,7 @@ export default async function AppPage() {
             planLabel={lowestPlanPriceLabel()}
           />
 
-          {hasAccess ? <DesktopDownloadCard variant="full" /> : null}
+          <DesktopDownloadCard variant="full" />
 
           <AppValueProps />
 

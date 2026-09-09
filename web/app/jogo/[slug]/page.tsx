@@ -261,6 +261,7 @@ export default async function GamePage({ params }: PageProps) {
               collectionSlug={game.installCollectionSlug ?? game.collectionSlug}
               entryIds={game.entryIds}
               gameTitle={title}
+              gamePath={`/jogo/${game.slug}`}
               access={access}
               isUtility={game.isUtility}
             />
@@ -275,8 +276,8 @@ export default async function GamePage({ params }: PageProps) {
                   ele aparece na área de trabalho e no Menu Iniciar.
                 </li>
                 <li>
-                  Assine o software para liberar downloads — você não paga pelos
-                  arquivos individualmente.
+                  Crie uma conta para baixar este jogo. Sem assinatura, um
+                  título por vez e velocidade limitada no app.
                 </li>
                 <li>
                   Clique em <strong className="text-zinc-200">Instalar no HD</strong>{" "}

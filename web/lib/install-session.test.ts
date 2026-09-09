@@ -16,11 +16,29 @@ test("sessao de instalacao assina e valida payload", () => {
   });
 
   assert.ok(token);
-  const payload = verifyInstallSessionToken(token!);
+    const payload = verifyInstallSessionToken(token!);
   assert.ok(payload);
   assert.equal(payload.sub, "user-1");
   assert.equal(payload.slug, "jogos360");
   assert.deepEqual(payload.entries, ["a", "b"]);
+});
+
+test("grava plano grátis e teto de velocidade", () => {
+  process.env.MANIFEST_TOKEN_SECRET = "test-secret";
+
+  const token = createInstallSessionToken({
+    userId: "user-1",
+    slug: "jogos360",
+    entryIds: ["a"],
+    plan: "free",
+    maxBytesPerSecond: 128000,
+  });
+
+  assert.ok(token);
+  const payload = verifyInstallSessionToken(token!);
+  assert.ok(payload);
+  assert.equal(payload.plan, "free");
+  assert.equal(payload.bps, 128000);
 });
 
 test("rejeita sessao com assinatura invalida", () => {

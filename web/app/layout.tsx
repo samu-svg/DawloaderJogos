@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "MontaHD — O app que monta o seu HD",
   description:
-    "Assine o software MontaHD — você paga pelo app, não pelos arquivos. Download e extração automáticos, acervo incluído, cada jogo na pasta certa do HD, sem anúncios.",
+    "Você paga pelo software MontaHD, não pelos arquivos. Com conta, baixe um jogo por vez. O plano pago libera o acervo em lote, velocidade cheia e sem anúncios.",
 };
 
 export default function RootLayout({

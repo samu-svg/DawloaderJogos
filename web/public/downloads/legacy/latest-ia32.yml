@@ -1,8 +1,8 @@
-version: 0.6.27
+version: 0.6.28
 files:
-  - url: MontaHD-0.6.27-legacy-ia32-setup.exe
-    sha512: nu6XI7u9dsBc9BkhvGPbrPntbZ/183Wnl4Z4/pG9xQG//pWrZtoP10Usq2wbXrTHkIf9vhBU1GK/4OdN06V/qA==
-    size: 70840514
-path: MontaHD-0.6.27-legacy-ia32-setup.exe
-sha512: nu6XI7u9dsBc9BkhvGPbrPntbZ/183Wnl4Z4/pG9xQG//pWrZtoP10Usq2wbXrTHkIf9vhBU1GK/4OdN06V/qA==
-releaseDate: '2026-09-05T18:05:00.000Z'
+  - url: MontaHD-0.6.28-legacy-ia32-setup.exe
+    sha512: sr946DKgEn1XUZCd2uuWpyBM4oWZehje6SZSmPdgUvu99vboOn2+TUOLF0jNnS7fmLUfyu8Ay0wkXGfHiFbBAA==
+    size: 70842060
+path: MontaHD-0.6.28-legacy-ia32-setup.exe
+sha512: sr946DKgEn1XUZCd2uuWpyBM4oWZehje6SZSmPdgUvu99vboOn2+TUOLF0jNnS7fmLUfyu8Ay0wkXGfHiFbBAA==
+releaseDate: '2026-09-09T00:31:01.940Z'
