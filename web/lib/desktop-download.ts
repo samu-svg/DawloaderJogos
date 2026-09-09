@@ -97,7 +97,22 @@ export function resolveDesktopBuildId(raw: string | null | undefined): DesktopBu
   return value;
 }
 
-/** Caminho relativo em public/ do instalador (auto-update continua em /downloads/). */
+const INSTALLER_FILE =
+  /^MontaHD-\d+\.\d+\.\d+(?:-ia32|-legacy-ia32|-legacy-x64)?-setup\.exe$/;
+
+export function desktopInstallerR2Key(fileName: string): string {
+  if (fileName.includes("-legacy-")) {
+    return `installers/legacy/${fileName}`;
+  }
+  return `installers/${fileName}`;
+}
+
+export function isKnownInstallerFileName(fileName: string): boolean {
+  if (!INSTALLER_FILE.test(fileName)) return false;
+  return BUILDS.some((build) => build.fileName === fileName);
+}
+
+/** URL pública do instalador (auto-update e redirect para R2 em /downloads/). */
 export function desktopBuildPublicPath(build: DesktopBuildInfo): string {
   if (build.id === "win7-x64") {
     return `/downloads/legacy/MontaHD-${build.version}-legacy-x64-setup.exe`;

@@ -1,13 +1,8 @@
-import { createReadStream } from "node:fs";
-import { stat } from "node:fs/promises";
-import path from "node:path";
 import { NextResponse } from "next/server";
 import { getApiUser } from "@/lib/auth";
-import {
-  desktopBuildPublicPath,
-  getDesktopBuild,
-  resolveDesktopBuildId,
-} from "@/lib/desktop-download";
+import { resolveInstallerSignedUrl } from "@/lib/desktop-installers";
+import { getDesktopBuild, resolveDesktopBuildId } from "@/lib/desktop-download";
+import { isR2Configured } from "@/lib/r2-configured";
 import { enforceRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -38,32 +33,21 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Instalador inválido." }, { status: 400 });
   }
 
-  const build = getDesktopBuild(buildId);
-  const relativePath = desktopBuildPublicPath(build).replace(/^\//, "");
-  const filePath = path.join(process.cwd(), "public", relativePath);
+  if (!isR2Configured()) {
+    return NextResponse.json(
+      { error: "Armazenamento de instaladores não configurado no servidor." },
+      { status: 503 },
+    );
+  }
 
-  let fileStat;
-  try {
-    fileStat = await stat(filePath);
-  } catch {
+  const build = getDesktopBuild(buildId);
+  const signedUrl = await resolveInstallerSignedUrl(build.fileName);
+  if (!signedUrl) {
     return NextResponse.json(
       { error: "Instalador não encontrado no servidor." },
       { status: 404 },
     );
   }
 
-  if (!fileStat.isFile()) {
-    return NextResponse.json({ error: "Instalador inválido." }, { status: 400 });
-  }
-
-  const stream = createReadStream(filePath);
-  return new NextResponse(stream as unknown as BodyInit, {
-    status: 200,
-    headers: {
-      "Content-Type": "application/octet-stream",
-      "Content-Disposition": `attachment; filename="${build.fileName}"`,
-      "Content-Length": String(fileStat.size),
-      "Cache-Control": "private, no-store",
-    },
-  });
+  return NextResponse.redirect(signedUrl, { status: 302 });
 }

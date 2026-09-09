@@ -1,5 +1,5 @@
-# Publica MontaHD no site — SOMENTE Windows nativo (PowerShell ou CMD).
-# NÃO rode no WSL/Git Bash no Linux: o setup.exe fica corrompido (~450 KB).
+# Publica MontaHD — manifestos no repo + instaladores no R2 (não na Vercel).
+# SOMENTE Windows nativo (PowerShell ou CMD). NÃO rode no WSL.
 #
 # Uso (na pasta desktop):
 #   npm.cmd ci
@@ -18,7 +18,8 @@ Abra PowerShell nativo do Windows (não Ubuntu/WSL) em:
 
 $desktop = Split-Path $PSScriptRoot -Parent
 $root = Split-Path $desktop -Parent
-$downloads = Join-Path $root "web\public\downloads"
+$updates = Join-Path $root "web\content\desktop-updates"
+$webRoot = Join-Path $root "web"
 
 $pkg = Get-Content (Join-Path $desktop "package.json") -Raw | ConvertFrom-Json
 $version = $pkg.version
@@ -29,7 +30,6 @@ $setup = Join-Path $outDir "MontaHD-$version-setup.exe"
 $portable = Join-Path $outDir "MontaHD-$version-portable.exe"
 $yml = Join-Path $outDir "latest.yml"
 $setupIa32 = Join-Path $outDir "MontaHD-$version-ia32-setup.exe"
-$portableIa32 = Join-Path $outDir "MontaHD-$version-ia32-portable.exe"
 $ymlIa32 = Join-Path $outDir "latest-ia32.yml"
 
 foreach ($path in @($setup, $portable, $yml)) {
@@ -46,37 +46,32 @@ Se rodou no WSL ou Linux, delete a pasta de output e compile de novo no Windows 
 "@
 }
 
-New-Item -ItemType Directory -Force -Path $downloads | Out-Null
-
-# Só a versão atual fica no site (economiza deploy/bandwidth na Vercel).
-Get-ChildItem $downloads -File | Where-Object {
-    $_.Name -match '^(MontaHD-|Dawloader-)' -or $_.Name -like '*.blockmap'
-} | Remove-Item -Force
-
-Copy-Item $setup $downloads -Force
-Copy-Item $yml $downloads -Force
-$blockmap = Join-Path $outDir "MontaHD-$version-setup.exe.blockmap"
-if (Test-Path $blockmap) { Copy-Item $blockmap $downloads -Force }
+New-Item -ItemType Directory -Force -Path $updates | Out-Null
+Copy-Item $yml $updates -Force
 
 if (Test-Path $setupIa32) {
     $ia32Size = (Get-Item $setupIa32).Length
     if ($ia32Size -lt 50MB) {
         Write-Error "Setup ia32 inválido ($([math]::Round($ia32Size / 1MB, 2)) MB)."
     }
-    Copy-Item $setupIa32 $downloads -Force
-    if (Test-Path $ymlIa32) { Copy-Item $ymlIa32 $downloads -Force }
-    $blockmapIa32 = Join-Path $outDir "MontaHD-$version-ia32-setup.exe.blockmap"
-    if (Test-Path $blockmapIa32) { Copy-Item $blockmapIa32 $downloads -Force }
+    if (Test-Path $ymlIa32) { Copy-Item $ymlIa32 $updates -Force }
 } else {
     Write-Warning "Build ia32 ausente. Rode: npm.cmd run dist:win:ia32"
 }
 
-Write-Host "OK — copiado para web\public\downloads\"
-Get-ChildItem $downloads | Where-Object {
-    $_.Name -like "MontaHD-$version*" -or $_.Name -eq "latest.yml" -or $_.Name -eq "latest-ia32.yml"
+Write-Host "Manifestos -> web\content\desktop-updates\"
+Get-ChildItem $updates | Where-Object {
+    $_.Name -like "latest*.yml"
 }
+
+Write-Host ""
+Write-Host "Enviando instaladores para o R2..."
+Push-Location $webRoot
+node --env-file=.env.local scripts/upload-installers-r2.mjs $outDir
+Pop-Location
+
 Write-Host ""
 Write-Host "Proximo passo (na raiz do repo):"
-Write-Host "  git add web/public/downloads/"
-Write-Host "  git commit -m 'Publica MontaHD $version'"
+Write-Host "  git add web/content/desktop-updates/"
+Write-Host "  git commit -m 'Publica MontaHD $version (R2)'"
 Write-Host "  git push"

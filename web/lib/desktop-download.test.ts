@@ -4,8 +4,10 @@ import {
   DESKTOP_APP_VERSION,
   desktopBuildPublicPath,
   desktopDownloadApiHref,
+  desktopInstallerR2Key,
   getDesktopBuild,
   getDesktopBuilds,
+  isKnownInstallerFileName,
   resolveDesktopBuildId,
 } from "./desktop-download.ts";
 
@@ -31,7 +33,26 @@ test("resolveDesktopBuildId valida ids conhecidos", () => {
   assert.equal(resolveDesktopBuildId("invalid"), null);
 });
 
-test("arquivos públicos continuam em /downloads para auto-update", () => {
+test("mapeia instaladores para chaves R2", () => {
+  assert.equal(
+    desktopInstallerR2Key(`MontaHD-${DESKTOP_APP_VERSION}-setup.exe`),
+    `installers/MontaHD-${DESKTOP_APP_VERSION}-setup.exe`,
+  );
+  assert.equal(
+    desktopInstallerR2Key(`MontaHD-${DESKTOP_APP_VERSION}-legacy-x64-setup.exe`),
+    `installers/legacy/MontaHD-${DESKTOP_APP_VERSION}-legacy-x64-setup.exe`,
+  );
+});
+
+test("aceita somente nomes de setup conhecidos", () => {
+  assert.equal(
+    isKnownInstallerFileName(`MontaHD-${DESKTOP_APP_VERSION}-setup.exe`),
+    true,
+  );
+  assert.equal(isKnownInstallerFileName("MontaHD-0.6.31-portable.exe"), false);
+});
+
+test("URLs públicas continuam em /downloads para auto-update", () => {
   assert.equal(
     desktopBuildPublicPath(getDesktopBuild("win10-x64")),
     `/downloads/MontaHD-${DESKTOP_APP_VERSION}-setup.exe`,

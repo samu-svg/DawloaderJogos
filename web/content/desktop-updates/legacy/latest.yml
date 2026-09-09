@@ -1,0 +1,8 @@
+version: 0.6.31
+files:
+  - url: MontaHD-0.6.31-legacy-x64-setup.exe
+    sha512: 7cbLHgb6ZkXsErkpaQRv+64eqQNNO0c60s0SRGLi2snqjNc98dbCmRQLnmS+R4FdXsXlVrfjCWSS+nw2F/G7aw==
+    size: 74726688
+path: MontaHD-0.6.31-legacy-x64-setup.exe
+sha512: 7cbLHgb6ZkXsErkpaQRv+64eqQNNO0c60s0SRGLi2snqjNc98dbCmRQLnmS+R4FdXsXlVrfjCWSS+nw2F/G7aw==
+releaseDate: '2026-09-09T21:36:55.615Z'

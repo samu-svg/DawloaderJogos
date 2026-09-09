@@ -23,10 +23,10 @@ desktop-legacy/release*/
 desktop-legacy/**/*.exe
 desktop-legacy/**/*.blockmap
 
-# Instaladores antigos no site — manter só a versão atual em public/downloads
-web/public/downloads/Dawloader-*
-web/public/downloads/*-portable.exe
-web/public/downloads/legacy/*-portable.exe
+# Instaladores ficam no R2 — não versionar binários em public/downloads
+web/public/downloads/**
+!web/public/downloads/.gitkeep
+web/.r2-upload-tmp/
 
 # Logs
 *.log

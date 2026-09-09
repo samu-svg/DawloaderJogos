@@ -1,4 +1,4 @@
-# Publica a linha legado (Windows 7 / 8 / 8.1) em web/public/downloads/legacy.
+# Publica a linha legado (Windows 7 / 8 / 8.1) — manifestos no repo + .exe no R2.
 # SOMENTE Windows nativo (PowerShell ou CMD). Não use WSL.
 #
 # Uso (na pasta desktop-legacy):
@@ -18,7 +18,8 @@ Abra PowerShell nativo do Windows (não Ubuntu/WSL) em:
 
 $legacy = Split-Path $PSScriptRoot -Parent
 $root = Split-Path $legacy -Parent
-$downloads = Join-Path $root "web\public\downloads\legacy"
+$updates = Join-Path $root "web\content\desktop-updates\legacy"
+$webRoot = Join-Path $root "web"
 
 $pkg = Get-Content (Join-Path $legacy "package.json") -Raw | ConvertFrom-Json
 $version = $pkg.version
@@ -45,30 +46,21 @@ foreach ($name in @("MontaHD-$version-legacy-x64-setup.exe", "MontaHD-$version-l
     }
 }
 
-New-Item -ItemType Directory -Force -Path $downloads | Out-Null
+New-Item -ItemType Directory -Force -Path $updates | Out-Null
+Copy-Item (Join-Path $outDir "latest.yml") $updates -Force
+Copy-Item (Join-Path $outDir "latest-ia32.yml") $updates -Force
 
-Get-ChildItem $downloads -File | Where-Object {
-    $_.Name -match '^MontaHD-' -or $_.Name -like '*.blockmap'
-} | Remove-Item -Force
+Write-Host "Manifestos -> web\content\desktop-updates\legacy\"
+Get-ChildItem $updates
 
-$copyNames = @(
-    "MontaHD-$version-legacy-x64-setup.exe",
-    "MontaHD-$version-legacy-ia32-setup.exe",
-    "MontaHD-$version-legacy-x64-setup.exe.blockmap",
-    "MontaHD-$version-legacy-ia32-setup.exe.blockmap",
-    "latest.yml",
-    "latest-ia32.yml"
-)
+Write-Host ""
+Write-Host "Enviando instaladores legado para o R2..."
+Push-Location $webRoot
+node --env-file=.env.local scripts/upload-installers-r2.mjs $outDir
+Pop-Location
 
-foreach ($name in $copyNames) {
-    $path = Join-Path $outDir $name
-    if (Test-Path $path) { Copy-Item $path $downloads -Force }
-}
-
-Write-Host "OK — copiado para web\public\downloads\legacy\"
-Get-ChildItem $downloads
 Write-Host ""
 Write-Host "Proximo passo (na raiz do repo):"
-Write-Host "  git add web/public/downloads/legacy/"
-Write-Host "  git commit -m 'Publica MontaHD legado $version'"
+Write-Host "  git add web/content/desktop-updates/legacy/"
+Write-Host "  git commit -m 'Publica MontaHD legado $version (R2)'"
 Write-Host "  git push"
