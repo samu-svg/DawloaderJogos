@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { GameCatalog } from "@/components/game-catalog";
 import { HomeHero } from "@/components/home-hero";
+import { SiteJsonLd } from "@/components/site-json-ld";
 import { SiteHeader } from "@/components/site-header";
 import { StoreFooter } from "@/components/store-footer";
 import { canAccessPainel } from "@/lib/rbac";
@@ -12,14 +13,20 @@ import {
   PAID_PLAN_NAME,
   freePlanSummary,
   paidPlanSummary,
-  siteMetaDescription,
 } from "@/lib/plan-copy";
+import {
+  absoluteUrl,
+  homeMetaDescription,
+  homeMetaTitle,
+  pageMetadata,
+} from "@/lib/seo";
 import { userHasCatalogAccess } from "@/lib/subscription";
 
-export const metadata: Metadata = {
-  title: "MontaHD — Downloads de jogos de Xbox 360",
-  description: siteMetaDescription(),
-};
+export const metadata: Metadata = pageMetadata({
+  title: homeMetaTitle(),
+  description: homeMetaDescription(),
+  path: "/",
+});
 
 type PageProps = {
   searchParams: Promise<{ colecao?: string; semanal?: string }>;
@@ -38,8 +45,20 @@ export default async function HomePage({ searchParams }: PageProps) {
 
   const items = catalogStoreGames(toCatalogGameItems(games));
 
+  const siteUrl = absoluteUrl("/");
+
   return (
     <>
+      <SiteJsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "MontaHD",
+          url: siteUrl,
+          description: homeMetaDescription(),
+          inLanguage: "pt-BR",
+        }}
+      />
       <SiteHeader
         email={appUser?.email}
         showPainelLink={isAdmin}

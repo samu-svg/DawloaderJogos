@@ -47,11 +47,13 @@ foreach ($name in @("MontaHD-$version-legacy-x64-setup.exe", "MontaHD-$version-l
 
 New-Item -ItemType Directory -Force -Path $downloads | Out-Null
 
+Get-ChildItem $downloads -File | Where-Object {
+    $_.Name -match '^MontaHD-' -or $_.Name -like '*.blockmap'
+} | Remove-Item -Force
+
 $copyNames = @(
     "MontaHD-$version-legacy-x64-setup.exe",
     "MontaHD-$version-legacy-ia32-setup.exe",
-    "MontaHD-$version-legacy-x64-portable.exe",
-    "MontaHD-$version-legacy-ia32-portable.exe",
     "MontaHD-$version-legacy-x64-setup.exe.blockmap",
     "MontaHD-$version-legacy-ia32-setup.exe.blockmap",
     "latest.yml",

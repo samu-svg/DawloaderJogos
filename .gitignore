@@ -19,6 +19,14 @@ desktop/release*/
 desktop/dist/
 desktop/**/*.exe
 desktop/**/*.blockmap
+desktop-legacy/release*/
+desktop-legacy/**/*.exe
+desktop-legacy/**/*.blockmap
+
+# Instaladores antigos no site — manter só a versão atual em public/downloads
+web/public/downloads/Dawloader-*
+web/public/downloads/*-portable.exe
+web/public/downloads/legacy/*-portable.exe
 
 # Logs
 *.log

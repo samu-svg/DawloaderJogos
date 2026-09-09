@@ -23,6 +23,7 @@ import {
 import { findAcervoGame, relatedAcervoGames } from "@/lib/games";
 import { formatBytes } from "@/lib/manifest";
 import { FREE_PLAN_NAME, freePlanSummary } from "@/lib/plan-copy";
+import { pageMetadata } from "@/lib/seo";
 import { getSiteUrl } from "@/lib/site-url";
 import { currentAppUser } from "@/lib/auth";
 import { userHasCatalogAccess } from "@/lib/subscription";
@@ -46,12 +47,20 @@ export async function generateMetadata({
 
   const meta = gamePageMeta(game.id);
   const title = meta?.displayTitle ?? formatTitle(game.label);
-  return {
-    title: `${title} — download para ${game.platform} | MontaHD`,
-    description:
-      meta?.description ??
-      `Baixe ${title} para ${game.platform} com o app MontaHD: download automático, extração e instalação na pasta certa do HD.`,
-  };
+  const pageTitle = `${title} — download para ${game.platform} | MontaHD`;
+  const description =
+    meta?.description ??
+    `Baixe ${title} para ${game.platform} com o app MontaHD: download automático, extração e instalação na pasta certa do HD.`;
+
+  const coverUrl = resolveCoverUrl(game.id, game.coverUrl, localCoverUrl);
+
+  return pageMetadata({
+    title: pageTitle,
+    description,
+    path: `/jogo/${game.slug}`,
+    ogImage: coverUrl,
+    ogType: "article",
+  });
 }
 
 export default async function GamePage({ params }: PageProps) {

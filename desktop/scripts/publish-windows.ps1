@@ -47,8 +47,13 @@ Se rodou no WSL ou Linux, delete a pasta de output e compile de novo no Windows 
 }
 
 New-Item -ItemType Directory -Force -Path $downloads | Out-Null
+
+# Só a versão atual fica no site (economiza deploy/bandwidth na Vercel).
+Get-ChildItem $downloads -File | Where-Object {
+    $_.Name -match '^(MontaHD-|Dawloader-)' -or $_.Name -like '*.blockmap'
+} | Remove-Item -Force
+
 Copy-Item $setup $downloads -Force
-Copy-Item $portable $downloads -Force
 Copy-Item $yml $downloads -Force
 $blockmap = Join-Path $outDir "MontaHD-$version-setup.exe.blockmap"
 if (Test-Path $blockmap) { Copy-Item $blockmap $downloads -Force }
@@ -59,7 +64,6 @@ if (Test-Path $setupIa32) {
         Write-Error "Setup ia32 inválido ($([math]::Round($ia32Size / 1MB, 2)) MB)."
     }
     Copy-Item $setupIa32 $downloads -Force
-    if (Test-Path $portableIa32) { Copy-Item $portableIa32 $downloads -Force }
     if (Test-Path $ymlIa32) { Copy-Item $ymlIa32 $downloads -Force }
     $blockmapIa32 = Join-Path $outDir "MontaHD-$version-ia32-setup.exe.blockmap"
     if (Test-Path $blockmapIa32) { Copy-Item $blockmapIa32 $downloads -Force }

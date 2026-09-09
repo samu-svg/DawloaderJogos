@@ -10,16 +10,18 @@ import { SiteHeader } from "@/components/site-header";
 import { StoreFooter } from "@/components/store-footer";
 import { currentAppUser } from "@/lib/auth";
 import { loadAcervo } from "@/lib/games";
-import { siteMetaDescription } from "@/lib/plan-copy";
+import { pageMetadata } from "@/lib/seo";
 import { canAccessPainel } from "@/lib/rbac";
 import { lowestPlanPriceLabel } from "@/lib/stripe-plans";
 import { subscriptionsEnabled } from "@/lib/stripe";
 import { userHasCatalogAccess } from "@/lib/subscription";
 
-export const metadata: Metadata = {
-  title: "O app MontaHD — baixa e organiza os jogos no seu HD",
-  description: siteMetaDescription(),
-};
+export const metadata: Metadata = pageMetadata({
+  title: "O app MontaHD — baixa e organiza os jogos no HD",
+  description:
+    "Baixe o app MontaHD para Windows: download automático de jogos Xbox 360, extração e instalação na pasta certa do HD. Grátis para um jogo por vez.",
+  path: "/app",
+});
 
 export default async function AppPage() {
   const [user, { games, collections }] = await Promise.all([

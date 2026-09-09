@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SiteAnalytics } from "@/components/site-analytics";
-import { siteMetaDescription } from "@/lib/plan-copy";
+import { rootLayoutMetadata } from "@/lib/seo";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,10 +15,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "MontaHD — O app que monta o seu HD",
-  description: siteMetaDescription(),
-};
+export const metadata: Metadata = rootLayoutMetadata();
 
 export default function RootLayout({
   children,
