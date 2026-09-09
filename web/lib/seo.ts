@@ -63,9 +63,7 @@ export function rootLayoutMetadata(): Metadata {
 
   return {
     metadataBase: metadataBaseUrl(),
-    title: {
-      default: homeMetaTitle(),
-    },
+    title: homeMetaTitle(),
     description: homeMetaDescription(),
     openGraph: {
       siteName: SITE_NAME,
