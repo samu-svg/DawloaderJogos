@@ -1,5 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
+import {
+  FREE_PLAN_NAME,
+  PAID_PLAN_NAME,
+  PLAN_SOFTWARE_LINE,
+  freePlanSummary,
+  paidPlanSummary,
+} from "@/lib/plan-copy";
 
 export function StoreFooter() {
   return (
@@ -18,9 +25,8 @@ export function StoreFooter() {
               Monta<span className="text-gradient">HD</span>
             </p>
             <p className="mx-auto mt-1 max-w-md text-sm text-zinc-500">
-              Software que baixa, descompacta e monta o seu HD. Com conta você
-              baixa um jogo por vez. O plano pago libera o acervo em lote,
-              velocidade cheia e sem anúncios.
+              {PLAN_SOFTWARE_LINE} No {FREE_PLAN_NAME}: {freePlanSummary()} No{" "}
+              {PAID_PLAN_NAME}: {paidPlanSummary()}
             </p>
           </div>
         </div>
@@ -32,7 +38,7 @@ export function StoreFooter() {
             O app
           </Link>
           <Link href="/assinar" className="hover:text-zinc-300">
-            Liberar
+            Completo
           </Link>
         </div>
       </div>

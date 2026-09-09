@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SiteAnalytics } from "@/components/site-analytics";
+import { siteMetaDescription } from "@/lib/plan-copy";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,8 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "MontaHD — O app que monta o seu HD",
-  description:
-    "Você paga pelo software MontaHD, não pelos arquivos. Com conta, baixe um jogo por vez. O plano pago libera o acervo em lote, velocidade cheia e sem anúncios.",
+  description: siteMetaDescription(),
 };
 
 export default function RootLayout({

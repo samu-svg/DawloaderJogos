@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
   afterAuthPath,
   DEFAULT_FREE_DOWNLOAD_BYTES_PER_SECOND,
+  freeDownloadSpeedLabel,
   freeMaxBytesPerSecond,
   isDownloadPlan,
   maxBytesPerSecondForPlan,
@@ -40,7 +41,18 @@ test("grátis usa o default ou a env", () => {
   }
 });
 
-test("depois do login, pago vai para lote e grátis para o catálogo", () => {
+test("rótulo de velocidade do grátis é 5 Mbps no default", () => {
+  const previous = process.env.FREE_DOWNLOAD_BYTES_PER_SECOND;
+  delete process.env.FREE_DOWNLOAD_BYTES_PER_SECOND;
+  assert.equal(freeDownloadSpeedLabel(), "5 Mbps");
+  if (previous === undefined) {
+    delete process.env.FREE_DOWNLOAD_BYTES_PER_SECOND;
+  } else {
+    process.env.FREE_DOWNLOAD_BYTES_PER_SECOND = previous;
+  }
+});
+
+test("depois do login, Completo vai para lote e Grátis para o catálogo", () => {
   assert.equal(afterAuthPath(true), "/baixar");
   assert.equal(afterAuthPath(false), "/");
 });

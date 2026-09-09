@@ -1,8 +1,10 @@
+import { FREE_PLAN_NAME, PAID_PLAN_NAME, freePlanSummary } from "@/lib/plan-copy";
+
 const STEPS = [
   {
     step: "01",
-    title: "Abra um jogo",
-    text: "Crie uma conta, escolha o título na aba Jogos e clique em Instalar no HD. Sem assinatura: um por vez.",
+    title: `Comece no ${FREE_PLAN_NAME}`,
+    text: `Crie a conta, abra um jogo e clique em Instalar no HD. ${freePlanSummary()}`,
   },
   {
     step: "02",
@@ -11,8 +13,8 @@ const STEPS = [
   },
   {
     step: "03",
-    title: "Assine para o lote",
-    text: "O plano pago libera seleção em massa, velocidade cheia e instalação do acervo sem clicar jogo a jogo.",
+    title: `Passe para o ${PAID_PLAN_NAME}`,
+    text: "Lote, velocidade máxima e instalação do acervo sem clicar jogo a jogo — enquanto o plano estiver ativo.",
   },
 ];
 

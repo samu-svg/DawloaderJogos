@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { signOut } from "@/lib/actions/auth";
+import { PAID_PLAN_NAME } from "@/lib/plan-copy";
 
 export function SiteHeader({
   email,
@@ -76,7 +77,7 @@ export function SiteHeader({
                 href={hasAccess ? "/baixar" : "/assinar"}
                 className="rounded-lg bg-accent px-4 py-1.5 font-medium text-white transition hover:bg-accent-hover"
               >
-                {hasAccess ? "Montar meu HD" : "Assinar"}
+                {hasAccess ? "Montar meu HD" : `Assinar ${PAID_PLAN_NAME}`}
               </Link>
               <form action={signOut}>
                 <button
@@ -94,6 +95,12 @@ export function SiteHeader({
                 className="rounded-lg px-3 py-1.5 text-zinc-400 transition hover:text-white"
               >
                 Entrar
+              </Link>
+              <Link
+                href="/app#planos"
+                className="hidden rounded-lg px-3 py-1.5 text-zinc-400 transition hover:text-white sm:inline"
+              >
+                Planos
               </Link>
               <Link
                 href="/cadastro"

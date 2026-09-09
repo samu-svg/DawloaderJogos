@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { buildMontaHDCatalogLink } from "@/lib/montahd-link";
 import { launchMontaHdProtocol } from "@/lib/launch-montahd";
 import { InstallOnHdControls } from "@/components/install-on-hd-controls";
+import { FREE_PLAN_NAME, PAID_PLAN_NAME, PLAN_SOFTWARE_LINE, freePlanSummary } from "@/lib/plan-copy";
 
 type GameInstallPanelProps = {
   siteUrl: string;
@@ -100,9 +101,8 @@ export function GameInstallPanel({
           Baixar {gameTitle}
         </h2>
         <p className="mt-2 text-sm leading-6 text-zinc-400">
-          Entre na sua conta e instale este jogo no HD pelo MontaHD. Sem
-          assinatura: um título por vez e velocidade limitada. O pagamento é
-          pelo software, não pelos arquivos.
+          Entre na sua conta e instale este jogo no HD pelo MontaHD. No plano{" "}
+          {FREE_PLAN_NAME}: {freePlanSummary()} {PLAN_SOFTWARE_LINE}
         </p>
         <div className="mt-5 flex flex-wrap justify-center gap-3">
           <Link
@@ -137,7 +137,7 @@ export function GameInstallPanel({
         {isUtility
           ? "Abre o MontaHD com este utilitário marcado. O app grava o .rar na raiz do HD e só baixa se o pack ainda não estiver lá."
           : limited
-            ? "Abre o MontaHD com este jogo. Velocidade limitada no plano grátis — um título por vez. Assine para instalar em lote e baixar sem teto."
+            ? `Abre o MontaHD com este jogo no plano ${FREE_PLAN_NAME}: ${freePlanSummary()} Assine o ${PAID_PLAN_NAME} para lote e velocidade máxima.`
             : "Abre o MontaHD já com este jogo marcado. Escolha a pasta raiz do seu HD e confirme — o app baixa, verifica e descompacta sozinho."}
       </p>
       {error && (
@@ -153,12 +153,12 @@ export function GameInstallPanel({
       />
       {limited ? (
         <p className="mt-4 text-xs leading-5 text-zinc-500">
-          Quer vários jogos de uma vez e velocidade cheia?{" "}
+          Quer vários jogos de uma vez e velocidade máxima?{" "}
           <Link
             href={`/assinar?next=${nextParam}`}
             className="font-medium text-accent hover:text-accent-hover"
           >
-            Assinar
+            Assinar {PAID_PLAN_NAME}
           </Link>
         </p>
       ) : null}

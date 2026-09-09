@@ -30,7 +30,7 @@ export async function GET(
         error:
           access.error ??
             (access.status === 403
-              ? "Sem permissão para este pack. No plano grátis, abra-o no site e clique em Instalar no HD."
+              ? "Sem permissão para este pack. No plano Grátis, abra-o no site e clique em Instalar no HD."
             : "Faça login ou abra o pack pelo site com sua conta."),
       },
       { status: access.status },

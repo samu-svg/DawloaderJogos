@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatBytesDetailed } from "@/lib/manifest";
+import { FREE_PLAN_NAME, PAID_PLAN_NAME, PLAN_SOFTWARE_LINE, freePlanSummary } from "@/lib/plan-copy";
 
 type AppHeroProps = {
   loggedIn: boolean;
@@ -23,7 +24,11 @@ export function AppHero({
     : loggedIn
       ? "/assinar"
       : "/cadastro";
-  const primaryLabel = hasAccess ? "Montar meu HD" : "Ver os planos";
+  const primaryLabel = hasAccess
+    ? "Montar meu HD"
+    : loggedIn
+      ? `Assinar ${PAID_PLAN_NAME}`
+      : "Criar conta grátis";
 
   return (
     <header className="mx-auto max-w-2xl text-center">
@@ -34,10 +39,12 @@ export function AppHero({
         Ele monta o seu <span className="text-gradient">HD</span>
       </h1>
       <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-zinc-400 sm:text-base">
-        Você paga pelo <strong className="text-zinc-200">software MontaHD</strong>,
-        não pelos arquivos. Sem assinatura você baixa um jogo por vez, com
-        velocidade limitada. O plano pago libera o acervo em lote e o download
-        sem teto. Planos de 1, 2 ou 3 meses, no cartão ou no PIX.
+        {PLAN_SOFTWARE_LINE} No plano{" "}
+        {hasAccess ? PAID_PLAN_NAME : FREE_PLAN_NAME}:{" "}
+        {hasAccess
+          ? "acervo em lote e velocidade máxima"
+          : freePlanSummary().replace(/\.$/, "")}
+        . Planos de 1, 2 ou 3 meses, no cartão ou no PIX.
       </p>
 
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -55,7 +62,9 @@ export function AppHero({
         </Link>
       </div>
       {!hasAccess && (
-        <p className="mt-4 text-sm text-zinc-500">{planLabel}</p>
+        <p className="mt-4 text-sm text-zinc-500">
+          {PAID_PLAN_NAME} {planLabel}
+        </p>
       )}
 
       <dl className="mt-10 grid grid-cols-3 gap-3">

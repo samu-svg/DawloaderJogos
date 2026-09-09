@@ -5,10 +5,12 @@ import { AppPlanCard } from "@/components/app-plan-card";
 import { AppValueProps } from "@/components/app-value-props";
 import { DesktopDownloadCard } from "@/components/desktop-download-card";
 import { HowItWorks } from "@/components/how-it-works";
+import { PlanCompare } from "@/components/plan-compare";
 import { SiteHeader } from "@/components/site-header";
 import { StoreFooter } from "@/components/store-footer";
 import { currentAppUser } from "@/lib/auth";
 import { loadAcervo } from "@/lib/games";
+import { siteMetaDescription } from "@/lib/plan-copy";
 import { canAccessPainel } from "@/lib/rbac";
 import { lowestPlanPriceLabel } from "@/lib/stripe-plans";
 import { subscriptionsEnabled } from "@/lib/stripe";
@@ -16,8 +18,7 @@ import { userHasCatalogAccess } from "@/lib/subscription";
 
 export const metadata: Metadata = {
   title: "O app MontaHD — baixa e organiza os jogos no seu HD",
-  description:
-    "Com conta, baixe um jogo por vez no MontaHD. O plano pago libera o acervo em lote, velocidade cheia e sem anúncios. Planos de 1, 2 ou 3 meses — cartão ou PIX.",
+  description: siteMetaDescription(),
 };
 
 export default async function AppPage() {
@@ -54,6 +55,11 @@ export default async function AppPage() {
           <AppValueProps />
 
           <HowItWorks />
+
+          <PlanCompare
+            hasAccess={hasAccess}
+            loggedIn={Boolean(user)}
+          />
 
           <AppPlanCard
             hasAccess={hasAccess}

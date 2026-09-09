@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/site-header";
 import { currentAppUser } from "@/lib/auth";
 import { PASSWORD_RECOVERY_PATH } from "@/lib/password-recovery";
 import { PASSWORD_MIN_LENGTH } from "@/lib/password-policy";
+import { FREE_PLAN_NAME, freePlanSummary } from "@/lib/plan-copy";
 import { afterAuthPath, userHasCatalogAccess } from "@/lib/subscription";
 
 export default async function CadastroPage() {
@@ -24,9 +25,9 @@ export default async function CadastroPage() {
             Criar conta
           </h1>
           <p className="text-sm text-zinc-500">
-            Crie sua conta para baixar jogos no MontaHD. Sem assinatura, um
-            título por vez. Em seguida você confirma com o código enviado por
-            e-mail. Senha com no mínimo {PASSWORD_MIN_LENGTH} caracteres.
+            Crie a conta {FREE_PLAN_NAME} para baixar no MontaHD.{" "}
+            {freePlanSummary()} Em seguida você confirma com o código enviado
+            por e-mail. Senha com no mínimo {PASSWORD_MIN_LENGTH} caracteres.
           </p>
         </div>
         <div className="mt-8 rounded-2xl border border-border bg-surface p-6">

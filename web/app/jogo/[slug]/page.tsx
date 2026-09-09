@@ -22,6 +22,7 @@ import {
 } from "@/lib/game-pages";
 import { findAcervoGame, relatedAcervoGames } from "@/lib/games";
 import { formatBytes } from "@/lib/manifest";
+import { FREE_PLAN_NAME, freePlanSummary } from "@/lib/plan-copy";
 import { getSiteUrl } from "@/lib/site-url";
 import { currentAppUser } from "@/lib/auth";
 import { userHasCatalogAccess } from "@/lib/subscription";
@@ -276,8 +277,8 @@ export default async function GamePage({ params }: PageProps) {
                   ele aparece na área de trabalho e no Menu Iniciar.
                 </li>
                 <li>
-                  Crie uma conta para baixar este jogo. Sem assinatura, um
-                  título por vez e velocidade limitada no app.
+                  Crie a conta {FREE_PLAN_NAME} para baixar este jogo.{" "}
+                  {freePlanSummary()}
                 </li>
                 <li>
                   Clique em <strong className="text-zinc-200">Instalar no HD</strong>{" "}

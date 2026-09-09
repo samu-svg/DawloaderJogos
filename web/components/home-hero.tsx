@@ -1,7 +1,15 @@
 import Link from "next/link";
 import { BaixarExploitCta } from "@/components/baixar-exploit-button";
 import { DesktopDownloadCard } from "@/components/desktop-download-card";
+import { PlanCompare } from "@/components/plan-compare";
 import { formatBytesDetailed } from "@/lib/manifest";
+import {
+  FREE_PLAN_NAME,
+  PAID_PLAN_NAME,
+  PLAN_SOFTWARE_LINE,
+  freePlanSummary,
+  paidPlanSummary,
+} from "@/lib/plan-copy";
 
 type HomeHeroProps = {
   hasAccess: boolean;
@@ -30,9 +38,9 @@ export function HomeHero({
             Downloads de <span className="text-gradient">jogos</span>
           </h1>
           <p className="page-lead">
-            Abra a página do jogo e instale no HD pelo MontaHD. Sem assinatura,
-            um título por vez. O plano pago libera o acervo em lote e a
-            velocidade cheia.
+            Abra a página do jogo e instale no HD pelo MontaHD. No plano{" "}
+            {FREE_PLAN_NAME}: {freePlanSummary().replace(/\.$/, "")}. No{" "}
+            {PAID_PLAN_NAME}: {paidPlanSummary().replace(/\.$/, "")}.
           </p>
         </header>
 
@@ -58,7 +66,9 @@ export function HomeHero({
           <div className="rounded-full border border-border bg-surface/80 px-3.5 py-1.5">
             <dt className="sr-only">Como baixar</dt>
             <dd className="text-xs font-medium text-zinc-300">
-              {hasAccess ? "Instalação em lote" : "Um jogo por vez"}
+              {hasAccess
+                ? `Plano ${PAID_PLAN_NAME} · lote`
+                : `Plano ${FREE_PLAN_NAME} · um por vez`}
             </dd>
           </div>
         </dl>
@@ -71,8 +81,9 @@ export function HomeHero({
                 <span className="text-gradient">MontaHD</span>
               </p>
               <p className="mt-1 text-sm leading-6 text-zinc-400">
-                O app baixa, verifica, descompacta e coloca cada jogo na pasta
-                certa do HD. O HD deve estar formatado em FAT32 pelo Xbox 360.
+                {PLAN_SOFTWARE_LINE} O app baixa, verifica, descompacta e
+                coloca cada jogo na pasta certa do HD. O HD deve estar formatado
+                em FAT32 pelo Xbox 360.
               </p>
             </div>
             <div className="flex shrink-0 flex-wrap items-center justify-center gap-2">
@@ -101,6 +112,8 @@ export function HomeHero({
             <BaixarExploitCta />
           </div>
         </div>
+
+        <PlanCompare hasAccess={hasAccess} loggedIn={loggedIn} compact />
 
         <DesktopDownloadCard />
       </div>

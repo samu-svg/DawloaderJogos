@@ -93,7 +93,7 @@ export async function GET(
           error:
             access.error ??
             (access.status === 403
-              ? "Sem permissão para este catálogo. No plano grátis, abra um jogo no site e clique em Instalar no HD."
+              ? "Sem permissão para este catálogo. No plano Grátis, abra um jogo no site e clique em Instalar no HD."
               : access.status === 503
                 ? "Servidor temporariamente indisponível. Tente novamente em instantes."
                 : "Faça login ou abra o catálogo pelo site com sua conta."),

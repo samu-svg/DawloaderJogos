@@ -1,8 +1,8 @@
-version: 0.6.29
+version: 0.6.30
 files:
-  - url: MontaHD-0.6.29-ia32-setup.exe
-    sha512: uw2JO/7DsvNuYrI7G1gj1MC6oYYpDgJnC8iHkQK7Q0pLidoZaCvjljd89JO+srcz1Zff5NWIjV9/9I2VRxZRfQ==
-    size: 91649171
-path: MontaHD-0.6.29-ia32-setup.exe
-sha512: uw2JO/7DsvNuYrI7G1gj1MC6oYYpDgJnC8iHkQK7Q0pLidoZaCvjljd89JO+srcz1Zff5NWIjV9/9I2VRxZRfQ==
-releaseDate: '2026-09-09T01:04:59.678Z'
+  - url: MontaHD-0.6.30-ia32-setup.exe
+    sha512: Y+BgKZRjvbNAHJl+V/z3T3fOZgIdlsjhvDY1+o5iZpZIgX+ZV5G2OHRxWy/VShPY6m6q3KncpZjSpCK5G241bA==
+    size: 91649845
+path: MontaHD-0.6.30-ia32-setup.exe
+sha512: Y+BgKZRjvbNAHJl+V/z3T3fOZgIdlsjhvDY1+o5iZpZIgX+ZV5G2OHRxWy/VShPY6m6q3KncpZjSpCK5G241bA==
+releaseDate: '2026-09-09T02:30:16.114Z'

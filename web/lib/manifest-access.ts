@@ -146,7 +146,7 @@ export async function resolveManifestAccess(
           allowed: false,
           status: 403,
           error:
-            "No plano grátis só é possível instalar um jogo por vez. Assine para montar o HD em lote.",
+            "No plano Grátis só é possível instalar um jogo por vez. Assine o Completo para montar o HD em lote.",
         };
       }
       return allowedAccess({

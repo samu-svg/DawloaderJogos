@@ -7,12 +7,18 @@ import { canAccessPainel } from "@/lib/rbac";
 import { catalogStoreGames, toCatalogGameItems } from "@/lib/catalog-items";
 import { loadAcervo } from "@/lib/games";
 import { currentAppUser } from "@/lib/auth";
+import {
+  FREE_PLAN_NAME,
+  PAID_PLAN_NAME,
+  freePlanSummary,
+  paidPlanSummary,
+  siteMetaDescription,
+} from "@/lib/plan-copy";
 import { userHasCatalogAccess } from "@/lib/subscription";
 
 export const metadata: Metadata = {
   title: "MontaHD — Downloads de jogos de Xbox 360",
-  description:
-    "Acervo de jogos de Xbox 360 para instalar no HD. Com conta, baixe um jogo por vez no MontaHD. O plano pago libera seleção em lote e velocidade cheia.",
+  description: siteMetaDescription(),
 };
 
 type PageProps = {
@@ -52,8 +58,8 @@ export default async function HomePage({ searchParams }: PageProps) {
           {!hasAccess && (
             <p className="mb-6 text-center text-sm leading-6 text-zinc-500">
               {appUser
-                ? "Abra um jogo e clique em Instalar no HD. Sem assinatura: um título por vez e velocidade limitada no app."
-                : "Entre na conta para baixar um jogo por vez. Assine para montar o HD em lote, com velocidade cheia."}
+                ? `No plano ${FREE_PLAN_NAME}: ${freePlanSummary()} Abra um jogo e clique em Instalar no HD.`
+                : `Crie a conta ${FREE_PLAN_NAME} e baixe ${freePlanSummary().replace(/^U/, "u")} Assine o ${PAID_PLAN_NAME} para ${paidPlanSummary().replace(/^A/, "a")}`}
             </p>
           )}
           <GameCatalog

@@ -105,6 +105,8 @@ function init() {
   const clearListBtn = document.getElementById("clear-list-btn");
   const spaceNotice = document.getElementById("space-notice");
   const speedBanner = document.getElementById("speed-banner");
+  const speedBannerText = document.getElementById("speed-banner-text");
+  const upgradePlanBtn = document.getElementById("upgrade-plan-btn");
   const pauseBtn = document.getElementById("pause-btn");
   const resumeBtn = document.getElementById("resume-btn");
   const removePausedBtn = document.getElementById("remove-paused-btn");
@@ -322,6 +324,10 @@ function init() {
     return `${getSiteUrl()}/baixar`;
   }
 
+  function subscribeUrl() {
+    return `${getSiteUrl()}/assinar`;
+  }
+
   function setSummary(text, tone = "muted") {
     summary.textContent = text;
     summary.className = `status-text ${tone === "ok" ? "done" : tone === "error" ? "error" : "muted"}`;
@@ -351,8 +357,9 @@ function init() {
     heroTitle.textContent = "Escolha no site, instale aqui";
     heroDesc.innerHTML =
       'Abra o catálogo no navegador, escolha um jogo e clique em <strong>Instalar no HD</strong>. ' +
-      "O app abre já com tudo pronto — você só escolhe a pasta do HD. " +
-      "Assine para instalar vários de uma vez. " +
+      "No plano <strong>Grátis</strong>: um jogo por vez, até 5 Mbps. " +
+      "No <strong>Completo</strong>: lote e velocidade máxima. " +
+      "Você só escolhe a pasta do HD. " +
       "Jogos até 4 GB instalam no HD; acima disso o FAT32 do Xbox 360 exige processar no PC.";
     setSpeedLimitBanner(null);
     setSteps("welcome");
@@ -1265,6 +1272,14 @@ function init() {
     }
   }
 
+  function formatMbpsCap(bytesPerSecond) {
+    if (!Number.isFinite(bytesPerSecond) || bytesPerSecond <= 0) return "5 Mbps";
+    const mbps = (bytesPerSecond * 8) / 1_000_000;
+    if (mbps >= 10) return `${Math.round(mbps)} Mbps`;
+    const rounded = Math.round(mbps * 10) / 10;
+    return `${rounded} Mbps`;
+  }
+
   function setSpeedLimitBanner(currentManifest) {
     if (!speedBanner) return;
     const limited =
@@ -1272,6 +1287,9 @@ function init() {
       typeof currentManifest.maxBytesPerSecond === "number" &&
       currentManifest.maxBytesPerSecond > 0;
     speedBanner.classList.toggle("hidden", !limited);
+    if (limited && speedBannerText) {
+      speedBannerText.textContent = `Um jogo por vez, até ${formatMbpsCap(currentManifest.maxBytesPerSecond)}.`;
+    }
   }
 
   function updatePortfolioMeta() {
@@ -1446,6 +1464,27 @@ function init() {
   openCatalogBtn.addEventListener("click", () => {
     void openCatalogInBrowser(openCatalogBtn);
   });
+
+  if (upgradePlanBtn) {
+    upgradePlanBtn.addEventListener("click", async () => {
+      const previousLabel = upgradePlanBtn.textContent;
+      upgradePlanBtn.disabled = true;
+      upgradePlanBtn.textContent = "Abrindo…";
+      try {
+        await window.montahd.openExternal(subscribeUrl());
+        setSummary("Planos abertos no navegador. Assine o Completo para lote e velocidade máxima.");
+      } catch (error) {
+        const detail =
+          error instanceof Error
+            ? unwrapIpcError(error.message)
+            : "Não foi possível abrir o navegador.";
+        setSummary(`${detail} Abra ${subscribeUrl()}`, "error");
+      } finally {
+        upgradePlanBtn.disabled = false;
+        upgradePlanBtn.textContent = previousLabel;
+      }
+    });
+  }
 
   openCatalogAgainBtn.addEventListener("click", () => {
     void openCatalogInBrowser(openCatalogAgainBtn);

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PAID_PLAN_NAME } from "@/lib/plan-copy";
 import { getPlan, STRIPE_PLANS } from "@/lib/stripe-plans";
 
 function formatBrl(value: number): string {
@@ -26,7 +27,7 @@ export function AppPlanCard({
     return (
       <section className="mx-auto max-w-xl rounded-[28px] border border-emerald-400/25 bg-gradient-to-br from-emerald-500/12 via-surface to-surface p-8 text-center">
         <p className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-300">
-          Plano ativo
+          {PAID_PLAN_NAME} ativo
         </p>
         <h2 className="mt-4 text-2xl font-bold tracking-tight text-white">
           App e acervo liberados
@@ -50,10 +51,10 @@ export function AppPlanCard({
     <section>
       <div className="mx-auto max-w-2xl text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-2">
-          Planos MontaHD
+          MontaHD {PAID_PLAN_NAME}
         </p>
         <h2 className="mt-3 text-2xl font-bold tracking-tight text-white sm:text-3xl">
-          Libere o <span className="text-gradient">MontaHD</span>
+          Escolha o período do <span className="text-gradient">{PAID_PLAN_NAME}</span>
         </h2>
         <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-zinc-400">
           Cartão recorrente ou PIX à vista. Cancele o cartão quando quiser; no

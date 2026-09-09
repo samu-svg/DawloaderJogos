@@ -24,9 +24,22 @@ export function freeMaxBytesPerSecond(): number {
   return DEFAULT_FREE_DOWNLOAD_BYTES_PER_SECOND;
 }
 
-/** `0` = sem teto (plano pago). */
+/** `0` = sem teto (plano Completo). */
 export function maxBytesPerSecondForPlan(plan: DownloadPlan): number {
   return plan === "paid" ? 0 : freeMaxBytesPerSecond();
+}
+
+/** Mbps efetivos do teto grátis — usado na UI. */
+export function freeDownloadMbps(): number {
+  return (freeMaxBytesPerSecond() * 8) / 1_000_000;
+}
+
+export function freeDownloadSpeedLabel(): string {
+  const mbps = freeDownloadMbps();
+  if (!Number.isFinite(mbps) || mbps <= 0) return "5 Mbps";
+  if (mbps >= 10) return `${Math.round(mbps)} Mbps`;
+  const rounded = Math.round(mbps * 10) / 10;
+  return Number.isInteger(rounded) ? `${rounded} Mbps` : `${rounded} Mbps`;
 }
 
 export function afterAuthPath(hasPaidAccess: boolean): string {

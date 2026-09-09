@@ -1,10 +1,12 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { PlanCompare } from "@/components/plan-compare";
 import { PlanPicker } from "@/components/plan-picker";
 import { SiteHeader } from "@/components/site-header";
 import { asaasPixAvailablePlans } from "@/lib/asaas";
 import { requireAppUser } from "@/lib/auth";
+import { PAID_PLAN_NAME, PLAN_SOFTWARE_LINE, paidPlanSummary } from "@/lib/plan-copy";
 import { canAccessPainel } from "@/lib/rbac";
 import { safeInternalPath } from "@/lib/safe-redirect";
 import { subscriptionsEnabled } from "@/lib/stripe";
@@ -19,29 +21,9 @@ import {
 } from "@/lib/subscription";
 
 export const metadata: Metadata = {
-  title: "Assinar o MontaHD",
-  description:
-    "Libere o app MontaHD em lote e a velocidade cheia. Planos de 1, 2 ou 3 meses — cartão recorrente ou PIX à vista.",
+  title: `Assinar o MontaHD ${PAID_PLAN_NAME}`,
+  description: `${paidPlanSummary()} ${PLAN_SOFTWARE_LINE} Planos de 1, 2 ou 3 meses — cartão recorrente ou PIX à vista.`,
 };
-
-const INCLUDED = [
-  {
-    title: "Licença do app",
-    text: "MontaHD para Windows, com atualizações no período.",
-  },
-  {
-    title: "Acervo em lote",
-    text: "Selecione vários jogos de uma vez enquanto o plano estiver ativo.",
-  },
-  {
-    title: "Velocidade cheia",
-    text: "Download sem teto no app — o plano grátis fica limitado.",
-  },
-  {
-    title: "Sem anúncios",
-    text: "Qualquer pasta, sem limite de dispositivos vinculados.",
-  },
-];
 
 type PageProps = {
   searchParams: Promise<{ cancelado?: string; next?: string }>;
@@ -87,15 +69,14 @@ export default async function AssinarPage({ searchParams }: PageProps) {
         <div className="relative mx-auto w-full max-w-5xl px-6 py-12 sm:py-16">
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent-2">
-              Planos MontaHD
+              MontaHD {PAID_PLAN_NAME}
             </p>
             <h1 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              Libere o <span className="text-gradient">MontaHD</span>
+              Passe para o <span className="text-gradient">{PAID_PLAN_NAME}</span>
             </h1>
             <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-zinc-400 sm:text-base">
-              Você paga pelo <strong className="text-zinc-200">software</strong>,
-              não pelos arquivos. Escolha 1, 2 ou 3 meses — cartão recorrente ou
-              PIX à vista, sem pegadinha.
+              {PLAN_SOFTWARE_LINE} {paidPlanSummary()} Escolha 1, 2 ou 3 meses —
+              cartão recorrente ou PIX à vista.
             </p>
           </div>
 
@@ -108,7 +89,7 @@ export default async function AssinarPage({ searchParams }: PageProps) {
             ) : active && user.role !== "admin" ? (
               <section className="mx-auto max-w-xl rounded-[28px] border border-emerald-400/25 bg-gradient-to-br from-emerald-500/12 via-surface to-surface p-8 text-center">
                 <p className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-300">
-                  Plano ativo
+                  {PAID_PLAN_NAME} ativo
                 </p>
                 <h2 className="mt-4 text-2xl font-bold tracking-tight text-white">
                   App e acervo liberados
@@ -152,24 +133,7 @@ export default async function AssinarPage({ searchParams }: PageProps) {
                   </p>
                 )}
 
-                <ul className="grid gap-3 sm:grid-cols-2">
-                  {INCLUDED.map((item) => (
-                    <li
-                      key={item.title}
-                      className="flex gap-3 rounded-2xl border border-border/70 bg-surface/60 px-4 py-3.5"
-                    >
-                      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/20 text-[11px] font-bold text-accent-hover">
-                        ✓
-                      </span>
-                      <div>
-                        <p className="text-sm font-medium text-white">{item.title}</p>
-                        <p className="mt-0.5 text-xs leading-5 text-zinc-500">
-                          {item.text}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                <PlanCompare hasAccess={false} loggedIn compact showCtas={false} />
 
                 <PlanPicker cardPlans={cardPlans} pixPlans={pixPlans} />
               </div>

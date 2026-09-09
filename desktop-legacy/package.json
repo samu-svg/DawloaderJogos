@@ -1,6 +1,6 @@
 {
   "name": "montahd-desktop-legacy",
-  "version": "0.6.29",
+  "version": "0.6.30",
   "private": true,
   "author": "MontaHD",
   "description": "MontaHD para Windows 7 / 8 / 8.1 (Electron 22)",
@@ -16,7 +16,7 @@
     "copyright": "Copyright © 2026 MontaHD",
     "icon": "build/icon.png",
     "directories": {
-      "output": "release629-legacy"
+      "output": "release630-legacy"
     },
     "files": [
       "dist/**/*",

@@ -63,7 +63,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "No plano grátis só é possível instalar um jogo por vez. Assine para montar o HD em lote.",
+            "No plano Grátis só é possível instalar um jogo por vez. Assine o Completo para montar o HD em lote.",
           code: "PAID_REQUIRED",
         },
         { status: 403 },
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "No plano grátis abra um jogo no site e clique em Instalar no HD.",
+            "No plano Grátis abra um jogo no site e clique em Instalar no HD.",
           code: "PAID_REQUIRED",
         },
         { status: 403 },
