@@ -110,6 +110,8 @@ function init() {
   const removePausedBtn = document.getElementById("remove-paused-btn");
   const cancelBtn = document.getElementById("cancel-btn");
   const summary = document.getElementById("summary");
+  const liveSpeed = document.getElementById("live-speed");
+  const liveSpeedValue = document.getElementById("live-speed-value");
   const step1 = document.getElementById("step-1");
   const step2 = document.getElementById("step-2");
   const confirmModal = document.getElementById("confirm-modal");
@@ -222,7 +224,7 @@ function init() {
   let downloadSessionActive = false;
   /** @type {boolean} */
   let catalogLaunchInFlight = false;
-  /** @type {Map<string, { fill: HTMLElement, label: HTMLElement }>} */
+  /** @type {Map<string, { fill: HTMLElement, label: HTMLElement, speed: HTMLElement }>} */
   const progressCells = new Map();
   /** @type {Map<string, { pause: HTMLButtonElement, resume: HTMLButtonElement, cancel: HTMLButtonElement, remove: HTMLButtonElement }>} */
   const entryActionCells = new Map();
@@ -280,6 +282,7 @@ function init() {
   function clearActiveEntryPhases() {
     activeEntryPhases.clear();
     downloadSpeedSamples.clear();
+    refreshLiveSpeed();
   }
 
   function installTagForState(state, entryId) {
@@ -462,6 +465,23 @@ function init() {
 
   function clearDownloadSpeed(entryId) {
     downloadSpeedSamples.delete(entryId);
+    refreshLiveSpeed();
+  }
+
+  function refreshLiveSpeed() {
+    if (!liveSpeed || !liveSpeedValue) return;
+    let best = 0;
+    for (const sample of downloadSpeedSamples.values()) {
+      if (sample.mbps > best) best = sample.mbps;
+    }
+    const label = formatMbps(best);
+    if (!label) {
+      liveSpeed.classList.add("hidden");
+      liveSpeedValue.textContent = "—";
+      return;
+    }
+    liveSpeedValue.textContent = label;
+    liveSpeed.classList.remove("hidden");
   }
 
   function groupLabel(group) {
@@ -499,15 +519,18 @@ function init() {
     fill.className = "progress-fill";
     track.appendChild(fill);
 
+    const speed = document.createElement("span");
+    speed.className = "progress-speed hidden";
+
     const label = document.createElement("span");
     label.className = "progress-label";
     label.textContent = "Aguardando";
 
-    wrap.append(track, label);
-    return { wrap, fill, label };
+    wrap.append(track, speed, label);
+    return { wrap, fill, label, speed };
   }
 
-  function setProgress(entryId, percent, text, state = "default") {
+  function setProgress(entryId, percent, text, state = "default", speedText = null) {
     const cell = progressCells.get(entryId);
     if (!cell) return;
 
@@ -517,6 +540,15 @@ function init() {
     if (state === "done") cell.label.classList.add("done");
     if (state === "error") cell.label.classList.add("error");
     if (state === "paused") cell.label.classList.add("paused");
+    if (cell.speed) {
+      if (speedText) {
+        cell.speed.textContent = speedText;
+        cell.speed.classList.remove("hidden");
+      } else {
+        cell.speed.textContent = "";
+        cell.speed.classList.add("hidden");
+      }
+    }
   }
 
   function getDestinationInput(entryId) {
@@ -751,7 +783,11 @@ function init() {
       const progress = createProgressCell();
       progress.label.textContent = goesToPc ? "Via PC" : "Direto no HD";
       statusCell.appendChild(progress.wrap);
-      progressCells.set(entry.id, { fill: progress.fill, label: progress.label });
+      progressCells.set(entry.id, {
+        fill: progress.fill,
+        label: progress.label,
+        speed: progress.speed,
+      });
 
       const actionCell = document.createElement("td");
       actionCell.className = "col-action";
@@ -1221,6 +1257,10 @@ function init() {
       cell.label.classList.remove("error");
       cell.label.classList.add("paused");
       cell.label.textContent = "Pausado";
+      if (cell.speed) {
+        cell.speed.textContent = "";
+        cell.speed.classList.add("hidden");
+      }
       updateEntryActionButtons(entryId);
     }
   }
@@ -2480,11 +2520,8 @@ function init() {
         measureDownloadMbps(event.entryId, event.downloadedBytes),
       );
       const progressText = `${where} ${formatBytes(event.downloadedBytes)} / ${formatBytes(event.totalBytes)}`;
-      setProgress(
-        event.entryId,
-        pct,
-        speedLabel ? `${progressText} · ${speedLabel}` : progressText,
-      );
+      setProgress(event.entryId, pct, progressText, "default", speedLabel);
+      refreshLiveSpeed();
     } else if (event.status === "verifying") {
       clearDownloadSpeed(event.entryId);
       setActiveEntryPhase(event.entryId, "verifying");

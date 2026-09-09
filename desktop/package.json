@@ -1,6 +1,6 @@
 {
   "name": "montahd-desktop",
-  "version": "0.6.28",
+  "version": "0.6.29",
   "private": true,
   "author": "MontaHD",
   "description": "Baixa arquivos de um manifesto e organiza no HD",
@@ -21,7 +21,7 @@
     "copyright": "Copyright © 2026 MontaHD",
     "icon": "build/icon.png",
     "directories": {
-      "output": "release25"
+      "output": "release629"
     },
     "files": [
       "dist/**/*",

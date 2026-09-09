@@ -4,7 +4,7 @@
   "copyright": "Copyright © 2026 MontaHD",
   "icon": "build/icon.png",
   "directories": {
-    "output": "release25"
+    "output": "release629"
   },
   "files": [
     "dist/**/*",

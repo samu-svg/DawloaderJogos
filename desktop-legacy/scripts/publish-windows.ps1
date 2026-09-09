@@ -22,7 +22,7 @@ $downloads = Join-Path $root "web\public\downloads\legacy"
 
 $pkg = Get-Content (Join-Path $legacy "package.json") -Raw | ConvertFrom-Json
 $version = $pkg.version
-$outDir = Join-Path $legacy "release-legacy"
+$outDir = Join-Path $legacy "release629-legacy"
 
 $required = @(
     "MontaHD-$version-legacy-x64-setup.exe",

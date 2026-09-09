@@ -2,7 +2,7 @@ import type { DesktopBuildId } from "@/lib/windows-build";
 
 export type { DesktopBuildId };
 
-export const DESKTOP_APP_VERSION = "0.6.28";
+export const DESKTOP_APP_VERSION = "0.6.29";
 
 export const DESKTOP_SETUP_FILENAME = `MontaHD-${DESKTOP_APP_VERSION}-setup.exe`;
 
