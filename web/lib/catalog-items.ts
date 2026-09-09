@@ -25,7 +25,7 @@ export function toCatalogGameItem(game: AcervoGame): CatalogGameItem {
     installCollectionSlug: game.installCollectionSlug ?? game.collectionSlug,
     collectionTitle: game.collectionTitle,
     platform: game.platform,
-    badges: catalogBadgesForGame(game.id, game.extraCount),
+    badges: catalogBadgesForGame(game.id, game.extraCount, game.label),
     featuredRank: featuredRank(game.id),
     categories: gameCategoriesForEntry(game.id, game.label, displayTitle),
     isWeekly: isWeeklyGame(game.id),

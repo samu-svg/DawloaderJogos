@@ -115,7 +115,7 @@ export function HomeHero({
 
         <PlanCompare hasAccess={hasAccess} loggedIn={loggedIn} compact />
 
-        <DesktopDownloadCard />
+        <DesktopDownloadCard loggedIn={loggedIn} />
       </div>
     </section>
   );

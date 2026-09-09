@@ -48,6 +48,11 @@ export function OpenMontaHDButton({
       });
 
       if (response.status === 403) {
+        const data = (await response.json()) as { code?: string };
+        if (data.code === "VIP_REQUIRED" || data.code === "PAID_REQUIRED") {
+          window.location.href = "/assinar?next=/baixar";
+          return;
+        }
         window.location.href = "/assinar?next=/baixar";
         return;
       }

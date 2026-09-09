@@ -3,16 +3,21 @@ import { FREE_PLAN_NAME, PAID_PLAN_NAME, freePlanSummary } from "@/lib/plan-copy
 const STEPS = [
   {
     step: "01",
-    title: `Comece no ${FREE_PLAN_NAME}`,
-    text: `Crie a conta, abra um jogo e clique em Instalar no HD. ${freePlanSummary()}`,
+    title: "Crie a conta",
+    text: `Cadastro grátis e e-mail confirmado. Depois baixe o app e clique em Instalar no HD. ${freePlanSummary()}`,
   },
   {
     step: "02",
+    title: "Baixe o MontaHD",
+    text: "Com a conta ativa, baixe o instalador no site. O app só funciona depois do cadastro concluído.",
+  },
+  {
+    step: "03",
     title: "O app instala",
     text: "O MontaHD baixa, confere a integridade, descompacta e organiza o jogo na pasta correta do HD.",
   },
   {
-    step: "03",
+    step: "04",
     title: `Passe para o ${PAID_PLAN_NAME}`,
     text: "Lote, velocidade máxima e instalação do acervo sem clicar jogo a jogo — enquanto o plano estiver ativo.",
   },
@@ -26,10 +31,10 @@ export function HowItWorks() {
           Como funciona
         </h2>
         <p className="mt-2 text-sm leading-6 text-zinc-400">
-          Três passos. O resto o app faz sozinho.
+          Quatro passos. O resto o app faz sozinho.
         </p>
       </div>
-      <ol className="mt-8 grid gap-4 sm:grid-cols-3">
+      <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {STEPS.map((item) => (
           <li
             key={item.step}

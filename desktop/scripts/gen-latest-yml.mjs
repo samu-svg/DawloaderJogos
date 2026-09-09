@@ -19,9 +19,9 @@ function buildYml(version, fileName, filePath) {
   ].join("\n");
 }
 
-const version = "0.6.30";
-const desktop = path.resolve("release630");
-const legacy = path.resolve("../desktop-legacy/release630-legacy");
+const version = "0.6.31";
+const desktop = path.resolve("release631");
+const legacy = path.resolve("../desktop-legacy/release631-legacy");
 
 const targets = [
   [desktop, "latest.yml", `MontaHD-${version}-setup.exe`],

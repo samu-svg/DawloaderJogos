@@ -13,6 +13,8 @@ import {
   verifyManifestAccessToken,
 } from "@/lib/subscription";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
+import { entryIdsRequireVip } from "@/lib/vip-install";
+import { VIP_REQUIRED_MESSAGE } from "@/lib/vip-games";
 
 export type ManifestAccessResult =
   | {
@@ -147,6 +149,13 @@ export async function resolveManifestAccess(
           status: 403,
           error:
             "No plano Grátis só é possível instalar um jogo por vez. Assine o Completo para montar o HD em lote.",
+        };
+      }
+      if (!hasSubscriptionBypass(role) && (await entryIdsRequireVip(slug, entryFilter))) {
+        return {
+          allowed: false,
+          status: 403,
+          error: VIP_REQUIRED_MESSAGE,
         };
       }
       return allowedAccess({

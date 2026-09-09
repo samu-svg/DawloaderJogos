@@ -29,6 +29,8 @@ function badgeClass(tone: CatalogBadge["tone"]): string {
       return "bg-emerald-700/90 text-white";
     case "featured":
       return "bg-amber-400/95 text-black";
+    case "vip":
+      return "bg-violet-500/95 text-white";
     default:
       return "bg-zinc-700/90 text-white";
   }
@@ -46,6 +48,8 @@ function Fallback({
   showTitle?: boolean;
 }) {
   const audioBadges = badges.filter((badge) => badge.kind === "audio");
+  const vipBadges = badges.filter((badge) => badge.kind === "vip");
+  const overlayBadges = [...vipBadges, ...audioBadges];
 
   return (
     <div
@@ -57,9 +61,9 @@ function Fallback({
           <p className="line-clamp-3 text-xs font-semibold leading-snug text-white/90">
             {title}
           </p>
-          {audioBadges.length > 0 && (
+          {overlayBadges.length > 0 && (
             <div className="flex flex-wrap justify-center gap-1">
-              {audioBadges.map((badge) => (
+              {overlayBadges.map((badge) => (
                 <span
                   key={badge.label}
                   className={`rounded-md px-2 py-0.5 text-[10px] font-semibold ${badgeClass(badge.tone)}`}

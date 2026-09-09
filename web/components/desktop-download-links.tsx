@@ -110,10 +110,13 @@ function BuildRow({
 export function DesktopDownloadPicker({
   compact = false,
   variant = "full",
+  loggedIn = true,
 }: {
   compact?: boolean;
   variant?: "full" | "strip" | "inline";
+  loggedIn?: boolean;
 }) {
+  if (!loggedIn) return null;
   const [suggested, setSuggested] = useState<DesktopBuildId>("win10-x64");
 
   useEffect(() => {
@@ -223,9 +226,12 @@ export function DesktopDownloadPicker({
 
 export function DesktopDownloadFallbackLink({
   className,
+  loggedIn = true,
 }: {
   className: string;
+  loggedIn?: boolean;
 }) {
+  if (!loggedIn) return null;
   const [id, setId] = useState<DesktopBuildId>("win10-x64");
 
   useEffect(() => {

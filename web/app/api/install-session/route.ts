@@ -5,8 +5,11 @@ import { createInstallSessionToken } from "@/lib/install-session";
 import { passwordIsExpired } from "@/lib/password-policy";
 import { maxBytesPerSecondForPlan } from "@/lib/plan-limits";
 import { enforceRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
+import { hasSubscriptionBypass } from "@/lib/rbac";
 import { subscriptionsEnabled } from "@/lib/stripe";
 import { userDownloadPlan } from "@/lib/subscription";
+import { entryIdsRequireVip } from "@/lib/vip-install";
+import { VIP_REQUIRED_MESSAGE } from "@/lib/vip-games";
 
 export async function POST(request: Request) {
   const limited = await enforceRateLimit(request, "install-session", RATE_LIMITS.tight);
@@ -57,6 +60,20 @@ export async function POST(request: Request) {
 
   const plan = await userDownloadPlan(user);
   if (plan === "free") {
+    if (
+      !hasSubscriptionBypass(user.role) &&
+      entryIds?.length &&
+      (await entryIdsRequireVip(slug, entryIds))
+    ) {
+      return NextResponse.json(
+        {
+          error: VIP_REQUIRED_MESSAGE,
+          code: "VIP_REQUIRED",
+        },
+        { status: 403 },
+      );
+    }
+
     if (!entryIds?.length || !(await isSingleGameInstall(slug, entryIds))) {
       return NextResponse.json(
         {

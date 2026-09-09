@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { detectWindowsBuildId } from "./windows-build.ts";
+import { detectWindowsBuildId, isWindowsBuildId } from "./windows-build.ts";
 
 test("detecta Windows 10/11 64-bit", () => {
   assert.equal(
@@ -41,4 +41,9 @@ test("detecta Windows 8.1 32-bit", () => {
     detectWindowsBuildId("Mozilla/5.0 (Windows NT 6.3) AppleWebKit/537.36"),
     "win7-ia32",
   );
+});
+
+test("isWindowsBuildId valida ids conhecidos", () => {
+  assert.equal(isWindowsBuildId("win10-x64"), true);
+  assert.equal(isWindowsBuildId("invalid"), false);
 });

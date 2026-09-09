@@ -36,6 +36,8 @@ function badgeClass(tone: CatalogBadge["tone"]): string {
       return "bg-emerald-700/90 text-white";
     case "featured":
       return "bg-amber-400/95 text-black";
+    case "vip":
+      return "bg-violet-500/95 text-white";
     default:
       return "bg-zinc-700/90 text-white";
   }
@@ -58,6 +60,7 @@ export function GameStoreCard({
   const audioBadges = badges.filter((badge) => badge.kind === "audio");
   const dlcBadges = badges.filter((badge) => badge.kind === "dlc");
   const weeklyBadges = badges.filter((badge) => badge.kind === "weekly");
+  const vipBadges = badges.filter((badge) => badge.kind === "vip");
   const hasCover = Boolean(coverUrl);
 
   const inner = (
@@ -82,12 +85,23 @@ export function GameStoreCard({
           </span>
         )}
         {platform && (
-          <span className="absolute right-2 top-2 z-10 rounded-md bg-black/70 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-300 backdrop-blur">
+          <span className="absolute left-2 top-2 z-10 rounded-md bg-black/70 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-300 backdrop-blur">
             {platform}
           </span>
         )}
+        {vipBadges.length > 0 && (
+          <span
+            className={`absolute right-2 top-2 z-10 rounded-md px-1.5 py-0.5 text-[9px] font-semibold shadow-sm backdrop-blur ${badgeClass("vip")}`}
+          >
+            {vipBadges[0].label}
+          </span>
+        )}
         {(dlcBadges.length > 0 || extraCount > 0) && (
-          <span className="absolute bottom-2 right-2 z-10 rounded-md bg-accent/85 px-1.5 py-0.5 text-[9px] font-semibold text-white shadow-sm backdrop-blur">
+          <span
+            className={`absolute bottom-2 right-2 z-10 rounded-md bg-accent/85 px-1.5 py-0.5 text-[9px] font-semibold text-white shadow-sm backdrop-blur ${
+              weeklyBadges.length > 0 ? "bottom-8" : ""
+            }`}
+          >
             {dlcBadges[0]?.label ?? `+${extraCount} DLC`}
           </span>
         )}
@@ -115,8 +129,16 @@ export function GameStoreCard({
         >
           {displayTitle}
         </h3>
-        {audioBadges.length > 0 && (
+        {audioBadges.length > 0 || vipBadges.length > 0 ? (
           <div className="flex flex-wrap justify-center gap-1">
+            {vipBadges.map((badge) => (
+              <span
+                key={badge.label}
+                className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${badgeClass(badge.tone)}`}
+              >
+                {badge.label}
+              </span>
+            ))}
             {audioBadges.map((badge) => (
               <span
                 key={badge.label}
@@ -126,7 +148,7 @@ export function GameStoreCard({
               </span>
             ))}
           </div>
-        )}
+        ) : null}
         <p className="text-xs text-zinc-500">
           {sizeBytes > 0 ? formatBytes(sizeBytes) : "Incluído no acervo"}
         </p>

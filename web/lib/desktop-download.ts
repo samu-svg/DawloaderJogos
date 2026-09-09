@@ -1,8 +1,13 @@
-import type { DesktopBuildId } from "@/lib/windows-build";
+import type { DesktopBuildId } from "./windows-build.ts";
+import { isWindowsBuildId } from "./windows-build.ts";
 
 export type { DesktopBuildId };
 
-export const DESKTOP_APP_VERSION = "0.6.30";
+export function desktopDownloadApiHref(buildId: DesktopBuildId): string {
+  return `/api/desktop-download?build=${encodeURIComponent(buildId)}`;
+}
+
+export const DESKTOP_APP_VERSION = "0.6.31";
 
 export const DESKTOP_SETUP_FILENAME = `MontaHD-${DESKTOP_APP_VERSION}-setup.exe`;
 
@@ -30,7 +35,7 @@ const BUILDS: readonly DesktopBuildInfo[] = [
     platform: "Windows 10 / 11 (64-bit)",
     detail: "Recomendado na maioria dos PCs atuais.",
     fileName: DESKTOP_SETUP_FILENAME,
-    href: `/downloads/${DESKTOP_SETUP_FILENAME}`,
+    href: desktopDownloadApiHref("win10-x64"),
     sizeLabel: DESKTOP_SETUP_SIZE_LABEL,
     version: DESKTOP_APP_VERSION,
     recommended: true,
@@ -41,7 +46,7 @@ const BUILDS: readonly DesktopBuildInfo[] = [
     platform: "Windows 10 / 11 (32-bit)",
     detail: "Só para PCs 32-bit. Não instale no Windows 64-bit.",
     fileName: `MontaHD-${DESKTOP_APP_VERSION}-ia32-setup.exe`,
-    href: `/downloads/MontaHD-${DESKTOP_APP_VERSION}-ia32-setup.exe`,
+    href: desktopDownloadApiHref("win10-ia32"),
     sizeLabel: "≈ 87 MB",
     version: DESKTOP_APP_VERSION,
     preview: true,
@@ -52,7 +57,7 @@ const BUILDS: readonly DesktopBuildInfo[] = [
     platform: "Windows 7 / 8 / 8.1 (64-bit)",
     detail: "Linha legado. Precisa de SP1 e TLS 1.2 para baixar os jogos.",
     fileName: `MontaHD-${DESKTOP_APP_VERSION}-legacy-x64-setup.exe`,
-    href: `/downloads/legacy/MontaHD-${DESKTOP_APP_VERSION}-legacy-x64-setup.exe`,
+    href: desktopDownloadApiHref("win7-x64"),
     sizeLabel: "≈ 71 MB",
     version: DESKTOP_APP_VERSION,
     preview: true,
@@ -63,7 +68,7 @@ const BUILDS: readonly DesktopBuildInfo[] = [
     platform: "Windows 7 / 8 / 8.1 (32-bit)",
     detail: "Linha legado. Precisa de SP1 e TLS 1.2 para baixar os jogos.",
     fileName: `MontaHD-${DESKTOP_APP_VERSION}-legacy-ia32-setup.exe`,
-    href: `/downloads/legacy/MontaHD-${DESKTOP_APP_VERSION}-legacy-ia32-setup.exe`,
+    href: desktopDownloadApiHref("win7-ia32"),
     sizeLabel: "≈ 68 MB",
     version: DESKTOP_APP_VERSION,
     preview: true,
@@ -83,6 +88,26 @@ export function getDesktopBuild(id: DesktopBuildId): DesktopBuildInfo {
 export function getDesktopDownloadUrl(): string {
   const override = process.env.NEXT_PUBLIC_DESKTOP_DOWNLOAD_URL?.trim();
   if (override) return override;
+  return desktopDownloadApiHref("win10-x64");
+}
+
+export function resolveDesktopBuildId(raw: string | null | undefined): DesktopBuildId | null {
+  const value = raw?.trim();
+  if (!value || !isWindowsBuildId(value)) return null;
+  return value;
+}
+
+/** Caminho relativo em public/ do instalador (auto-update continua em /downloads/). */
+export function desktopBuildPublicPath(build: DesktopBuildInfo): string {
+  if (build.id === "win7-x64") {
+    return `/downloads/legacy/MontaHD-${build.version}-legacy-x64-setup.exe`;
+  }
+  if (build.id === "win7-ia32") {
+    return `/downloads/legacy/MontaHD-${build.version}-legacy-ia32-setup.exe`;
+  }
+  if (build.id === "win10-ia32") {
+    return `/downloads/MontaHD-${build.version}-ia32-setup.exe`;
+  }
   return `/downloads/${DESKTOP_SETUP_FILENAME}`;
 }
 

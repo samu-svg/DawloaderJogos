@@ -16,7 +16,7 @@ export function paidPlanSummary(): string {
 }
 
 export const FREE_PLAN_FEATURES = [
-  "Conta e app MontaHD sem pagar",
+  "Cadastro grátis para baixar o app",
   "Um jogo por vez, direto no HD",
   "Download limitado no app",
 ] as const;
@@ -24,7 +24,8 @@ export const FREE_PLAN_FEATURES = [
 export const PAID_PLAN_FEATURES = [
   "Vários jogos de uma vez",
   "Velocidade máxima, sem teto",
-  "Sem anúncios no período do plano",
+  "Jogos VIP: dublados e GTA V",
+  "Montagem em lote no site Montar meu HD",
 ] as const;
 
 export const PLAN_SOFTWARE_LINE =

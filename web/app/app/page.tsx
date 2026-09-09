@@ -50,7 +50,7 @@ export default async function AppPage() {
             planLabel={lowestPlanPriceLabel()}
           />
 
-          <DesktopDownloadCard variant="full" />
+          <DesktopDownloadCard variant="full" loggedIn={Boolean(user)} />
 
           <AppValueProps />
 

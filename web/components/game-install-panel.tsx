@@ -15,6 +15,7 @@ type GameInstallPanelProps = {
   gamePath: string;
   access: "anon" | "sem-assinatura" | "liberado";
   isUtility?: boolean;
+  isVipGame?: boolean;
 };
 
 export function GameInstallPanel({
@@ -25,6 +26,7 @@ export function GameInstallPanel({
   gamePath,
   access,
   isUtility = false,
+  isVipGame = false,
 }: GameInstallPanelProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +61,7 @@ export function GameInstallPanel({
           window.location.href = "/conta";
           return;
         }
-        if (data.code === "PAID_REQUIRED") {
+        if (data.code === "PAID_REQUIRED" || data.code === "VIP_REQUIRED") {
           window.location.href = `/assinar?next=${nextParam}`;
           return;
         }
@@ -116,6 +118,31 @@ export function GameInstallPanel({
             className="rounded-xl border border-border px-6 py-3 text-sm font-medium text-zinc-300 transition hover:border-zinc-600 hover:text-white"
           >
             Entrar
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (access === "sem-assinatura" && isVipGame) {
+    return (
+      <div className="rounded-2xl border border-violet-500/35 bg-violet-600/10 p-6 text-center">
+        <p className="inline-flex rounded-full border border-violet-400/40 bg-violet-500/15 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-violet-200">
+          VIP
+        </p>
+        <h2 className="mt-3 text-base font-semibold text-white">
+          {gameTitle} é conteúdo VIP
+        </h2>
+        <p className="mt-2 text-sm leading-6 text-zinc-300">
+          Jogos dublados e GTA V ficam no plano {PAID_PLAN_NAME}. Assine para
+          baixar e instalar no HD pelo MontaHD.
+        </p>
+        <div className="mt-5 flex flex-wrap justify-center gap-3">
+          <Link
+            href={`/assinar?next=${nextParam}`}
+            className="rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-hover"
+          >
+            Assinar {PAID_PLAN_NAME}
           </Link>
         </div>
       </div>

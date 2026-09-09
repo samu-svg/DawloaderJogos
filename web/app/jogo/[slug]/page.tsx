@@ -26,6 +26,7 @@ import { FREE_PLAN_NAME, freePlanSummary } from "@/lib/plan-copy";
 import { getSiteUrl } from "@/lib/site-url";
 import { currentAppUser } from "@/lib/auth";
 import { userHasCatalogAccess } from "@/lib/subscription";
+import { isVipGame } from "@/lib/vip-games";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -70,6 +71,12 @@ export default async function GamePage({ params }: PageProps) {
   const meta = gamePageMeta(game.id);
   const title = catalogDisplayTitle(game.id, game.label, game.extraCount);
   const coverUrl = resolveCoverUrl(game.id, game.coverUrl, localCoverUrl);
+  const isVip = isVipGame({
+    id: game.id,
+    label: game.label,
+    displayTitle: title,
+    audio: meta?.audio,
+  });
   const folder = installFolderKind(game.destination, meta?.installHint);
   const dlcNotes = meta?.dlcNotes ?? [];
   const technicalNotes = meta?.technicalNotes ?? [];
@@ -112,8 +119,8 @@ export default async function GamePage({ params }: PageProps) {
                 <GameCoverFrame
                   title={title}
                   coverUrl={coverUrl}
-                  badges={catalogBadgesForGame(game.id, game.extraCount).filter(
-                    (badge) => badge.kind === "audio",
+                  badges={catalogBadgesForGame(game.id, game.extraCount, game.label).filter(
+                    (badge) => badge.kind === "audio" || badge.kind === "vip",
                   )}
                   showTitle={!coverUrl}
                 />
@@ -265,6 +272,7 @@ export default async function GamePage({ params }: PageProps) {
               gamePath={`/jogo/${game.slug}`}
               access={access}
               isUtility={game.isUtility}
+              isVipGame={isVip}
             />
 
             <section className="rounded-2xl border border-border bg-surface p-5 text-left">

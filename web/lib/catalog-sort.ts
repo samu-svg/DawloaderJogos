@@ -1,4 +1,5 @@
 import { featuredRank } from "./featured-games.ts";
+import { isGtaVGame } from "./gta-v.ts";
 import { gamePageMeta } from "./game-pages.ts";
 
 export type PopularSortableGame = {
@@ -13,22 +14,8 @@ function sortTexts(game: PopularSortableGame): string[] {
   );
 }
 
-/** GTA V / GTA 5 — não San Andreas. */
-export function isGtaVGame(game: PopularSortableGame): boolean {
-  for (const text of sortTexts(game)) {
-    const lower = text.toLowerCase();
-    if (/san\s*andreas|\bandreas\b/.test(lower)) continue;
-    if (
-      /\bgrand theft auto\s*v\b/.test(lower) ||
-      /\bgrand theft auto\s*5\b/.test(lower) ||
-      /\bgta\s*v\b/.test(lower) ||
-      /\bgta\s*5\b/.test(lower)
-    ) {
-      return true;
-    }
-  }
-  return false;
-}
+/** @deprecated import from ./gta-v.ts */
+export { isGtaVGame } from "./gta-v.ts";
 
 /** 0 = dublado, 1 = pt-br/legendado, 2 = outro */
 export function audioSortPriority(game: PopularSortableGame): number {

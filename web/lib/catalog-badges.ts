@@ -1,10 +1,11 @@
-import { gamePageMeta, type GameAudio } from "@/lib/game-pages";
-import { isWeeklyGame } from "@/lib/weekly-games";
+import { gamePageMeta, type GameAudio } from "./game-pages.ts";
+import { isWeeklyGame } from "./weekly-games.ts";
+import { isVipGame } from "./vip-games.ts";
 
 export type CatalogBadge = {
-  kind: "audio" | "dlc" | "weekly" | "utility" | "featured";
+  kind: "audio" | "dlc" | "weekly" | "utility" | "featured" | "vip";
   label: string;
-  tone: "pt-br" | "dublado" | "dlc" | "weekly" | "utility" | "featured";
+  tone: "pt-br" | "dublado" | "dlc" | "weekly" | "utility" | "featured" | "vip";
 };
 
 function formatTitle(label: string): string {
@@ -38,9 +39,15 @@ function hasMeaningfulDlcNotes(notes: string[] | undefined): boolean {
 export function catalogBadgesForGame(
   entryId: string,
   extraCount: number,
+  label = "",
 ): CatalogBadge[] {
   const meta = gamePageMeta(entryId);
   const badges: CatalogBadge[] = [];
+  const displayTitle = meta?.displayTitle;
+
+  if (isVipGame({ id: entryId, label, displayTitle, audio: meta?.audio })) {
+    badges.push({ kind: "vip", label: "VIP", tone: "vip" });
+  }
 
   const audio = audioCatalogBadge(meta?.audio);
   if (audio) badges.push(audio);

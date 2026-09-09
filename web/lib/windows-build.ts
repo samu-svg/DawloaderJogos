@@ -4,6 +4,17 @@ export type DesktopBuildId =
   | "win7-x64"
   | "win7-ia32";
 
+const BUILD_IDS: readonly DesktopBuildId[] = [
+  "win10-x64",
+  "win10-ia32",
+  "win7-x64",
+  "win7-ia32",
+];
+
+export function isWindowsBuildId(value: string): value is DesktopBuildId {
+  return (BUILD_IDS as readonly string[]).includes(value);
+}
+
 /**
  * Palpite a partir do User-Agent. WOW64 = navegador 32-bit num Windows 64-bit
  * → recomendamos a build 64-bit. Sempre deixe o usuário trocar na mão.

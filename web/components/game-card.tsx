@@ -32,6 +32,8 @@ function badgeClass(tone: CatalogBadge["tone"]): string {
       return "bg-emerald-700/90 text-white";
     case "featured":
       return "bg-amber-400/95 text-black";
+    case "vip":
+      return "bg-violet-500/95 text-white";
   }
 }
 
@@ -50,6 +52,7 @@ export function GameCard({
   const weeklyBadges = badges.filter((badge) => badge.kind === "weekly");
   const featuredBadges = badges.filter((badge) => badge.kind === "featured");
   const utilityBadges = badges.filter((badge) => badge.kind === "utility");
+  const vipBadges = badges.filter((badge) => badge.kind === "vip");
   const hasCover = Boolean(coverUrl);
 
   return (
@@ -69,6 +72,13 @@ export function GameCard({
         <span className="absolute left-2 top-2 rounded-md bg-black/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300 backdrop-blur">
           {platform}
         </span>
+        {vipBadges.length > 0 && (
+          <span
+            className={`absolute right-2 top-2 z-10 rounded-md px-2 py-0.5 text-[10px] font-semibold shadow-sm backdrop-blur ${badgeClass("vip")}`}
+          >
+            {vipBadges[0].label}
+          </span>
+        )}
         {audioBadges.length > 0 && (
           <div className="absolute bottom-2 left-2 z-10 flex max-w-[calc(100%-1rem)] flex-wrap gap-1">
             {audioBadges.map((badge) => (
@@ -102,16 +112,24 @@ export function GameCard({
           </div>
         )}
         {(dlcBadges.length > 0 || extraCount > 0) && (
-          <span className="absolute right-2 top-2 rounded-md bg-accent/85 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm backdrop-blur">
+          <span
+            className={`absolute right-2 z-10 rounded-md bg-accent/85 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm backdrop-blur ${
+              vipBadges.length > 0 ? "top-8" : "top-2"
+            }`}
+          >
             {dlcBadges[0]?.label ?? `+${extraCount} DLC`}
           </span>
         )}
         {weeklyBadges.length > 0 && (
           <span
-            className={`absolute rounded-md px-2 py-0.5 text-[10px] font-semibold shadow-sm backdrop-blur ${badgeClass("weekly")} ${
+            className={`absolute right-2 rounded-md px-2 py-0.5 text-[10px] font-semibold shadow-sm backdrop-blur ${badgeClass("weekly")} ${
               dlcBadges.length > 0 || extraCount > 0
-                ? "right-2 top-8"
-                : "right-2 top-2"
+                ? vipBadges.length > 0
+                  ? "top-14"
+                  : "top-8"
+                : vipBadges.length > 0
+                  ? "top-8"
+                  : "top-2"
             }`}
           >
             {weeklyBadges[0].label}
@@ -125,8 +143,16 @@ export function GameCard({
         <h3 className="truncate text-sm font-semibold text-white" title={displayTitle}>
           {displayTitle}
         </h3>
-        {audioBadges.length > 0 && (
+        {audioBadges.length > 0 || vipBadges.length > 0 ? (
           <div className="flex flex-wrap justify-center gap-1">
+            {vipBadges.map((badge) => (
+              <span
+                key={`title-${badge.label}`}
+                className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${badgeClass(badge.tone)}`}
+              >
+                {badge.label}
+              </span>
+            ))}
             {audioBadges.map((badge) => (
               <span
                 key={`title-${badge.label}`}
@@ -136,7 +162,7 @@ export function GameCard({
               </span>
             ))}
           </div>
-        )}
+        ) : null}
         <p className="text-xs text-zinc-500">
           {sizeBytes > 0 ? formatBytes(sizeBytes) : "Tamanho sob consulta"}
         </p>
