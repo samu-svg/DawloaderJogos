@@ -5,6 +5,7 @@ import {
   PAID_PLAN_NAME,
   freePlanSpeedLabel,
   freePlanSummary,
+  homeMetaDescription,
   paidPlanSummary,
   siteMetaDescription,
 } from "./plan-copy.ts";
@@ -30,4 +31,12 @@ test("meta do site cita os dois planos", () => {
   assert.match(meta, /Grátis/);
   assert.match(meta, /Completo/);
   assert.match(meta, /software MontaHD/);
+});
+
+test("meta da home destaca acervo, semanais e download grátis", () => {
+  const meta = homeMetaDescription();
+  assert.match(meta, /semanais/i);
+  assert.match(meta, /dublados/i);
+  assert.match(meta, /download grátis/i);
+  assert.doesNotMatch(meta, /FAT32/i);
 });

@@ -83,8 +83,8 @@ export function HomeHero({
               </p>
               <p className="mt-1 text-sm leading-6 text-zinc-400">
                 {PLAN_SOFTWARE_LINE} O app baixa, verifica, descompacta e
-                coloca cada jogo na pasta certa do HD. O HD deve estar formatado
-                em FAT32 pelo Xbox 360.
+                instala cada jogo no HD. Acervo com lançamentos semanais,
+                títulos dublados e centenas de jogos para RGH e JTAG.
               </p>
             </div>
             <div className="flex shrink-0 flex-wrap items-center justify-center gap-2">

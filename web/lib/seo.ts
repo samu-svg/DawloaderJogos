@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import { homeMetaDescription } from "@/lib/plan-copy";
 import { publicSiteOrigin } from "@/lib/site-url";
+
+export { homeMetaDescription };
 
 const SITE_NAME = "MontaHD";
 const DEFAULT_OG_IMAGE = "/montahd-icon.png";
@@ -14,10 +17,6 @@ export function absoluteUrl(path: string): string {
 
 export function homeMetaTitle(): string {
   return "MontaHD — Download de jogos Xbox 360 (RGH) | Acervo atualizado";
-}
-
-export function homeMetaDescription(): string {
-  return "Acervo de jogos Xbox 360 para RGH e JTAG. Lista atualizada, títulos dublados em PT-BR e download pelo app MontaHD — baixa, extrai e instala direto no HD.";
 }
 
 type PageMetaInput = {
@@ -60,12 +59,16 @@ export function pageMetadata(input: PageMetaInput): Metadata {
 
 export function rootLayoutMetadata(): Metadata {
   const verification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim();
+  const title = homeMetaTitle();
+  const description = homeMetaDescription();
 
   return {
     metadataBase: metadataBaseUrl(),
-    title: homeMetaTitle(),
-    description: homeMetaDescription(),
+    title,
+    description,
     openGraph: {
+      title,
+      description,
       siteName: SITE_NAME,
       locale: "pt_BR",
       type: "website",
@@ -73,6 +76,8 @@ export function rootLayoutMetadata(): Metadata {
     },
     twitter: {
       card: "summary_large_image",
+      title,
+      description,
     },
     robots: {
       index: true,

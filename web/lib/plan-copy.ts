@@ -34,3 +34,7 @@ export const PLAN_SOFTWARE_LINE =
 export function siteMetaDescription(): string {
   return `${PLAN_SOFTWARE_LINE} No ${FREE_PLAN_NAME}, um jogo por vez (${freePlanSpeedLabel()}). No ${PAID_PLAN_NAME}, lote e velocidade máxima. Planos de 1, 2 ou 3 meses.`;
 }
+
+export function homeMetaDescription(): string {
+  return "Acervo de jogos Xbox 360 para RGH e JTAG — dublados em PT-BR, lançamentos semanais e novidades no catálogo. Download grátis pelo app MontaHD: baixa, extrai e instala direto no HD.";
+}
