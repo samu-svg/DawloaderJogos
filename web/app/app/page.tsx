@@ -17,9 +17,9 @@ import { subscriptionsEnabled } from "@/lib/stripe";
 import { userHasCatalogAccess } from "@/lib/subscription";
 
 export const metadata: Metadata = pageMetadata({
-  title: "O app MontaHD — baixa e organiza os jogos no HD",
+  title: "App MontaHD — Baixar jogos Xbox 360 no PC | RGH/JTAG",
   description:
-    "Baixe o app MontaHD para Windows: download automático de jogos Xbox 360, extração e instalação na pasta certa do HD. Grátis para um jogo por vez.",
+    "Baixe o app MontaHD para Windows e instale jogos Xbox 360 no HD: download automático, extração e instalação na pasta certa. Acervo para RGH e JTAG.",
   path: "/app",
 });
 

@@ -32,7 +32,7 @@ export function StoreFooter() {
         </div>
         <div className="flex flex-wrap justify-center gap-5 text-sm text-zinc-500">
           <Link href="/" className="hover:text-zinc-300">
-            Jogos
+            Baixar jogos Xbox 360
           </Link>
           <Link href="/app" className="hover:text-zinc-300">
             O app

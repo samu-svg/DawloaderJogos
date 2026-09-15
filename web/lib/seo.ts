@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { homeMetaDescription } from "@/lib/plan-copy";
+import { homeMetaDescription, homeMetaTitle } from "@/lib/seo-copy";
 import { publicSiteOrigin } from "@/lib/site-url";
 
-export { homeMetaDescription };
+export { homeMetaDescription, homeMetaTitle };
 
 const SITE_NAME = "MontaHD";
 const DEFAULT_OG_IMAGE = "/montahd-icon.png";
@@ -15,16 +15,13 @@ export function absoluteUrl(path: string): string {
   return new URL(path.startsWith("/") ? path : `/${path}`, metadataBaseUrl()).href;
 }
 
-export function homeMetaTitle(): string {
-  return "MontaHD — Download de jogos Xbox 360 (RGH) | Acervo atualizado";
-}
-
 type PageMetaInput = {
   title: string;
   description: string;
   path: string;
   ogImage?: string | null;
   ogType?: "website" | "article";
+  keywords?: readonly string[];
 };
 
 export function pageMetadata(input: PageMetaInput): Metadata {
@@ -38,6 +35,7 @@ export function pageMetadata(input: PageMetaInput): Metadata {
   return {
     title: input.title,
     description: input.description,
+    ...(input.keywords?.length ? { keywords: [...input.keywords] } : {}),
     alternates: { canonical: url },
     openGraph: {
       title: input.title,

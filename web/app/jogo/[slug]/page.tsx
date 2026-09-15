@@ -23,6 +23,10 @@ import {
 import { findAcervoGame, relatedAcervoGames } from "@/lib/games";
 import { formatBytes } from "@/lib/manifest";
 import { FREE_PLAN_NAME, freePlanSummary } from "@/lib/plan-copy";
+import {
+  gamePageMetaDescription,
+  gamePageMetaTitle,
+} from "@/lib/seo-copy";
 import { pageMetadata } from "@/lib/seo";
 import { getSiteUrl } from "@/lib/site-url";
 import { currentAppUser } from "@/lib/auth";
@@ -47,10 +51,9 @@ export async function generateMetadata({
 
   const meta = gamePageMeta(game.id);
   const title = meta?.displayTitle ?? formatTitle(game.label);
-  const pageTitle = `${title} — download para ${game.platform} | MontaHD`;
+  const pageTitle = gamePageMetaTitle(title, game.platform);
   const description =
-    meta?.description ??
-    `Baixe ${title} para ${game.platform} com o app MontaHD: download automático, extração e instalação na pasta certa do HD.`;
+    meta?.description ?? gamePageMetaDescription(title, game.platform);
 
   const coverUrl = resolveCoverUrl(game.id, game.coverUrl, localCoverUrl);
 
@@ -145,7 +148,10 @@ export default async function GamePage({ params }: PageProps) {
               <h1 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
                 {title}
               </h1>
-              <p className="mt-2 text-sm text-zinc-400">
+              <p className="mt-2 text-sm text-zinc-500">
+                Baixar para Xbox 360 · {game.platform}
+              </p>
+              <p className="mt-1 text-sm text-zinc-400">
                 Coleção{" "}
                 <Link
                   href={`/?colecao=${game.collectionSlug}`}

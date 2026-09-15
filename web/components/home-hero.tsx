@@ -35,11 +35,12 @@ export function HomeHero({
         <header>
           <p className="page-eyebrow">Xbox 360 · RGH e JTAG</p>
           <h1 className="page-title">
-            Download de jogos <span className="text-gradient">Xbox 360</span>
+            Baixar jogos <span className="text-gradient">Xbox 360</span>
           </h1>
           <p className="page-lead">
-            Acervo atualizado para RGH e JTAG — dublados em PT-BR e instalação
-            direto no HD pelo MontaHD. No plano {FREE_PLAN_NAME}:{" "}
+            Acervo de jogos Xbox 360 para RGH e JTAG — dublados em PT-BR,
+            lançamentos semanais e instalação direto no HD pelo MontaHD. No plano{" "}
+            {FREE_PLAN_NAME}:{" "}
             {freePlanSummary().replace(/\.$/, "")}. No {PAID_PLAN_NAME}:{" "}
             {paidPlanSummary().replace(/\.$/, "")}.
           </p>

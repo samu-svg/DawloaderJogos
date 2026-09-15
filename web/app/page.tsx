@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { GameCatalog } from "@/components/game-catalog";
 import { HomeHero } from "@/components/home-hero";
+import { HomeSeoContent } from "@/components/home-seo-content";
 import { SiteJsonLd } from "@/components/site-json-ld";
 import { SiteHeader } from "@/components/site-header";
 import { StoreFooter } from "@/components/store-footer";
@@ -15,17 +16,19 @@ import {
   paidPlanSummary,
 } from "@/lib/plan-copy";
 import {
-  absoluteUrl,
+  SEO_KEYWORDS,
+  buildHomeJsonLd,
   homeMetaDescription,
   homeMetaTitle,
-  pageMetadata,
-} from "@/lib/seo";
+} from "@/lib/seo-copy";
+import { absoluteUrl, pageMetadata } from "@/lib/seo";
 import { userHasCatalogAccess } from "@/lib/subscription";
 
 export const metadata: Metadata = pageMetadata({
   title: homeMetaTitle(),
   description: homeMetaDescription(),
   path: "/",
+  keywords: SEO_KEYWORDS,
 });
 
 type PageProps = {
@@ -50,14 +53,14 @@ export default async function HomePage({ searchParams }: PageProps) {
   return (
     <>
       <SiteJsonLd
-        data={{
-          "@context": "https://schema.org",
-          "@type": "WebSite",
-          name: "MontaHD",
-          url: siteUrl,
-          description: homeMetaDescription(),
-          inLanguage: "pt-BR",
-        }}
+        data={buildHomeJsonLd({
+          siteUrl,
+          logoUrl: absoluteUrl("/montahd-icon.png"),
+          games: items.map((game) => ({
+            slug: game.slug,
+            label: game.displayTitle,
+          })),
+        })}
       />
       <SiteHeader
         email={appUser?.email}
@@ -92,6 +95,8 @@ export default async function HomePage({ searchParams }: PageProps) {
             initialWeekly={semanal === "1"}
           />
         </div>
+
+        <HomeSeoContent />
 
         <StoreFooter />
         </div>
